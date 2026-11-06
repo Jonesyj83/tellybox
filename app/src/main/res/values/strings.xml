@@ -103,6 +103,7 @@
     <!-- tv guide -->
     <string name="action_guide">TV guide</string>
     <string name="guide_no_info">No information</string>
+    <string name="guide_no_data">No guide data</string>
     <string name="guide_empty">No channels to show.</string>
     <string name="guide_hint">OK: watch · Menu: record, remind and more · CH+/CH−: page · Fast-forward/Rewind: ±1 day</string>
     <string name="guide_future">That programme hasn\'t started yet.</string>

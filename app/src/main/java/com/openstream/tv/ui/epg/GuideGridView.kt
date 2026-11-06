@@ -20,14 +20,24 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** One row of the guide. [tvgId] is lower-cased, null when the channel has no guide id. */
-data class GuideChannel(val id: Long, val number: Int?, val name: String, val tvgId: String?, val catchupDays: Int)
+data class GuideChannel(
+    val id: Long,
+    val number: Int?,
+    val name: String,
+    val tvgId: String?,
+    val catchupDays: Int,
+    val favorite: Boolean = false,
+)
 
 /**
  * A program cell in the grid. When a channel has no guide data for a stretch of time,
  * the grid makes up half-hour placeholder blocks with [program] set to null so that
- * there's still something to move focus onto.
+ * there's still something to move focus onto. A channel with no programmes at all gets a
+ * single [strip] across the whole row instead (see [GuideBlocks.build]).
  */
-data class GuideBlock(val start: Long, val stop: Long, val program: EpgProgramEntity?)
+data class GuideBlock(val start: Long, val stop: Long, val program: EpgProgramEntity?, val strip: Strip? = null) {
+    enum class Strip { LOADING, NO_DATA }
+}
 
 /**
  * Time-based TV guide drawn directly on a canvas. A RecyclerView per row with shared
@@ -46,6 +56,8 @@ class GuideGridView @JvmOverloads constructor(
         fun onFocus(channel: GuideChannel, block: GuideBlock)
         fun onSelect(row: Int, block: GuideBlock)
         fun onMenu(row: Int, block: GuideBlock)
+        /** Holding OK. Opens the same menu as the Menu key unless a screen wants otherwise. */
+        fun onLongSelect(row: Int, block: GuideBlock) = onMenu(row, block)
     }
 
     var callback: Callback? = null
@@ -53,11 +65,36 @@ class GuideGridView @JvmOverloads constructor(
     var channels: List<GuideChannel> = emptyList()
         private set
 
+    /**
+     * Called when Left can't go any further back (or, with [exitLeftAtNow], when there's
+     * nothing playable to the left). Return true if focus was moved somewhere else.
+     */
+    var onExitLeft: (() -> Boolean)? = null
+
+    /** Treat Left on a current programme without catch-up as leaving the grid. */
+    var exitLeftAtNow = false
+
+    /** Channel to mark as playing (the preview), or null. */
+    var playingChannelId: Long? = null
+        set(value) {
+            if (field != value) { field = value; invalidate() }
+        }
+
     private val dp = resources.displayMetrics.density
-    private val rowHeight = 60 * dp
+    private var rowHeight = 60 * dp
     private val headerHeight = 36 * dp
-    private val channelWidth = 240 * dp
-    private val pxPerMinute = 7 * dp
+    private var channelWidth = 240 * dp
+    private var pxPerMinute = 7 * dp
+
+    /** Tighter layout for when the grid shares the screen with other things. */
+    fun setMetrics(rowHeightDp: Float, channelWidthDp: Float, pxPerMinuteDp: Float) {
+        rowHeight = rowHeightDp * dp
+        channelWidth = channelWidthDp * dp
+        pxPerMinute = pxPerMinuteDp * dp
+        ensureRowVisible()
+        lastReportedRows = -1 to -1
+        invalidate()
+    }
     private val gap = 3 * dp
     private val pad = 12 * dp
 
@@ -90,6 +127,8 @@ class GuideGridView @JvmOverloads constructor(
         color = color(R.color.text_secondary); textSize = 13 * resources.displayMetrics.scaledDensity
     }
     private val numberPaint = TextPaint(captionPaint).apply { typeface = Typeface.DEFAULT_BOLD }
+    private val favoritePaint = TextPaint(captionPaint).apply { color = color(R.color.accent) }
+    private val playingPaint = Paint().apply { color = color(R.color.accent) }
     private val rect = RectF()
     private val timeFormat = DateFormat.getTimeFormat(context)
 
@@ -98,23 +137,57 @@ class GuideGridView @JvmOverloads constructor(
         isFocusableInTouchMode = true
     }
 
-    fun setChannels(list: List<GuideChannel>, focusChannelId: Long? = null) {
-        channels = list
-        focusedRow = list.indexOfFirst { it.id == focusChannelId }.takeIf { it >= 0 }
-            ?: focusedRow.coerceIn(0, max(0, list.size - 1))
-        firstRow = 0
-        focusTime = System.currentTimeMillis()
-        viewStart = floorSlot(focusTime)
+    /**
+     * Replaces the rows. With [keepPosition] (the same list, updated) the focused channel,
+     * its place on screen and the time all stay put; otherwise focus goes to
+     * [focusChannelId] (or the first row) at the current time.
+     */
+    fun setChannels(list: List<GuideChannel>, focusChannelId: Long? = null, keepPosition: Boolean = false) {
+        if (keepPosition) {
+            val focusedId = channels.getOrNull(focusedRow)?.id
+            val offset = focusedRow - firstRow
+            channels = list
+            focusedRow = list.indexOfFirst { it.id == focusedId }.takeIf { it >= 0 }
+                ?: focusedRow.coerceIn(0, max(0, list.size - 1))
+            firstRow = max(0, focusedRow - offset)
+        } else {
+            channels = list
+            focusedRow = list.indexOfFirst { it.id == focusChannelId }.takeIf { it >= 0 } ?: 0
+            firstRow = 0
+            focusTime = System.currentTimeMillis()
+            viewStart = floorSlot(focusTime)
+        }
         ensureRowVisible()
         lastReportedRows = -1 to -1
         invalidate()
         notifyFocus()
     }
 
+    val focusedChannel: GuideChannel? get() = channels.getOrNull(focusedRow)
+
+    /** Moves focus to a channel's row, keeping the time. Returns false if it isn't in the list. */
+    fun focusChannel(channelId: Long): Boolean {
+        val row = channels.indexOfFirst { it.id == channelId }
+        if (row < 0) return false
+        if (row != focusedRow) {
+            focusedRow = row
+            ensureRowVisible()
+            invalidate()
+            notifyFocus()
+        }
+        return true
+    }
+
     /** New programme data arrived for some rows. */
     fun refresh() {
         invalidate()
         notifyFocus()
+    }
+
+    /** Programme data was thrown away; ask for the visible rows again. */
+    fun reload() {
+        lastReportedRows = -1 to -1
+        refresh()
     }
 
     fun jumpToNow() {
@@ -134,29 +207,10 @@ class GuideGridView @JvmOverloads constructor(
     private val visibleRows get() = max(1, ((height - headerHeight) / rowHeight).toInt())
     private val visibleMs get() = TimeUnit.MINUTES.toMillis(((width - channelWidth) / pxPerMinute).toLong())
 
-    /** Programmes for a row, with half-hour placeholders filling any holes. */
+    /** Programmes for a row, with placeholders filling any holes. */
     fun blocksFor(row: Int, from: Long, to: Long): List<GuideBlock> {
         val ch = channels.getOrNull(row) ?: return emptyList()
-        val programs = callback?.programsFor(ch).orEmpty()
-        val out = ArrayList<GuideBlock>()
-        var cursor = floorSlot(from)
-        for (p in programs) {
-            if (p.stop <= cursor) continue
-            if (p.start >= to) break
-            while (cursor < p.start && cursor < to) {
-                val end = min(p.start, floorSlot(cursor) + SLOT)
-                out += GuideBlock(cursor, end, null)
-                cursor = end
-            }
-            out += GuideBlock(p.start, p.stop, p)
-            cursor = p.stop
-        }
-        while (cursor < to) {
-            val end = floorSlot(cursor) + SLOT
-            out += GuideBlock(cursor, end, null)
-            cursor = end
-        }
-        return out
+        return GuideBlocks.build(callback?.programsFor(ch), from, to)
     }
 
     private fun blockAt(row: Int, time: Long): GuideBlock? =
@@ -175,9 +229,11 @@ class GuideGridView @JvmOverloads constructor(
             KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_CHANNEL_UP -> moveRow(-visibleRows)
             KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_CHANNEL_DOWN -> moveRow(visibleRows)
             KeyEvent.KEYCODE_DPAD_LEFT -> {
-                val cur = focusedBlock ?: return true
-                if (cur.start <= minTime) return true
-                val prev = blockAt(focusedRow, cur.start - 1) ?: return true
+                val cur = focusedBlock ?: return exitLeft()
+                if (cur.start <= minTime) return exitLeft()
+                if (exitLeftAtNow && cur.start <= System.currentTimeMillis() &&
+                    channels[focusedRow].catchupDays <= 0) return exitLeft()
+                val prev = blockAt(focusedRow, cur.start - 1) ?: return exitLeft()
                 // Long programmes: land on the part nearest to where we were, not hours back.
                 focusTime = max(prev.start, min(cur.start - 1, focusTime - SLOT)).coerceAtLeast(minTime)
                 if (focusTime < viewStart) viewStart = floorSlot(focusTime)
@@ -205,11 +261,17 @@ class GuideGridView @JvmOverloads constructor(
     }
 
     override fun onKeyLongPress(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-            focusedBlock?.let { callback?.onMenu(focusedRow, it) }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER ||
+            keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+            focusedBlock?.let { callback?.onLongSelect(focusedRow, it) }
             return true
         }
         return super.onKeyLongPress(keyCode, event)
+    }
+
+    private fun exitLeft(): Boolean {
+        onExitLeft?.invoke()
+        return true
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
@@ -265,10 +327,18 @@ class GuideGridView @JvmOverloads constructor(
             // Channel cell
             rect.set(0f, top, channelWidth - gap, top + rowHeight - gap)
             canvas.drawRoundRect(rect, 4 * dp, 4 * dp, if (row == focusedRow) nowPaint else bgPaint)
+            if (ch.id == playingChannelId) {
+                rect.set(0f, top + 8 * dp, 4 * dp, top + rowHeight - gap - 8 * dp)
+                canvas.drawRoundRect(rect, 2 * dp, 2 * dp, playingPaint)
+            }
             val numText = ch.number?.toString().orEmpty()
             val textY = top + rowHeight / 2 + titlePaint.textSize / 3
             canvas.drawText(numText, pad, textY, numberPaint)
-            val nameX = pad + 44 * dp
+            var nameX = pad + 44 * dp
+            if (ch.favorite) {
+                canvas.drawText("★", nameX, textY, favoritePaint)
+                nameX += favoritePaint.measureText("★ ")
+            }
             canvas.drawText(ellipsize(ch.name, titlePaint, channelWidth - nameX - pad), nameX, textY, titlePaint)
 
             for (block in blocksFor(row, viewStart, viewEnd)) {
@@ -285,10 +355,17 @@ class GuideGridView @JvmOverloads constructor(
                 }
                 canvas.drawRoundRect(rect, 4 * dp, 4 * dp, paint)
                 if (focused) canvas.drawRoundRect(rect, 4 * dp, 4 * dp, focusStroke)
+                val avail = right - left - 2 * pad
+                if (block.strip != null) {
+                    if (block.strip == GuideBlock.Strip.NO_DATA && avail > 12 * dp) {
+                        canvas.drawText(ellipsize(context.getString(R.string.guide_no_data), dimTitlePaint, avail),
+                            left + pad, textY, dimTitlePaint)
+                    }
+                    continue
+                }
                 val canReplay = block.program != null && com.openstream.tv.data.catchup.CatchupUrls.available(
                     channels[row].catchupDays, block.start, block.stop, now)
                 val title = (if (canReplay) "↶ " else "") + (block.program?.title ?: context.getString(R.string.guide_no_info))
-                val avail = right - left - 2 * pad
                 if (avail > 12 * dp) {
                     val tp = if (block.stop <= now || block.program == null) dimTitlePaint else titlePaint
                     canvas.drawText(ellipsize(title, tp, avail), left + pad, top + rowHeight * 0.45f, tp)
@@ -320,7 +397,7 @@ class GuideGridView @JvmOverloads constructor(
         TextUtils.ellipsize(text, paint, width, TextUtils.TruncateAt.END).toString()
 
     companion object {
-        val SLOT = TimeUnit.MINUTES.toMillis(30)
-        fun floorSlot(t: Long) = t - Math.floorMod(t, SLOT)
+        val SLOT = GuideBlocks.SLOT
+        fun floorSlot(t: Long) = GuideBlocks.floorSlot(t)
     }
 }
