@@ -1,0 +1,225 @@
+package com.openstream.tv.data.db
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+
+enum class PlaylistType { M3U, XTREAM, STALKER }
+
+/** What a channel row actually is. M3U lists often mix live channels with VOD. */
+enum class ContentKind { LIVE, MOVIE, SERIES }
+
+@Entity(tableName = "playlists")
+data class PlaylistEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val type: PlaylistType,
+    /** M3U: http(s) URL or content:// URI. Xtream: server base URL. Stalker: portal URL. */
+    val url: String,
+    val username: String? = null,
+    val password: String? = null,
+    val macAddress: String? = null,
+    val userAgent: String? = null,
+    val enabled: Boolean = true,
+    val sortOrder: Int = 0,
+    val lastUpdated: Long = 0,
+    val lastError: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+@Entity(
+    tableName = "channel_groups",
+    foreignKeys = [
+        ForeignKey(
+            entity = PlaylistEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["playlistId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["playlistId", "kind", "name"], unique = true)],
+)
+data class ChannelGroupEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val playlistId: Long,
+    val name: String,
+    val kind: ContentKind = ContentKind.LIVE,
+    /** Category id on the provider side (Xtream/Stalker), null for M3U. */
+    val remoteId: String? = null,
+    val sortOrder: Int = 0,
+    val hidden: Boolean = false,
+)
+
+@Entity(
+    tableName = "channels",
+    foreignKeys = [
+        ForeignKey(
+            entity = PlaylistEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["playlistId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = ChannelGroupEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["groupId"],
+            onDelete = ForeignKey.SET_NULL,
+        ),
+    ],
+    indices = [
+        Index(value = ["playlistId", "channelKey"], unique = true),
+        Index("groupId"),
+        Index("tvgId"),
+    ],
+)
+data class ChannelEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val playlistId: Long,
+    val groupId: Long? = null,
+    /**
+     * Identifier that survives a playlist refresh: the provider stream id when there is
+     * one, otherwise the stream URL. Favorites and history are keyed on this, not [id].
+     */
+    val channelKey: String,
+    val name: String,
+    val streamUrl: String,
+    val kind: ContentKind = ContentKind.LIVE,
+    val logoUrl: String? = null,
+    val tvgId: String? = null,
+    val tvgName: String? = null,
+    val number: Int? = null,
+    val catchupType: String? = null,
+    val catchupDays: Int = 0,
+    val catchupSource: String? = null,
+    val userAgent: String? = null,
+    val referrer: String? = null,
+    val sortOrder: Int = 0,
+    val hidden: Boolean = false,
+    val addedAt: Long = System.currentTimeMillis(),
+)
+
+@Entity(
+    tableName = "epg_sources",
+    foreignKeys = [
+        ForeignKey(
+            entity = PlaylistEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["playlistId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("playlistId"), Index(value = ["playlistId", "url"], unique = true)],
+)
+data class EpgSourceEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    /** Playlist this guide belongs to. Null means it applies to every playlist. */
+    val playlistId: Long? = null,
+    val name: String,
+    val url: String,
+    val enabled: Boolean = true,
+    val priority: Int = 0,
+    val lastUpdated: Long = 0,
+    val lastError: String? = null,
+)
+
+@Entity(
+    tableName = "epg_channels",
+    primaryKeys = ["sourceId", "xmltvId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = EpgSourceEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["sourceId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+)
+data class EpgChannelEntity(
+    val sourceId: Long,
+    val xmltvId: String,
+    val displayName: String,
+    val iconUrl: String? = null,
+)
+
+@Entity(
+    tableName = "epg_programs",
+    foreignKeys = [
+        ForeignKey(
+            entity = EpgSourceEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["sourceId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [
+        Index(value = ["channelXmltvId", "start"]),
+        Index("sourceId"),
+        Index("stop"),
+    ],
+)
+data class EpgProgramEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val sourceId: Long,
+    val channelXmltvId: String,
+    /** Epoch millis, UTC. */
+    val start: Long,
+    val stop: Long,
+    val title: String,
+    val subtitle: String? = null,
+    val description: String? = null,
+    val category: String? = null,
+    val iconUrl: String? = null,
+    val episode: String? = null,
+)
+
+@Entity(
+    tableName = "favorites",
+    primaryKeys = ["playlistId", "channelKey"],
+    foreignKeys = [
+        ForeignKey(
+            entity = PlaylistEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["playlistId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+)
+data class FavoriteEntity(
+    val playlistId: Long,
+    val channelKey: String,
+    val sortOrder: Int = 0,
+    val addedAt: Long = System.currentTimeMillis(),
+)
+
+@Entity(
+    tableName = "watch_history",
+    primaryKeys = ["playlistId", "channelKey"],
+    foreignKeys = [
+        ForeignKey(
+            entity = PlaylistEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["playlistId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("lastWatched")],
+)
+data class WatchHistoryEntity(
+    val playlistId: Long,
+    val channelKey: String,
+    val lastWatched: Long,
+    @ColumnInfo(defaultValue = "0") val totalWatchMs: Long = 0,
+    /** Resume point for VOD, 0 for live. */
+    @ColumnInfo(defaultValue = "0") val positionMs: Long = 0,
+)
+
+/** Group row plus how many visible channels it holds, for the sidebar. */
+data class GroupWithCount(
+    val id: Long,
+    val playlistId: Long,
+    val name: String,
+    val kind: ContentKind,
+    val channelCount: Int,
+)
