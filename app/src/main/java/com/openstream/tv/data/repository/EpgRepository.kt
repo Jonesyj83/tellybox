@@ -109,6 +109,17 @@ class EpgRepository(
     suspend fun currentProgram(tvgId: String?, now: Long = System.currentTimeMillis()): EpgProgramEntity? =
         tvgId?.let { db.epg().current(it.lowercase(), now) }
 
+    /** Now-playing lookup for a whole list of channels, keyed by lower-cased tvg-id. */
+    suspend fun currentPrograms(tvgIds: Collection<String>, now: Long = System.currentTimeMillis()): Map<String, EpgProgramEntity> {
+        val ids = tvgIds.map { it.lowercase() }.distinct()
+        if (ids.isEmpty()) return emptyMap()
+        val out = HashMap<String, EpgProgramEntity>()
+        ids.chunked(900).forEach { chunk ->
+            db.epg().currentFor(chunk, now).forEach { out.putIfAbsent(it.channelXmltvId, it) }
+        }
+        return out
+    }
+
     suspend fun programs(tvgId: String, from: Long, to: Long): List<EpgProgramEntity> =
         db.epg().programsFor(tvgId.lowercase(), from, to)
 

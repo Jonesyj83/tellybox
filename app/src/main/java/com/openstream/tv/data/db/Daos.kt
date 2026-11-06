@@ -184,6 +184,15 @@ interface EpgDao {
     )
     suspend fun current(xmltvId: String, now: Long): EpgProgramEntity?
 
+    /** Programmes airing at [now] for a batch of (lower-cased) XMLTV ids. Keep batches under 900. */
+    @Query(
+        """
+        SELECT * FROM epg_programs
+        WHERE channelXmltvId IN (:xmltvIds) AND start <= :now AND stop > :now
+        """,
+    )
+    suspend fun currentFor(xmltvIds: List<String>, now: Long): List<EpgProgramEntity>
+
     @Query("SELECT COUNT(*) FROM epg_programs WHERE sourceId = :sourceId")
     suspend fun programCount(sourceId: Long): Int
 }

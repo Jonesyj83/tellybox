@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.coil)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
