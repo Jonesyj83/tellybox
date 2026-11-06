@@ -128,6 +128,22 @@ class EpgRepository(
         return out
     }
 
+    /**
+     * Programmes for several channels at once, keyed by lower-cased tvg-id. When more than
+     * one guide covers a channel, the first source to list it wins so rows don't overlap.
+     */
+    suspend fun programsFor(tvgIds: Collection<String>, from: Long, to: Long): Map<String, List<EpgProgramEntity>> {
+        val ids = tvgIds.map { it.lowercase() }.distinct()
+        val out = HashMap<String, List<EpgProgramEntity>>()
+        ids.chunked(900).forEach { chunk ->
+            db.epg().programsForIds(chunk, from, to).groupBy { it.channelXmltvId }.forEach { (id, list) ->
+                val source = list.minOf { it.sourceId }
+                out[id] = list.filter { it.sourceId == source }
+            }
+        }
+        return out
+    }
+
     suspend fun programs(tvgId: String, from: Long, to: Long): List<EpgProgramEntity> =
         db.epg().programsFor(tvgId.lowercase(), from, to)
 

@@ -95,4 +95,14 @@
     <string name="error_format">This stream\'s format isn\'t supported.</string>
     <string name="error_decoder">This device can\'t decode the stream.</string>
     <string name="now_next">Now: %1$s</string>
+
+    <!-- tv guide -->
+    <string name="action_guide">TV guide</string>
+    <string name="guide_no_info">No information</string>
+    <string name="guide_empty">No channels to show.</string>
+    <string name="guide_hint">OK: watch · Hold OK or Menu: options · CH+/CH−: page · Fast-forward/Rewind: ±1 day</string>
+    <string name="guide_future">That programme hasn\'t started yet.</string>
+    <string name="guide_no_catchup">No catch-up available for this channel.</string>
+    <string name="guide_watch_live">Watch channel</string>
+    <string name="guide_jump_now">Jump to now</string>
 </resources>

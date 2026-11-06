@@ -26,6 +26,13 @@ class ChannelRepository(
 
     suspend fun get(id: Long): ChannelEntity? = db.channels().get(id)
 
+    /** Looks up channels by id, keeping the order of [ids] and skipping any that are gone. */
+    suspend fun getByIds(ids: LongArray): List<ChannelEntity> {
+        val found = HashMap<Long, ChannelEntity>()
+        ids.toList().chunked(900).forEach { chunk -> db.channels().getByIds(chunk).forEach { found[it.id] = it } }
+        return ids.toList().mapNotNull { found[it] }
+    }
+
     suspend fun channelsInGroup(groupId: Long): List<ChannelEntity> = db.channels().getByGroup(groupId)
 
     suspend fun search(query: String): List<ChannelEntity> = db.channels().search(query.trim())

@@ -111,6 +111,9 @@ interface ChannelDao {
     )
     suspend fun search(query: String, limit: Int = 200): List<ChannelEntity>
 
+    @Query("SELECT * FROM channels WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Long>): List<ChannelEntity>
+
     @Query("SELECT COUNT(*) FROM channels WHERE playlistId = :playlistId")
     suspend fun countForPlaylist(playlistId: Long): Int
 
@@ -192,6 +195,16 @@ interface EpgDao {
         """,
     )
     suspend fun currentFor(xmltvIds: List<String>, now: Long): List<EpgProgramEntity>
+
+    /** Programmes overlapping [from, to) for a batch of (lower-cased) XMLTV ids. Keep batches under 900. */
+    @Query(
+        """
+        SELECT * FROM epg_programs
+        WHERE channelXmltvId IN (:xmltvIds) AND stop > :from AND start < :to
+        ORDER BY channelXmltvId, start
+        """,
+    )
+    suspend fun programsForIds(xmltvIds: List<String>, from: Long, to: Long): List<EpgProgramEntity>
 
     @Query("SELECT COUNT(*) FROM epg_programs WHERE sourceId = :sourceId")
     suspend fun programCount(sourceId: Long): Int
