@@ -71,6 +71,12 @@ class GuideGridView @JvmOverloads constructor(
      */
     var onExitLeft: (() -> Boolean)? = null
 
+    /**
+     * Called for Up on the top row instead of letting Android's focus search pick
+     * somewhere. Unset, Up there falls through to the default handling.
+     */
+    var onExitUp: (() -> Unit)? = null
+
     /** Treat Left on a current programme without catch-up as leaving the grid. */
     var exitLeftAtNow = false
 
@@ -222,7 +228,12 @@ class GuideGridView @JvmOverloads constructor(
         if (channels.isEmpty()) return super.onKeyDown(keyCode, event)
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP -> {
-                if (focusedRow == 0) return super.onKeyDown(keyCode, event)
+                if (focusedRow == 0) {
+                    val exit = onExitUp ?: return super.onKeyDown(keyCode, event)
+                    // Holding Up to scroll to the top stops there instead of running out of the grid.
+                    if (event.repeatCount == 0) exit()
+                    return true
+                }
                 moveRow(-1)
             }
             KeyEvent.KEYCODE_DPAD_DOWN -> moveRow(1)

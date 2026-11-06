@@ -30,7 +30,6 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="@drawable/fg_preview"
-                android:nextFocusDown="@id/grid"
                 android:nextFocusLeft="@id/previewTile">
 
                 <androidx.media3.ui.PlayerView
@@ -85,7 +84,6 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|start"
                     android:layout_margin="6dp"
-                    android:layout_marginEnd="88dp"
                     android:background="@drawable/bg_watch_chip"
                     android:ellipsize="end"
                     android:paddingStart="8dp"
@@ -101,15 +99,16 @@
                     style="@style/Text.Caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|end"
+                    android:layout_gravity="top|end"
                     android:layout_margin="6dp"
                     android:background="@drawable/bg_watch_chip"
                     android:duplicateParentState="true"
+                    android:fontFamily="sans-serif-medium"
                     android:paddingStart="10dp"
-                    android:paddingTop="2dp"
+                    android:paddingTop="3dp"
                     android:paddingEnd="10dp"
-                    android:paddingBottom="2dp"
-                    android:text="@string/preview_watch"
+                    android:paddingBottom="3dp"
+                    android:text="@string/preview_action_play"
                     android:textColor="@color/text_primary"
                     android:visibility="gone" />
             </com.openstream.tv.ui.channels.RatioFrameLayout>
@@ -127,9 +126,24 @@
                     android:scrollbars="none">
 
                     <LinearLayout
+                        android:id="@+id/headerButtons"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/watchButton"
+                            style="@style/Button.TV.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_watch_button"
+                            android:ellipsize="end"
+                            android:fontFamily="sans-serif-medium"
+                            android:maxWidth="280dp"
+                            android:nextFocusLeft="@id/previewTile"
+                            android:singleLine="true"
+                            android:visibility="gone" />
 
                         <Button android:id="@+id/vodButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="Movies / Series" />
                         <Button android:id="@+id/guideButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="@string/action_guide" />
@@ -226,8 +240,7 @@
                 <com.openstream.tv.ui.epg.GuideGridView
                     android:id="@+id/grid"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:nextFocusUp="@id/previewTile" />
+                    android:layout_height="match_parent" />
 
                 <TextView
                     android:id="@+id/channelsEmpty"

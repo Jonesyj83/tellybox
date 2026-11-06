@@ -32,10 +32,12 @@ import com.openstream.tv.databinding.ActivityMainBinding
 import com.openstream.tv.player.Playback
 import com.openstream.tv.player.PlaybackErrors
 import com.openstream.tv.player.Player
+import com.openstream.tv.ui.channels.FocusTarget
 import com.openstream.tv.ui.channels.GroupAdapter
 import com.openstream.tv.ui.channels.GroupSelection
 import com.openstream.tv.ui.channels.HomeArea
 import com.openstream.tv.ui.channels.HomeBack
+import com.openstream.tv.ui.channels.HomeFocus
 import com.openstream.tv.ui.channels.MainViewModel
 import com.openstream.tv.ui.channels.PreviewController
 import com.openstream.tv.ui.channels.PreviewController.Action
@@ -121,11 +123,16 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             setMetrics(rowHeightDp = 54f, channelWidthDp = 190f, pxPerMinuteDp = 4.5f)
             exitLeftAtNow = true
             onExitLeft = { focusActiveGroup() }
+            onExitUp = { moveFocus(HomeFocus.upFromGridTop(previewShowing)) }
         }
 
         // Subtitles are unreadable at this size and cover the channel label.
         binding.previewPlayer.subtitleView?.visibility = View.GONE
         binding.previewTile.setOnClickListener { act(preview.tile()) }
+        binding.previewTile.setOnFocusChangeListener { _, focused ->
+            binding.previewWatch.setText(if (focused) R.string.preview_action_ok else R.string.preview_action_play)
+        }
+        binding.watchButton.setOnClickListener { act(preview.tile()) }
         binding.previewTile.setOnLongClickListener {
             previewChannel?.let { showChannelMenu(it, null, null) }
             true
@@ -427,6 +434,8 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         binding.previewLabel.text = listOfNotNull(channel.number?.toString(), channel.name).joinToString("  ")
         binding.previewLabel.visibility = View.VISIBLE
         binding.previewWatch.visibility = View.VISIBLE
+        binding.watchButton.text = getString(R.string.preview_watch_button, channel.name)
+        binding.watchButton.visibility = View.VISIBLE
     }
 
     private fun showPreviewError(detail: String) {
@@ -453,6 +462,9 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         binding.previewError.visibility = View.GONE
         binding.previewLabel.visibility = View.GONE
         binding.previewWatch.visibility = View.GONE
+        // Don't let focus fall wherever Android puts it when the button it's on disappears.
+        if (binding.watchButton.hasFocus()) binding.previewTile.requestFocus()
+        binding.watchButton.visibility = View.GONE
     }
 
     private fun goFullScreen(channelId: Long) {
@@ -548,18 +560,73 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         return selected?.requestFocus() == true || binding.groups.requestFocus()
     }
 
+    /** Something is in the preview window, so the Watch button is up and Up from the grid goes there. */
+    private val previewShowing get() = binding.watchButton.visibility == View.VISIBLE
+
+    private fun moveFocus(target: FocusTarget) {
+        val moved = when (target) {
+            FocusTarget.GRID -> binding.grid.channels.isNotEmpty() && binding.grid.requestFocus()
+            FocusTarget.GROUPS -> focusActiveGroup()
+            FocusTarget.PREVIEW -> binding.previewTile.requestFocus()
+            FocusTarget.WATCH -> binding.watchButton.requestFocus()
+            FocusTarget.HEADER -> binding.vodButton.requestFocus()
+        }
+        if (!moved && target == FocusTarget.GRID) focusActiveGroup()
+    }
+
+    private fun groupsAtTop(): Boolean {
+        val focused = currentFocus ?: return false
+        val holder = binding.groups.findContainingViewHolder(focused) ?: return false
+        return holder.bindingAdapterPosition == 0
+    }
+
+    /** Up/Down between areas, by fixed rules rather than Android's focus search. Null = not ours. */
+    private fun routeVertical(keyCode: Int): FocusTarget? {
+        val up = keyCode == KeyEvent.KEYCODE_DPAD_UP
+        return when {
+            binding.previewTile.hasFocus() ->
+                if (up) HomeFocus.upFromPreview(previewShowing) else HomeFocus.downFromPreview()
+            binding.headerButtons.hasFocus() ->
+                if (up) null else HomeFocus.downFromHeader(previewShowing)
+            binding.groups.hasFocus() && up && groupsAtTop() -> HomeFocus.upFromGroupsTop(previewShowing)
+            else -> null
+        }
+    }
+
+    private var mediaKeyHandled = false
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && binding.content.visibility == View.VISIBLE) {
+        if (binding.content.visibility == View.VISIBLE) {
+            val down = event.action == KeyEvent.ACTION_DOWN
             when (event.keyCode) {
                 // Left of the groups column is the preview window.
-                KeyEvent.KEYCODE_DPAD_LEFT -> if (binding.groups.hasFocus()) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> if (down && binding.groups.hasFocus()) {
                     binding.previewTile.requestFocus()
                     return true
                 }
+                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> if (down) {
+                    val inHeader = binding.headerButtons.hasFocus()
+                    val target = routeVertical(event.keyCode)
+                    if (target != null) {
+                        // A held key moves one area, not straight through the next ones.
+                        if (event.repeatCount == 0) moveFocus(target)
+                        return true
+                    }
+                    // Nothing above the buttons; don't let focus search wander off.
+                    if (inHeader) return true
+                }
                 // Play from anywhere on the screen: full screen on what's previewing.
-                KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                    if (event.repeatCount == 0) act(preview.tile())
-                    return true
+                KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> {
+                    if (down) {
+                        if (event.repeatCount == 0) mediaKeyHandled = preview.previewing != null
+                        if (mediaKeyHandled) {
+                            if (event.repeatCount == 0) act(preview.tile())
+                            return true
+                        }
+                    } else if (mediaKeyHandled) {
+                        mediaKeyHandled = false
+                        return true
+                    }
                 }
             }
         }

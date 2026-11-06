@@ -222,9 +222,11 @@
     <string name="setting_reminder_before">Remind before start</string>
     <string name="setting_reminder_popup">Reminder popup stays for</string>
     <plurals name="seconds"><item quantity="one">%d second</item><item quantity="other">%d seconds</item></plurals>
-    <string name="setting_preview_follows_focus">Preview the channel under focus</string>
+    <string name="setting_preview_follows_focus">Home: change the preview while browsing (off = only OK changes it)</string>
     <string name="preview_hint">Press OK on a channel to preview it here</string>
-    <string name="preview_watch">▶ Watch</string>
+    <string name="preview_action_ok">OK: full screen</string>
+    <string name="preview_action_play">▶ Play: full screen</string>
+    <string name="preview_watch_button">▶ Watch: %1$s</string>
     <string name="preview_error">Can\'t play this channel</string>
     <string name="preview_elsewhere">Playing in picture-in-picture</string>
     <string name="preview_watch_full">Watch full screen</string>
