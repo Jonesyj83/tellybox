@@ -35,6 +35,8 @@ data class PlayerConfig(
     val handleAudioFocus: Boolean = true,
     /** Caps the picked video variant, so several streams at once stay within decoder limits. */
     val maxVideoHeight: Int? = null,
+    val audioPassthrough: Boolean = true,
+    val preferSoftwareAudioDecoders: Boolean = false,
 )
 
 @OptIn(UnstableApi::class)
@@ -46,17 +48,28 @@ object PlayerFactory {
         // extension automatically when it's on the classpath.
         val dataSourceFactory = DefaultDataSource.Factory(context, httpFactory)
 
-        val renderers = DefaultRenderersFactory(context)
+        val renderers = object : DefaultRenderersFactory(context) {
+            override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): androidx.media3.exoplayer.audio.AudioSink {
+                return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
+                    .setAudioCapabilities(if (config.audioPassthrough) androidx.media3.exoplayer.audio.AudioCapabilities.getCapabilities(context)
+                        else androidx.media3.exoplayer.audio.AudioCapabilities.DEFAULT_AUDIO_CAPABILITIES)
+                    .setEnableFloatOutput(enableFloatOutput)
+                    .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams).build()
+            }
+        }
             .setEnableDecoderFallback(true)
             .setExtensionRendererMode(
                 if (config.preferSoftwareDecoders) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
                 else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON,
             )
 
-        if (config.preferSoftwareDecoders) {
+        if (config.preferSoftwareDecoders || config.preferSoftwareAudioDecoders) {
             renderers.setMediaCodecSelector { mimeType, secure, tunneling ->
                 MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling)
-                    .sortedBy { if (it.softwareOnly) 0 else 1 }
+                    .sortedBy {
+                        val preferSoftware = if (mimeType.startsWith("audio/")) config.preferSoftwareAudioDecoders else config.preferSoftwareDecoders
+                        if (it.softwareOnly == preferSoftware) 0 else 1
+                    }
             }
         }
 

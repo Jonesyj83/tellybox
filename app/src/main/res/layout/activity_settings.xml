@@ -16,6 +16,7 @@
         android:text="@string/settings_title" />
 
     <ScrollView
+        android:descendantFocusability="afterDescendants"
         android:layout_width="640dp"
         android:layout_height="0dp"
         android:layout_weight="1"

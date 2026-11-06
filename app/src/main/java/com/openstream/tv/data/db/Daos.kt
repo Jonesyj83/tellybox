@@ -156,6 +156,9 @@ interface EpgDao {
     @Query("UPDATE epg_sources SET lastUpdated = :time, lastError = :error WHERE id = :id")
     suspend fun setSourceRefreshResult(id: Long, time: Long, error: String?)
 
+    @Query("UPDATE epg_sources SET enabled = :enabled WHERE id = :id")
+    suspend fun setSourceEnabled(id: Long, enabled: Boolean)
+
     @Query("DELETE FROM epg_sources WHERE id = :id")
     suspend fun deleteSource(id: Long)
 
@@ -245,6 +248,9 @@ interface FavoriteDao {
 
 @Dao
 interface WatchHistoryDao {
+    @Query("SELECT * FROM watch_history")
+    suspend fun getAll(): List<WatchHistoryEntity>
+
     @Query(
         """
         SELECT c.* FROM channels c

@@ -15,10 +15,14 @@ import com.openstream.tv.databinding.ActivitySettingsBinding
 import com.openstream.tv.databinding.ItemChoiceBinding
 import com.openstream.tv.player.BufferSize
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlin.math.abs
 
 class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
+    private var section: String? = null
+    private val exportFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { it?.let(::exportBackup) }
+    private val importFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(::importBackup) }
     private lateinit var binding: ActivitySettingsBinding
     private val rows = ArrayList<ItemChoiceBinding>()
 
@@ -26,6 +30,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        section = savedInstanceState?.getString("section")
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         lifecycleScope.launch {
@@ -33,6 +38,11 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 appContainer.settings.settings.collect { render(it) }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("section", section)
     }
 
     private fun header(text: Int) = Row(getString(text), "", isHeader = true) {}
@@ -90,7 +100,20 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                         lifecycleScope.launch { repo.setChannelNameTokens(input.text.toString()) }
                     }.setNegativeButton(R.string.cancel, null).show()
             },
+            Row("Show clock", onOff(s.showClock)) { lifecycleScope.launch { repo.setShowClock(!s.showClock) } },
+            Row("Dim past programmes", onOff(s.dimPast)) { lifecycleScope.launch { repo.setDimPast(!s.dimPast) } },
+            Row("Panel transparency", "${100 - s.panelOpacity}%") {
+                AlertDialog.Builder(this).setTitle("Panel transparency").setItems(arrayOf("Opaque", "10%", "25%", "40%")) { _, i -> lifecycleScope.launch { repo.setPanelOpacity(listOf(100, 90, 75, 60)[i]) } }.show()
+            },
+            Row("Full guide scan", onOff(s.fullScan)) { lifecycleScope.launch { repo.setFullScan(!s.fullScan) } },
             header(R.string.settings_player),
+            Row("Audio decoder", if (s.softwareAudioDecoders) "Software preferred" else "Hardware preferred") {
+                AlertDialog.Builder(this).setTitle("Audio decoder").setSingleChoiceItems(arrayOf("Hardware preferred", "Software preferred"), if (s.softwareAudioDecoders) 1 else 0) { dialog, index ->
+                    dialog.dismiss()
+                    lifecycleScope.launch { repo.setSoftwareAudioDecoders(index == 1) }
+                }.show()
+            },
+            Row("Audio passthrough", onOff(s.audioPassthrough)) { lifecycleScope.launch { repo.setAudioPassthrough(!s.audioPassthrough) } },
             Row(getString(R.string.setting_buffer), bufferLabel(s.buffer)) {
                 pick(R.string.setting_buffer, buffers, s.buffer, repo::setBuffer)
             },
@@ -152,8 +175,69 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         )
     }
 
+    private fun maintenance() = listOf(Row("Clear EPG", "Maintenance") { clearEpg() }, Row("Clear logo cache", "Maintenance") {
+        lifecycleScope.launch {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                coil.Coil.imageLoader(this@SettingsActivity).diskCache?.clear()
+                coil.Coil.imageLoader(this@SettingsActivity).memoryCache?.clear()
+            }
+            android.widget.Toast.makeText(this@SettingsActivity, "Logo cache cleared", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    })
+
+    private fun clearEpg() = lifecycleScope.launch {
+        val dao = appContainer.database.epg()
+        val sources = appContainer.epg.observeSources().let { it.first() }
+        val count = sources.sumOf { dao.programCount(it.id) }
+        AlertDialog.Builder(this@SettingsActivity).setTitle("Clear EPG?").setMessage("Delete $count programmes? Guide sources stay assigned.")
+            .setNegativeButton("Cancel", null).setPositiveButton("Clear") { _, _ -> lifecycleScope.launch {
+                sources.forEach { dao.deleteProgramsForSource(it.id); dao.deleteChannelsForSource(it.id); dao.setSourceRefreshResult(it.id, 0, null) }
+                android.widget.Toast.makeText(this@SettingsActivity, "EPG cleared", android.widget.Toast.LENGTH_SHORT).show()
+            } }.show()
+    }
+
+    private fun showGuides() = lifecycleScope.launch {
+        val sources = appContainer.database.epg().observeSources().first().filter { it.enabled }
+        val playlists = appContainer.database.playlists().getAll()
+        val labels = sources.map { source -> "${source.name}: ${source.url}\n${if (source.lastUpdated == 0L) "Never updated" else java.util.Date(source.lastUpdated).toString()}${source.lastError?.let { " — $it" }.orEmpty()}" } + "Assign guide to playlist"
+        AlertDialog.Builder(this@SettingsActivity).setTitle("Guide sources").setItems(labels.toTypedArray()) { _, index ->
+            if (index < sources.size) {
+                val source = sources[index]
+                AlertDialog.Builder(this@SettingsActivity).setTitle(source.name).setItems(arrayOf("Refresh now", "Remove guide")) { _, action -> lifecycleScope.launch {
+                    if (action == 0) {
+                        val result = appContainer.epg.refresh(source)
+                        AlertDialog.Builder(this@SettingsActivity).setMessage(result.fold({ "Guide refreshed" }, { "Refresh failed: ${it.message}" })).setPositiveButton("OK", null).show()
+                    } else appContainer.epg.deleteSource(source.id)
+                } }.show()
+            } else AlertDialog.Builder(this@SettingsActivity).setTitle("Choose playlist").setItems(playlists.map { it.name }.toTypedArray()) { _, which ->
+                val input = android.widget.EditText(this@SettingsActivity).apply { hint = "https://example.com/guide.xml"; setSingleLine() }
+                AlertDialog.Builder(this@SettingsActivity).setTitle("Guide URL").setView(input).setNegativeButton("Cancel", null).setPositiveButton("Assign") { _, _ -> lifecycleScope.launch {
+                    if (input.text.isNotBlank()) {
+                        appContainer.epg.addSource(input.text.toString(), playlists[which].name, playlists[which].id)
+                        android.widget.Toast.makeText(this@SettingsActivity, "Guide assigned", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                } }.show()
+            }.show()
+        }.setPositiveButton("Close", null).show()
+    }
+
     private fun render(s: AppSettings) {
-        val list = buildRows(s)
+        val all = buildRows(s)
+        val sections = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
+        val list = if (section == null) sections.map { name -> Row(name, "") { section = name; render(s) } }
+        else listOf(Row("‹ Settings", section!!) { section = null; render(s) }) + when (section) {
+            "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { startActivity(android.content.Intent(this, com.openstream.tv.ui.playlists.PlaylistsActivity::class.java)) })
+            "Parental" -> all.take(1)
+            "General" -> all.filter { it.title == "Channel name cleanup" } + maintenance()
+            "EPG" -> all.dropWhile { it.title != getString(R.string.settings_guide) }.filterNot { it.isHeader } + all.filter { it.title == "Full guide scan" } + listOf(Row("Guide sources and assignments", "URLs and last update times") { showGuides() }, Row("Clear EPG", "") { clearEpg() })
+            "Player" -> all.dropWhile { it.title != getString(R.string.settings_player) }.drop(1).takeWhile { !it.isHeader }.filterNot { it.title == getString(R.string.setting_preview_follows_focus) }
+            "Appearance" -> all.filter { it.title in listOf(getString(R.string.setting_preview_follows_focus), "Show clock", "Dim past programmes", "Panel transparency") }
+            "Recording" -> all.filter { it.title in listOf(getString(R.string.recordings_title), getString(R.string.setting_pad_before), getString(R.string.setting_pad_after), getString(R.string.setting_instant_length)) }
+            "Reminders" -> all.filter { it.title in listOf(getString(R.string.reminders_title), getString(R.string.setting_reminder_before), getString(R.string.setting_reminder_popup)) }
+            "Backup & restore" -> listOf(Row("Export backup", "Includes credentials; excludes parental PIN") { exportFile.launch("openstream-backup.json") }, Row("Import backup", "Replace configuration from a versioned JSON file") { importFile.launch(arrayOf("application/json", "text/plain")) })
+            "About" -> listOf(Row("OpenStream TV ${com.openstream.tv.BuildConfig.VERSION_NAME}", "A player for playlists supplied by you.") {}, Row("Open-source licences", "AndroidX, Media3, Kotlin, Coil, OkHttp and Retrofit") { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton("OK", null).show() })
+            else -> emptyList()
+        }
         val focused = rows.indexOfFirst { it.root.hasFocus() }
         binding.list.removeAllViews()
         rows.clear()
@@ -176,7 +260,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             }
         }
         val target = rows.getOrNull(focused) ?: rows.firstOrNull { it.root.isFocusable }
-        target?.root?.requestFocus()
+        binding.list.post { target?.root?.requestFocus() }
     }
 
     private fun minutes(m: Int) = resources.getQuantityString(R.plurals.minutes, m, m)

@@ -42,6 +42,11 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.playlists.observePlaylists().collect { list ->
                     adapter.submitList(list)
+                    adapter.details = list.associate { playlist ->
+                        val db = appContainer.database
+                        playlist.id to "${db.channels().countForPlaylist(playlist.id)} channels · ${db.groups().getForPlaylist(playlist.id).size} groups · ${if (db.epg().getSourcesForPlaylist(playlist.id).any { it.enabled }) "Guide attached" else "No guide"}"
+                    }
+                    adapter.notifyDataSetChanged()
                     binding.empty.visibility = if (list.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
                     binding.refreshAllButton.isEnabled = list.isNotEmpty()
                     if (list.isEmpty()) binding.addButton.requestFocus()
@@ -72,14 +77,14 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             .show()
     }
 
-    private fun editPlaylist(playlist: PlaylistEntity) {
-        val form = android.widget.LinearLayout(this).apply {
+    private fun editPlaylist(playlist: PlaylistEntity) = lifecycleScope.launch {
+        val form = android.widget.LinearLayout(this@PlaylistsActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(32, 16, 32, 16)
         }
         fun field(label: String, value: String?, secret: Boolean = false): android.widget.EditText {
-            form.addView(android.widget.TextView(this).apply { text = label })
-            return android.widget.EditText(this).apply {
+            form.addView(android.widget.TextView(this@PlaylistsActivity).apply { text = label })
+            return android.widget.EditText(this@PlaylistsActivity).apply {
                 setSingleLine()
                 inputType = if (secret) android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
                     else android.text.InputType.TYPE_CLASS_TEXT
@@ -87,23 +92,25 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 form.addView(this)
             }
         }
+        val sources = appContainer.database.epg().getSourcesForPlaylist(playlist.id)
+        val epg = field("EPG URLs (one per line; clear to remove)", sources.filter { it.enabled }.joinToString("\n") { it.url }).apply { setSingleLine(false); minLines = 2 }
         val name = field("Playlist name", playlist.name)
         val url = field("Source URL or file URI", playlist.url)
         val user = if (playlist.type == PlaylistType.XTREAM) field("Username", playlist.username) else null
         val password = if (playlist.type == PlaylistType.XTREAM) field("Password", playlist.password, true) else null
         val mac = if (playlist.type == PlaylistType.STALKER) field("MAC address", playlist.macAddress) else null
         val ua = field("User agent (optional)", playlist.userAgent)
-        val dialog = AlertDialog.Builder(this).setTitle("Edit playlist")
-            .setView(android.widget.ScrollView(this).apply { addView(form) })
+        val dialog = AlertDialog.Builder(this@PlaylistsActivity).setTitle("Edit playlist")
+            .setView(android.widget.ScrollView(this@PlaylistsActivity).apply { addView(form) })
             .setPositiveButton("Save and re-fetch", null).setNegativeButton(R.string.cancel, null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 if (name.text.isBlank() || url.text.isBlank()) {
-                    Toast.makeText(this, "Name and source are required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PlaylistsActivity, "Name and source are required", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 if (user != null && (user.text.isBlank() || password!!.text.isBlank())) {
-                    Toast.makeText(this, "Username and password are required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PlaylistsActivity, "Username and password are required", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 val edited = playlist.copy(name = name.text.toString().trim(), url = url.text.toString().trim(),
@@ -116,6 +123,9 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 val container = appContainer
                 container.appScope.launch {
                     val result = container.playlists.edit(edited)
+                    val wanted = epg.text.toString().lines().map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+                    container.database.epg().getSourcesForPlaylist(edited.id).filter { it.url !in wanted }.forEach { container.epg.deleteSource(it.id) }
+                    wanted.forEach { container.epg.addSource(it, edited.name, edited.id) }
                     result.onSuccess { container.epg.refreshForPlaylist(edited.id) }
                     runOnUiThread {
                         if (!isDestroyed) {
@@ -154,19 +164,36 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                     },
                     onFailure = { getString(R.string.playlist_refresh_failed, playlist.name, it.message ?: "") },
                 )
-                Toast.makeText(this@PlaylistsActivity, msg, Toast.LENGTH_LONG).show()
+                binding.status.text = msg
             }
         }
     }
 
     private fun refreshAll() {
-        adapter.currentList.filter { it.enabled }.forEach { refresh(it) }
+        val playlists = adapter.currentList.toList()
+        binding.refreshAllButton.isEnabled = false
+        val container = appContainer
+        container.appScope.launch {
+            val results = mutableListOf<String>()
+            playlists.forEachIndexed { index, playlist ->
+                runOnUiThread { if (!isDestroyed) binding.status.text = "Refreshing ${index + 1}/${playlists.size}: ${playlist.name}…" }
+                val result = container.playlists.refresh(playlist.id)
+                result.onSuccess { container.epg.refreshForPlaylist(playlist.id) }
+                results += result.fold({ "${playlist.name}: success" }, { "${playlist.name}: failed — ${it.message}" })
+            }
+            runOnUiThread { if (!isDestroyed) {
+                binding.status.text = results.joinToString("\n")
+                binding.refreshAllButton.isEnabled = true
+            } }
+        }
     }
 }
 
 private class PlaylistAdapter(
     private val onClick: (PlaylistEntity) -> Unit,
 ) : ListAdapter<PlaylistEntity, PlaylistAdapter.Holder>(Diff) {
+
+    var details: Map<Long, String> = emptyMap()
 
     class Holder(val b: ItemPlaylistBinding) : RecyclerView.ViewHolder(b.root)
 
@@ -192,6 +219,8 @@ private class PlaylistAdapter(
                 DateUtils.getRelativeTimeSpanString(p.lastUpdated, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS),
             )
         }
+        holder.b.detail.append("\n" + details[p.id].orEmpty())
+        holder.b.detail.append("\nLast refreshed: " + if (p.lastUpdated == 0L) "Never" else java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastUpdated)))
         holder.b.root.alpha = if (p.enabled) 1f else 0.55f
         holder.b.root.setOnClickListener { onClick(p) }
     }

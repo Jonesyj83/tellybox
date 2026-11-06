@@ -6,6 +6,30 @@ import org.junit.Test
 class HomeFocusTest {
 
     @Test
+    fun `rail categories guide route works in both directions`() {
+        assertEquals(FocusTarget.GROUPS, HomeFocus.rightFrom(HomeArea.RAIL))
+        assertEquals(FocusTarget.GRID, HomeFocus.rightFrom(HomeArea.GROUPS))
+        assertEquals(FocusTarget.GROUPS, HomeFocus.leftFrom(HomeArea.GUIDE))
+        assertEquals(FocusTarget.RAIL, HomeFocus.leftFrom(HomeArea.GROUPS))
+    }
+
+    @Test
+    fun `vertical movement stays inside rail and category bounds`() {
+        assertEquals(0, HomeFocus.verticalIndex(0, 6, up = true))
+        assertEquals(1, HomeFocus.verticalIndex(0, 6, up = false))
+        assertEquals(5, HomeFocus.verticalIndex(5, 6, up = false))
+        assertEquals(4, HomeFocus.verticalIndex(5, 6, up = true))
+        assertEquals(8, HomeFocus.verticalIndex(7, 20, up = false))
+        assertEquals(6, HomeFocus.verticalIndex(7, 20, up = true))
+    }
+
+    @Test
+    fun `back from rail reaches categories before exit`() {
+        assertEquals(HomeBack.FOCUS_GROUPS, homeBack(HomeArea.RAIL, searching = false))
+        assertEquals(HomeBack.EXIT, homeBack(HomeArea.GROUPS, searching = false))
+    }
+
+    @Test
     fun `up from the top of the guide goes to the preview window`() {
         assertEquals(FocusTarget.PREVIEW, HomeFocus.upFromGridTop(previewing = true))
     }

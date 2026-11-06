@@ -12,6 +12,7 @@ enum class PlaylistType { M3U, XTREAM, STALKER }
 enum class ContentKind { LIVE, MOVIE, SERIES }
 
 @Entity(tableName = "playlists")
+@kotlinx.serialization.Serializable
 data class PlaylistEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -114,6 +115,7 @@ data class ChannelEntity(
     ],
     indices = [Index("playlistId"), Index(value = ["playlistId", "url"], unique = true)],
 )
+@kotlinx.serialization.Serializable
 data class EpgSourceEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     /** Playlist this guide belongs to. Null means it applies to every playlist. */
@@ -188,6 +190,7 @@ data class EpgProgramEntity(
         ),
     ],
 )
+@kotlinx.serialization.Serializable
 data class FavoriteEntity(
     val playlistId: Long,
     val channelKey: String,
@@ -208,6 +211,7 @@ data class FavoriteEntity(
     ],
     indices = [Index("lastWatched")],
 )
+@kotlinx.serialization.Serializable
 data class WatchHistoryEntity(
     val playlistId: Long,
     val channelKey: String,

@@ -17,9 +17,16 @@ import kotlinx.coroutines.flow.map
 /** How the video fills the screen. */
 enum class DisplayMode { FIT, FILL, ZOOM, REDUCED }
 
+@kotlinx.serialization.Serializable
 data class AppSettings(
+    val showClock: Boolean = true,
+    val dimPast: Boolean = true,
+    val panelOpacity: Int = 100,
+    val fullScan: Boolean = false,
+    val audioPassthrough: Boolean = true,
     val channelNameTokens: String = "",
     val buffer: BufferSize = BufferSize.MEDIUM,
+    val softwareAudioDecoders: Boolean = false,
     val softwareDecoders: Boolean = false,
     val tunneling: Boolean = false,
     val guideRefreshHours: Int = 12,
@@ -39,7 +46,7 @@ data class AppSettings(
     /** Home screen: preview whichever channel focus rests on, rather than waiting for OK. */
     val previewFollowsFocus: Boolean = false,
 ) {
-    val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling)
+    val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling, audioPassthrough = audioPassthrough, preferSoftwareAudioDecoders = softwareAudioDecoders)
 }
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -48,8 +55,14 @@ class SettingsRepository(context: Context) {
     private val store = context.applicationContext.dataStore
 
     private object Keys {
+        val showClock = booleanPreferencesKey("showClock")
+        val dimPast = booleanPreferencesKey("dimPast")
+        val panelOpacity = intPreferencesKey("panelOpacity")
+        val fullScan = booleanPreferencesKey("fullScan")
+        val audioPassthrough = booleanPreferencesKey("audioPassthrough")
         val channelNameTokens = stringPreferencesKey("channel_name_tokens")
         val buffer = stringPreferencesKey("buffer")
+        val softwareAudioDecoders = booleanPreferencesKey("software_audio_decoders")
         val softwareDecoders = booleanPreferencesKey("software_decoders")
         val tunneling = booleanPreferencesKey("tunneling")
         val guideRefreshHours = intPreferencesKey("guide_refresh_hours")
@@ -68,8 +81,14 @@ class SettingsRepository(context: Context) {
     val settings: Flow<AppSettings> = store.data.map { p ->
         val d = AppSettings()
         AppSettings(
+            showClock = p[Keys.showClock] ?: d.showClock,
+            dimPast = p[Keys.dimPast] ?: d.dimPast,
+            panelOpacity = p[Keys.panelOpacity] ?: d.panelOpacity,
+            fullScan = p[Keys.fullScan] ?: d.fullScan,
+            audioPassthrough = p[Keys.audioPassthrough] ?: d.audioPassthrough,
             channelNameTokens = p[Keys.channelNameTokens].orEmpty(),
             buffer = p[Keys.buffer]?.let { runCatching { BufferSize.valueOf(it) }.getOrNull() } ?: d.buffer,
+            softwareAudioDecoders = p[Keys.softwareAudioDecoders] ?: d.softwareAudioDecoders,
             softwareDecoders = p[Keys.softwareDecoders] ?: d.softwareDecoders,
             tunneling = p[Keys.tunneling] ?: d.tunneling,
             guideRefreshHours = p[Keys.guideRefreshHours] ?: d.guideRefreshHours,
@@ -85,6 +104,43 @@ class SettingsRepository(context: Context) {
             previewFollowsFocus = p[Keys.previewFollowsFocus] ?: d.previewFollowsFocus,
         )
     }
+
+    suspend fun replace(s: AppSettings) = store.edit { p ->
+        p.clear()
+        p[Keys.softwareAudioDecoders] = s.softwareAudioDecoders
+        p[Keys.audioPassthrough] = s.audioPassthrough
+        p[Keys.fullScan] = s.fullScan
+        p[Keys.panelOpacity] = s.panelOpacity
+        p[Keys.dimPast] = s.dimPast
+        p[Keys.showClock] = s.showClock
+        p[Keys.channelNameTokens] = s.channelNameTokens
+        p[Keys.buffer] = s.buffer.name
+        p[Keys.softwareDecoders] = s.softwareDecoders
+        p[Keys.tunneling] = s.tunneling
+        p[Keys.guideRefreshHours] = s.guideRefreshHours
+        p[Keys.epgOffset] = s.epgOffsetMinutes
+        p[Keys.storeDescriptions] = s.storeDescriptions
+        p[Keys.displayMode] = s.displayMode.name
+        p[Keys.recordPadBefore] = s.recordPadBefore
+        p[Keys.recordPadAfter] = s.recordPadAfter
+        p[Keys.instantRecordMinutes] = s.instantRecordMinutes
+        p[Keys.reminderMinutes] = s.reminderMinutes
+        p[Keys.reminderPopupSeconds] = s.reminderPopupSeconds
+        p[Keys.backgroundPlayback] = s.backgroundPlayback
+        p[Keys.previewFollowsFocus] = s.previewFollowsFocus
+    }
+
+    suspend fun setShowClock(v: Boolean) = store.edit { it[Keys.showClock] = v }
+
+    suspend fun setDimPast(v: Boolean) = store.edit { it[Keys.dimPast] = v }
+
+    suspend fun setPanelOpacity(v: Int) = store.edit { it[Keys.panelOpacity] = v }
+
+    suspend fun setFullScan(v: Boolean) = store.edit { it[Keys.fullScan] = v }
+
+    suspend fun setAudioPassthrough(v: Boolean) = store.edit { it[Keys.audioPassthrough] = v }
+
+    suspend fun setSoftwareAudioDecoders(v: Boolean) = store.edit { it[Keys.softwareAudioDecoders] = v }
 
     suspend fun get(): AppSettings = settings.first()
 

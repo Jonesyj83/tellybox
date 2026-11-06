@@ -22,6 +22,8 @@ class ParentalRepository(context: Context) {
             delay(1000)
         }
     }.distinctUntilChanged()
+    fun exportBlocks(): Set<String> = prefs.getStringSet("blocks", emptySet())!!.toSet()
+    fun replaceBlocks(blocks: Set<String>) { prefs.edit().putStringSet("blocks", blocks).commit() }
     val configured get() = prefs.contains("hash")
     val unlocked get() = !configured || window.isOpen()
     val allScreens get() = prefs.getBoolean("all", false)

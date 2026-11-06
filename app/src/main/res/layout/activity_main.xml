@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version='1.0' encoding='utf-8'?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,300 +8,276 @@
     android:paddingTop="@dimen/overscan_v"
     android:paddingEnd="@dimen/overscan_h"
     android:paddingBottom="@dimen/overscan_v">
-
+  <LinearLayout
+      android:id="@+id/content"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="horizontal">
     <LinearLayout
-        android:id="@+id/content"
-        android:layout_width="match_parent"
+        android:id="@+id/menuRail"
+        android:layout_width="84dp"
         android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="top|center_horizontal">
+      <ImageButton android:id="@+id/guideButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_live" android:contentDescription="Live TV" android:focusable="true" />
+      <ImageButton android:id="@+id/vodButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_movies" android:contentDescription="Movies &amp; Series" android:focusable="true" />
+      <ImageButton android:id="@+id/recordingsButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_recordings" android:contentDescription="Recordings" android:focusable="true" />
+      <ImageButton android:id="@+id/remindersButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_reminders" android:contentDescription="Reminders" android:focusable="true" />
+      <ImageButton android:id="@+id/searchButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_search" android:contentDescription="Search" android:focusable="true" />
+      <ImageButton android:id="@+id/multiviewButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_multiview" android:contentDescription="Multiview" android:focusable="true" />
+      <ImageButton android:id="@+id/playlistsButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_playlists" android:contentDescription="Playlists" android:focusable="true" />
+      <ImageButton android:id="@+id/settingsButton" android:layout_width="64dp" android:layout_height="0dp" android:layout_weight="1" android:padding="8dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_settings" android:contentDescription="Settings" android:focusable="true" />
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/groups"
+        android:layout_width="260dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="12dp"
+        android:clipToPadding="false"
+        android:descendantFocusability="afterDescendants"
+        android:scrollbars="none" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:orientation="vertical">
-
-        <!-- Top band: preview window on the left, buttons and programme details beside it. -->
-        <LinearLayout
-            android:layout_width="match_parent"
+      <LinearLayout
+          android:id="@+id/topBlock"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:baselineAligned="false"
+          android:orientation="horizontal">
+        <com.openstream.tv.ui.channels.RatioFrameLayout
+            android:id="@+id/previewTile"
+            android:layout_width="400dp"
             android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
-
-            <com.openstream.tv.ui.channels.RatioFrameLayout
-                android:id="@+id/previewTile"
+            android:background="@android:color/black"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="@drawable/fg_preview">
+          <androidx.media3.ui.PlayerView
+              android:id="@+id/previewPlayer"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:focusable="false"
+              app:show_buffering="when_playing"
+              app:shutter_background_color="@android:color/black"
+              app:use_controller="false" />
+          <TextView
+              android:id="@+id/previewHint"
+              style="@style/Text.Caption"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:gravity="center"
+              android:padding="16dp"
+              android:text="@string/preview_hint" />
+          <LinearLayout
+              android:id="@+id/previewError"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:gravity="center_horizontal"
+              android:orientation="vertical"
+              android:padding="12dp"
+              android:visibility="gone">
+            <TextView
+                style="@style/Text.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/preview_error"
+                android:textColor="@color/error" />
+            <TextView
+                android:id="@+id/previewErrorDetail"
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="2" />
+          </LinearLayout>
+          <TextView
+              android:id="@+id/previewLabel"
+              style="@style/Text.Caption"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="bottom|start"
+              android:layout_margin="6dp"
+              android:background="@drawable/bg_watch_chip"
+              android:ellipsize="end"
+              android:paddingStart="8dp"
+              android:paddingTop="2dp"
+              android:paddingEnd="8dp"
+              android:paddingBottom="2dp"
+              android:singleLine="true"
+              android:textColor="@color/text_primary"
+              android:visibility="gone" />
+          <TextView
+              android:id="@+id/previewWatch"
+              style="@style/Text.Caption"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="top|end"
+              android:layout_margin="6dp"
+              android:background="@drawable/bg_watch_chip"
+              android:duplicateParentState="true"
+              android:fontFamily="sans-serif-medium"
+              android:paddingStart="10dp"
+              android:paddingTop="3dp"
+              android:paddingEnd="10dp"
+              android:paddingBottom="3dp"
+              android:text="@string/preview_action_play"
+              android:textColor="@color/text_primary"
+              android:visibility="gone" />
+        </com.openstream.tv.ui.channels.RatioFrameLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="8dp"
+              android:gravity="center_vertical"
+              android:orientation="horizontal">
+            <TextView
+                android:id="@+id/infoChannel"
+                style="@style/Text.Caption"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/black"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="@drawable/fg_preview"
-                android:nextFocusLeft="@id/previewTile">
-
-                <androidx.media3.ui.PlayerView
-                    android:id="@+id/previewPlayer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:focusable="false"
-                    app:show_buffering="when_playing"
-                    app:shutter_background_color="@android:color/black"
-                    app:use_controller="false" />
-
-                <TextView
-                    android:id="@+id/previewHint"
-                    style="@style/Text.Caption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:padding="16dp"
-                    android:text="@string/preview_hint" />
-
-                <LinearLayout
-                    android:id="@+id/previewError"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:padding="12dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        style="@style/Text.Body"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/preview_error"
-                        android:textColor="@color/error" />
-
-                    <TextView
-                        android:id="@+id/previewErrorDetail"
-                        style="@style/Text.Caption"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:maxLines="2" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/previewLabel"
-                    style="@style/Text.Caption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|start"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_watch_chip"
-                    android:ellipsize="end"
-                    android:paddingStart="8dp"
-                    android:paddingTop="2dp"
-                    android:paddingEnd="8dp"
-                    android:paddingBottom="2dp"
-                    android:singleLine="true"
-                    android:textColor="@color/text_primary"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/previewWatch"
-                    style="@style/Text.Caption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top|end"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_watch_chip"
-                    android:duplicateParentState="true"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingStart="10dp"
-                    android:paddingTop="3dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="3dp"
-                    android:text="@string/preview_action_play"
-                    android:textColor="@color/text_primary"
-                    android:visibility="gone" />
-            </com.openstream.tv.ui.channels.RatioFrameLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="20dp"
-                android:layout_weight="2"
-                android:orientation="vertical">
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:scrollbars="none">
-
-                    <LinearLayout
-                        android:id="@+id/headerButtons"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/watchButton"
-                            style="@style/Button.TV.Small"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_watch_button"
-                            android:ellipsize="end"
-                            android:fontFamily="sans-serif-medium"
-                            android:maxWidth="280dp"
-                            android:nextFocusLeft="@id/previewTile"
-                            android:singleLine="true"
-                            android:visibility="gone" />
-
-                        <Button android:id="@+id/vodButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="Movies / Series" />
-                        <Button android:id="@+id/guideButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="@string/action_guide" />
-                        <Button android:id="@+id/recordingsButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="@string/action_recordings" />
-                        <Button android:id="@+id/searchButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="@string/action_search" />
-                        <Button android:id="@+id/playlistsButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:text="@string/action_playlists" />
-                        <Button android:id="@+id/settingsButton" style="@style/Button.TV.Small" android:layout_width="wrap_content" android:layout_height="wrap_content" android:nextFocusRight="@id/settingsButton" android:text="@string/action_settings" />
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/infoChannel"
-                        style="@style/Text.Caption"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:singleLine="true" />
-
-                    <TextView
-                        android:id="@+id/status"
-                        style="@style/Text.Caption"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:singleLine="true" />
-
-                    <TextView
-                        android:id="@+id/clock"
-                        style="@style/Text.Caption"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:textColor="@color/text_primary" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/infoTitle"
-                    style="@style/Text.Body"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:fontFamily="sans-serif-medium"
-                    android:singleLine="true"
-                    android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/infoTime"
-                    style="@style/Text.Caption"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:singleLine="true" />
-
-                <TextView
-                    android:id="@+id/infoDescription"
-                    style="@style/Text.Caption"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:ellipsize="end"
-                    android:maxLines="2" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="12dp"
-            android:layout_weight="1"
-            android:orientation="horizontal">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/groups"
-                android:layout_width="200dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="12dp"
-                android:clipToPadding="false"
-                android:descendantFocusability="afterDescendants"
-                android:scrollbars="none" />
-
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <com.openstream.tv.ui.epg.GuideGridView
-                    android:id="@+id/grid"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <TextView
-                    android:id="@+id/channelsEmpty"
-                    style="@style/Text.Caption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:maxWidth="420dp"
-                    android:text="@string/empty_group"
-                    android:visibility="gone" />
-            </FrameLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/emptyState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <TextView
-            style="@style/Text.Title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/empty_title" />
-
-        <TextView
-            style="@style/Text.Body"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:maxWidth="520dp"
-            android:text="@string/empty_body"
-            android:textColor="@color/text_secondary" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/emptyAddButton"
-                style="@style/Button.TV"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/action_add_playlist" />
-
-            <Button
-                android:id="@+id/emptySettingsButton"
-                style="@style/Button.TV"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textSize="18sp"
+                android:fontFamily="sans-serif-medium" />
+            <TextView
+                android:id="@+id/status"
+                style="@style/Text.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="@string/settings_title" />
+                android:singleLine="true" />
+            <TextView
+                android:id="@+id/clock"
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:textColor="@color/text_primary" />
+          </LinearLayout>
+          <TextView
+              android:id="@+id/infoTitle"
+              style="@style/Text.Body"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:ellipsize="end"
+              android:fontFamily="sans-serif-medium"
+              android:singleLine="true"
+              android:textSize="20sp" />
+          <TextView
+              android:id="@+id/infoTime"
+              style="@style/Text.Caption"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:ellipsize="end"
+              android:singleLine="true"
+              android:textSize="14sp" />
+          <ProgressBar
+              android:id="@+id/infoProgress"
+              style="?android:attr/progressBarStyleHorizontal"
+              android:layout_width="match_parent"
+              android:layout_height="3dp"
+              android:max="1000"
+              android:progressTint="@color/accent"
+              android:layout_marginTop="4dp"
+              android:layout_marginBottom="4dp" />
+          <TextView
+              android:id="@+id/infoDescription"
+              style="@style/Text.Caption"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="2dp"
+              android:ellipsize="end"
+              android:maxLines="3"
+              android:textSize="14sp" />
+          <Button
+              android:id="@+id/watchButton"
+              style="@style/Button.TV.Small"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginEnd="0dp"
+              android:background="@drawable/bg_watch_button"
+              android:ellipsize="end"
+              android:fontFamily="sans-serif-medium"
+              android:maxWidth="400dp"
+              android:singleLine="true"
+              android:visibility="gone" />
         </LinearLayout>
+      </LinearLayout>
+      <FrameLayout
+          android:layout_width="match_parent"
+          android:layout_height="0dp"
+          android:layout_weight="1"
+          android:layout_marginTop="12dp">
+        <com.openstream.tv.ui.epg.GuideGridView
+            android:id="@+id/grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <TextView
+            android:id="@+id/channelsEmpty"
+            style="@style/Text.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:maxWidth="420dp"
+            android:text="@string/empty_group"
+            android:visibility="gone" />
+      </FrameLayout>
     </LinearLayout>
+  </LinearLayout>
+  <LinearLayout
+      android:id="@+id/emptyState"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:gravity="center_horizontal"
+      android:orientation="vertical"
+      android:visibility="gone">
+    <TextView
+        style="@style/Text.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/empty_title" />
+    <TextView
+        style="@style/Text.Body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:maxWidth="520dp"
+        android:text="@string/empty_body"
+        android:textColor="@color/text_secondary" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal">
+      <Button
+          android:id="@+id/emptyAddButton"
+          style="@style/Button.TV"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/action_add_playlist" />
+      <Button
+          android:id="@+id/emptySettingsButton"
+          style="@style/Button.TV"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="12dp"
+          android:text="@string/settings_title" />
+    </LinearLayout>
+  </LinearLayout>
+  <TextView android:id="@+id/railLabel" android:layout_width="140dp" android:layout_height="36dp" android:gravity="center" android:textSize="12sp" android:textColor="@color/accent" android:background="@drawable/bg_watch_chip" android:visibility="gone" android:importantForAccessibility="no" />
 </FrameLayout>

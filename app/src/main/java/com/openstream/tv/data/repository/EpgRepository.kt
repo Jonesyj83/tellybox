@@ -12,6 +12,7 @@ import com.openstream.tv.data.parser.xmltv.XmltvProgramme
 import com.openstream.tv.data.parser.xmltv.XmltvStats
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import com.openstream.tv.data.settings.SettingsRepository
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -24,10 +25,20 @@ class EpgRepository(
 ) {
     fun observeSources(): Flow<List<EpgSourceEntity>> = db.epg().observeSources()
 
-    suspend fun addSource(url: String, name: String, playlistId: Long?): Long =
-        db.epg().insertSource(EpgSourceEntity(playlistId = playlistId, name = name, url = url.trim()))
+    suspend fun addSource(url: String, name: String, playlistId: Long?): Long {
+        val existing = db.epg().observeSources().first().find { it.url == url.trim() && it.playlistId == playlistId }
+        if (existing != null) {
+            db.epg().setSourceEnabled(existing.id, true)
+            return existing.id
+        }
+        return db.epg().insertSource(EpgSourceEntity(playlistId = playlistId, name = name, url = url.trim()))
+    }
 
-    suspend fun deleteSource(id: Long) = db.epg().deleteSource(id)
+    suspend fun deleteSource(id: Long) {
+        db.epg().setSourceEnabled(id, false)
+        db.epg().deleteProgramsForSource(id)
+        db.epg().deleteChannelsForSource(id)
+    }
 
     suspend fun refreshAll(): List<Pair<EpgSourceEntity, Result<XmltvStats>>> {
         db.epg().deleteProgramsEndingBefore(System.currentTimeMillis() - KEEP_PAST)
@@ -67,7 +78,7 @@ class EpgRepository(
                 val listener = object : XmltvListener {
                     override fun onChannel(channel: XmltvChannel) {
                         val id = channel.id.lowercase()
-                        if (wanted.isNotEmpty() && id !in wanted) return
+                        if (!prefs.fullScan && wanted.isNotEmpty() && id !in wanted) return
                         channels += EpgChannelEntity(source.id, id, channel.displayName, channel.iconUrl)
                         if (channels.size >= BATCH) flushChannels(channels)
                     }
@@ -75,7 +86,7 @@ class EpgRepository(
                     override fun onProgramme(programme: XmltvProgramme) {
                         val id = programme.channelId.lowercase()
                         if (programme.stop + offset < cutoff) return
-                        if (wanted.isNotEmpty() && id !in wanted) return
+                        if (!prefs.fullScan && wanted.isNotEmpty() && id !in wanted) return
                         programmes += EpgProgramEntity(
                             sourceId = source.id,
                             channelXmltvId = id,

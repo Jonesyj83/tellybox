@@ -56,6 +56,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.util.Date
 
@@ -95,6 +96,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         override fun run() {
             binding.clock.text = DateFormat.getTimeFormat(this@MainActivity).format(Date())
             binding.grid.invalidate()
+            updateNowPlaying()
             handler.postDelayed(this, 30_000)
         }
     }
@@ -112,6 +114,12 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        lifecycleScope.launch { appContainer.settings.settings.collect { settings ->
+            binding.clock.visibility = if (settings.showClock) View.VISIBLE else View.GONE
+            binding.grid.dimPast = settings.dimPast
+            binding.grid.panelOpacity = settings.panelOpacity
+        } }
+
 
         binding.groups.layoutManager = LinearLayoutManager(this)
         binding.groups.adapter = groupAdapter
@@ -120,10 +128,17 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         guide = GuideSupport(this, binding.grid)
         with(binding.grid) {
             callback = this@MainActivity
-            setMetrics(rowHeightDp = 54f, channelWidthDp = 190f, pxPerMinuteDp = 4.5f)
+            setMetrics(rowHeightDp = 44f, channelWidthDp = 200f, pxPerMinuteDp = 6f)
             exitLeftAtNow = true
-            onExitLeft = { focusActiveGroup() }
+            onExitLeft = { moveFocus(HomeFocus.leftFrom(HomeArea.GUIDE)); true }
             onExitUp = { moveFocus(HomeFocus.upFromGridTop(previewShowing)) }
+        }
+
+        binding.topBlock.addOnLayoutChangeListener { _, left, _, right, _, _, _, _, _ ->
+            val width = minOf((400 * resources.displayMetrics.density).toInt(), ((right - left) * 0.42f).toInt())
+            if (binding.previewTile.layoutParams.width != width) {
+                binding.previewTile.layoutParams = binding.previewTile.layoutParams.apply { this.width = width }
+            }
         }
 
         // Subtitles are unreadable at this size and cover the channel label.
@@ -138,11 +153,37 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             true
         }
 
+        binding.remindersButton.setOnClickListener { startActivity(Intent(this, com.openstream.tv.ui.reminders.RemindersActivity::class.java)) }
+        binding.multiviewButton.setOnClickListener { lifecycleScope.launch {
+            val channels = appContainer.channels.observeAll().first()
+            if (channels.isEmpty()) Toast.makeText(this@MainActivity, "Add an enabled live playlist first", Toast.LENGTH_LONG).show()
+            else AlertDialog.Builder(this@MainActivity).setTitle("Choose first multiview channel").setItems(channels.map { it.name }.toTypedArray()) { _, index ->
+                startActivity(com.openstream.tv.ui.multiview.MultiviewActivity.intent(this@MainActivity, channels[index].id, channels.map { it.id }.toLongArray()))
+            }.show()
+        } }
+        val railButtons = listOf(binding.guideButton, binding.vodButton, binding.recordingsButton, binding.remindersButton,
+            binding.searchButton, binding.multiviewButton, binding.playlistsButton, binding.settingsButton)
+        railButtons.forEach { button -> button.setOnFocusChangeListener { _, focused ->
+            if (focused) {
+                binding.railLabel.text = button.contentDescription
+                binding.railLabel.visibility = View.VISIBLE
+                binding.railLabel.x = binding.content.x + binding.menuRail.x + binding.menuRail.width
+                binding.railLabel.y = binding.content.y + binding.menuRail.y + button.y + (button.height - binding.railLabel.layoutParams.height) / 2f
+            } else binding.menuRail.post {
+                if (!binding.menuRail.hasFocus()) binding.railLabel.visibility = View.GONE
+            }
+        } }
+        lifecycleScope.launch { appContainer.playlists.observePlaylists().collect { playlists ->
+            binding.playlistsButton.foreground = if (playlists.any { it.lastError != null }) getDrawable(R.drawable.rail_badge) else null
+        } }
+        lifecycleScope.launch { appContainer.database.recordings().observeAll().collect { recordings ->
+            binding.recordingsButton.foreground = if (recordings.any { it.status == com.openstream.tv.data.db.RecordingStatus.RECORDING }) getDrawable(R.drawable.rail_badge) else null
+        } }
         binding.playlistsButton.setOnClickListener { startActivity(Intent(this, PlaylistsActivity::class.java)) }
         binding.emptyAddButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
         binding.searchButton.setOnClickListener { showSearch() }
         binding.vodButton.setOnClickListener { startActivity(Intent(this, com.openstream.tv.ui.vod.VodActivity::class.java)) }
-        binding.guideButton.setOnClickListener { openGuide() }
+        binding.guideButton.setOnClickListener { moveFocus(FocusTarget.GRID) }
         binding.recordingsButton.setOnClickListener {
             startActivity(Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))
         }
@@ -191,7 +232,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                         if (list == null) return@collect
                         val empty = list.isEmpty()
                         binding.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
-                        binding.content.visibility = if (empty) View.GONE else View.VISIBLE
+                        binding.content.visibility = View.VISIBLE
                         if (empty) {
                             stopPreview()
                             binding.emptyAddButton.requestFocus()
@@ -221,9 +262,6 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                         if (last != null && last != v) guide.invalidate()
                         last = v
                     }
-                }
-                launch {
-                    appContainer.settings.settings.collect { preview.followFocus = it.previewFollowsFocus }
                 }
                 launch {
                     // A channel that becomes blocked (unlock window ran out) stops previewing.
@@ -270,9 +308,30 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     override fun onVisibleRows(first: Int, last: Int) = guide.onVisibleRows(first, last)
 
     override fun onFocus(channel: GuideChannel, block: GuideBlock) {
-        showInfo(channel, block)
-        // Only real browsing counts; the grid also reports focus when its rows are replaced.
-        if (binding.grid.hasFocus()) act(preview.focus(channel.id))
+        if (previewChannel == null) showInfo(channel, block)
+
+    }
+
+    private fun updateNowPlaying() {
+        val channel = previewChannel ?: return
+        binding.infoChannel.text = channel.name
+        val now = System.currentTimeMillis()
+        lifecycleScope.launch {
+            val programs = channel.tvgId?.let { id ->
+                appContainer.epg.programsFor(listOf(id), now, now + 1)[id.lowercase()]
+            }.orEmpty()
+            if (previewChannel?.id != channel.id) return@launch
+            val program = programs.firstOrNull { now >= it.start && now < it.stop }
+            binding.infoTitle.text = program?.title.orEmpty()
+            binding.infoDescription.text = program?.description.orEmpty()
+            binding.infoTime.text = program?.let {
+                val format = DateFormat.getTimeFormat(this@MainActivity)
+                "${format.format(Date(it.start))} – ${format.format(Date(it.stop))}"
+            }.orEmpty()
+            binding.infoProgress.progress = program?.let {
+                (((now - it.start) * 1000 / (it.stop - it.start).coerceAtLeast(1)).toInt()).coerceIn(0, 1000)
+            } ?: 0
+        }
     }
 
     private fun showInfo(channel: GuideChannel, block: GuideBlock) {
@@ -405,6 +464,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                 return@launch
             }
             previewChannel = channel
+            updateNowPlaying()
             val player = attachPlayer()
             val playback = appContainer.playback
             if (playback.key == PlayerActivity.channelKey(channelId) &&
@@ -476,6 +536,11 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     /** The full-screen player (or picture-in-picture) took over the stream. */
     override fun onPlaybackTaken() {
         detachPlayer()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra("focus_rail", false)) binding.guideButton.requestFocus()
     }
 
     override fun onStart() {
@@ -551,6 +616,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         binding.groups.hasFocus() -> HomeArea.GROUPS
         binding.grid.hasFocus() -> HomeArea.GUIDE
         binding.previewTile.hasFocus() -> HomeArea.PREVIEW
+        binding.menuRail.hasFocus() -> HomeArea.RAIL
         else -> HomeArea.HEADER
     }
 
@@ -569,15 +635,9 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             FocusTarget.GROUPS -> focusActiveGroup()
             FocusTarget.PREVIEW -> binding.previewTile.requestFocus()
             FocusTarget.WATCH -> binding.watchButton.requestFocus()
-            FocusTarget.HEADER -> binding.vodButton.requestFocus()
+            FocusTarget.HEADER, FocusTarget.RAIL -> binding.guideButton.requestFocus()
         }
         if (!moved && target == FocusTarget.GRID) focusActiveGroup()
-    }
-
-    private fun groupsAtTop(): Boolean {
-        val focused = currentFocus ?: return false
-        val holder = binding.groups.findContainingViewHolder(focused) ?: return false
-        return holder.bindingAdapterPosition == 0
     }
 
     /** Up/Down between areas, by fixed rules rather than Android's focus search. Null = not ours. */
@@ -586,9 +646,8 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         return when {
             binding.previewTile.hasFocus() ->
                 if (up) HomeFocus.upFromPreview(previewShowing) else HomeFocus.downFromPreview()
-            binding.headerButtons.hasFocus() ->
+            binding.watchButton.hasFocus() ->
                 if (up) null else HomeFocus.downFromHeader(previewShowing)
-            binding.groups.hasFocus() && up && groupsAtTop() -> HomeFocus.upFromGroupsTop(previewShowing)
             else -> null
         }
     }
@@ -599,21 +658,43 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         if (binding.content.visibility == View.VISIBLE) {
             val down = event.action == KeyEvent.ACTION_DOWN
             when (event.keyCode) {
-                // Left of the groups column is the preview window.
-                KeyEvent.KEYCODE_DPAD_LEFT -> if (down && binding.groups.hasFocus()) {
-                    binding.previewTile.requestFocus()
-                    return true
+                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> if (down) {
+                    if (binding.emptyState.visibility == View.VISIBLE) {
+                        if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) binding.guideButton.requestFocus()
+                        else if (binding.menuRail.hasFocus()) binding.emptyAddButton.requestFocus()
+                        return true
+                    }
+                    val area = focusArea()
+                    val left = event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                    if (area == HomeArea.RAIL || area == HomeArea.GROUPS || area == HomeArea.PREVIEW || area == HomeArea.HEADER) {
+                        if (event.repeatCount == 0) moveFocus(if (left) {
+                            if (binding.watchButton.hasFocus()) FocusTarget.PREVIEW else HomeFocus.leftFrom(area)
+                        } else HomeFocus.rightFrom(area))
+                        return true
+                    }
                 }
                 KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> if (down) {
-                    val inHeader = binding.headerButtons.hasFocus()
+                    val up = event.keyCode == KeyEvent.KEYCODE_DPAD_UP
+                    if (binding.menuRail.hasFocus()) {
+                        val rail = binding.menuRail
+                        val index = (0 until rail.childCount).firstOrNull { rail.getChildAt(it).hasFocus() } ?: 0
+                        rail.getChildAt(HomeFocus.verticalIndex(index, rail.childCount, up)).requestFocus()
+                        return true
+                    }
+                    if (binding.groups.hasFocus()) {
+                        val holder = currentFocus?.let { binding.groups.findContainingViewHolder(it) }
+                        val index = holder?.bindingAdapterPosition ?: 0
+                        val next = HomeFocus.verticalIndex(index, groupAdapter.itemCount, up)
+                        binding.groups.scrollToPosition(next)
+                        binding.groups.post { binding.groups.findViewHolderForAdapterPosition(next)?.itemView?.requestFocus() }
+                        return true
+                    }
                     val target = routeVertical(event.keyCode)
                     if (target != null) {
-                        // A held key moves one area, not straight through the next ones.
                         if (event.repeatCount == 0) moveFocus(target)
                         return true
                     }
-                    // Nothing above the buttons; don't let focus search wander off.
-                    if (inHeader) return true
+                    if (binding.watchButton.hasFocus()) return true
                 }
                 // Play from anywhere on the screen: full screen on what's previewing.
                 KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> {

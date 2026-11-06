@@ -87,10 +87,10 @@ class GuideGridView @JvmOverloads constructor(
         }
 
     private val dp = resources.displayMetrics.density
-    private var rowHeight = 60 * dp
-    private val headerHeight = 36 * dp
-    private var channelWidth = 240 * dp
-    private var pxPerMinute = 7 * dp
+    private var rowHeight = 44 * dp
+    private val headerHeight = 32 * dp
+    private var channelWidth = 200 * dp
+    private var pxPerMinute = 6 * dp
 
     /** Tighter layout for when the grid shares the screen with other things. */
     fun setMetrics(rowHeightDp: Float, channelWidthDp: Float, pxPerMinuteDp: Float) {
@@ -126,11 +126,22 @@ class GuideGridView @JvmOverloads constructor(
     }
     private val nowLine = Paint().apply { color = color(R.color.accent); strokeWidth = 2 * dp }
     private val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = color(R.color.text_primary); textSize = 17 * resources.displayMetrics.scaledDensity
+        color = color(R.color.text_primary); textSize = 13 * resources.displayMetrics.scaledDensity
     }
+    private val channelPaint = TextPaint(titlePaint).apply { textSize = 14 * resources.displayMetrics.scaledDensity }
+    var panelOpacity = 100
+        set(value) {
+            field = value.coerceIn(0, 100)
+            listOf(bgPaint, pastPaint, nowPaint, focusPaint).forEach { it.alpha = field * 255 / 100 }
+            invalidate()
+        }
+
+    var dimPast = true
+        set(value) { field = value; invalidate() }
+
     private val dimTitlePaint = TextPaint(titlePaint).apply { color = color(R.color.text_secondary) }
     private val captionPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = color(R.color.text_secondary); textSize = 13 * resources.displayMetrics.scaledDensity
+        color = color(R.color.text_secondary); textSize = 12 * resources.displayMetrics.scaledDensity
     }
     private val numberPaint = TextPaint(captionPaint).apply { typeface = Typeface.DEFAULT_BOLD }
     private val favoritePaint = TextPaint(captionPaint).apply { color = color(R.color.accent) }
@@ -350,7 +361,7 @@ class GuideGridView @JvmOverloads constructor(
                 canvas.drawText("★", nameX, textY, favoritePaint)
                 nameX += favoritePaint.measureText("★ ")
             }
-            canvas.drawText(ellipsize(ch.name, titlePaint, channelWidth - nameX - pad), nameX, textY, titlePaint)
+            canvas.drawText(ellipsize(ch.name, channelPaint, channelWidth - nameX - pad), nameX, textY, channelPaint)
 
             for (block in blocksFor(row, viewStart, viewEnd)) {
                 val left = channelWidth + (max(block.start, viewStart) - viewStart) / 60_000f * pxPerMinute
@@ -378,7 +389,7 @@ class GuideGridView @JvmOverloads constructor(
                     channels[row].catchupDays, block.start, block.stop, now)
                 val title = (if (canReplay) "↶ " else "") + (block.program?.title ?: context.getString(R.string.guide_no_info))
                 if (avail > 12 * dp) {
-                    val tp = if (block.stop <= now || block.program == null) dimTitlePaint else titlePaint
+                    val tp = if ((dimPast && block.stop <= now) || block.program == null) dimTitlePaint else titlePaint
                     canvas.drawText(ellipsize(title, tp, avail), left + pad, top + rowHeight * 0.45f, tp)
                     val time = "${timeFormat.format(Date(block.start))} – ${timeFormat.format(Date(block.stop))}"
                     canvas.drawText(ellipsize(time, captionPaint, avail), left + pad, top + rowHeight * 0.78f, captionPaint)

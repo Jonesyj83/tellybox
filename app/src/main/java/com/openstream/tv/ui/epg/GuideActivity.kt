@@ -42,6 +42,19 @@ class GuideActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGr
         super.onCreate(savedInstanceState)
         binding = ActivityGuideBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        lifecycleScope.launch { appContainer.settings.settings.collect { settings ->
+            binding.clock.visibility = if (settings.showClock) View.VISIBLE else View.GONE
+            binding.grid.dimPast = settings.dimPast
+            binding.grid.panelOpacity = settings.panelOpacity
+        } }
+
+        binding.grid.exitLeftAtNow = true
+        binding.grid.onExitLeft = {
+            startActivity(Intent(this, com.openstream.tv.ui.MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("focus_rail", true))
+            finish()
+            true
+        }
         binding.grid.callback = this
         guide = GuideSupport(this, binding.grid)
 
