@@ -35,6 +35,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp" />
 
+            <Button android:id="@+id/vodButton" style="@style/Button.TV" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Movies / Series" android:layout_marginEnd="12dp" />
+
             <Button
                 android:id="@+id/guideButton"
                 style="@style/Button.TV"

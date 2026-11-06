@@ -9,6 +9,15 @@ import android.os.SystemClock
 import android.text.format.DateFormat
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.media3.common.C
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.ui.AspectRatioFrameLayout
+import com.openstream.tv.data.settings.DisplayMode
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -54,6 +63,7 @@ class PlayerActivity : AppCompatActivity() {
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.channelOverlay.layoutManager = LinearLayoutManager(this)
         archivePosition = savedInstanceState?.getLong("archive_position") ?: 0L
         val requested = intent.getLongExtra(EXTRA_CHANNEL_ID, -1)
         channelIds = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST) ?: longArrayOf(requested)
@@ -69,7 +79,9 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        val p = PlayerFactory.create(this, appContainer.http, runBlocking { appContainer.settings.get() }.playerConfig)
+        val settings = runBlocking { appContainer.settings.get() }
+        applyDisplayMode(settings.displayMode)
+        val p = PlayerFactory.create(this, appContainer.http, settings.playerConfig)
         p.exo.addListener(object : Listener {
             override fun onPlayerError(error: PlaybackException) = handleError(error)
             override fun onPlaybackStateChanged(state: Int) {
@@ -103,7 +115,12 @@ class PlayerActivity : AppCompatActivity() {
         loadJob?.cancel()
         loadJob = lifecycleScope.launch {
             val container = appContainer
-            val channel = container.channels.get(channelIds[i]) ?: return@launch
+            val stored = container.channels.get(channelIds[i]) ?: return@launch
+            val channel = try {
+                val episode = intent.getLongExtra("episode_id", -1)
+                if (episode >= 0) container.vod.episode(stored, episode) else stored
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { showError("Unable to open episode"); return@launch }
             current = channel
             triedHls = false
             showBanner(channel, null)
@@ -117,7 +134,10 @@ class PlayerActivity : AppCompatActivity() {
                 else container.channels.resolveStreamUrl(channel)
                 lastUrl = url
                 player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
-                if (catchup && archivePosition > 0) player?.exo?.seekTo(archivePosition)
+                val resume = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
+                    container.database.history().get(channel.playlistId, channel.channelKey)?.positionMs ?: 0L else 0L
+                if (resume > 0) player?.exo?.seekTo(resume)
+                intent.removeExtra("from_beginning")
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -135,8 +155,10 @@ class PlayerActivity : AppCompatActivity() {
         // Extensionless URLs are often HLS underneath; give that one more go before giving up.
         if (!triedHls && url != null && ch != null && Player.guessMimeType(url) == null) {
             triedHls = true
+            val position = player?.exo?.currentPosition ?: 0L
             lifecycleScope.launch {
                 player?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer, forceHls = true)
+                if ((ch.kind != ContentKind.LIVE || catchup) && position > 0) player?.exo?.seekTo(position)
             }
             return
         }
@@ -182,15 +204,23 @@ class PlayerActivity : AppCompatActivity() {
         val watched = SystemClock.elapsedRealtime() - watchStartedAt
         watchStartedAt = 0L
         // Ignore quick zaps; they're not really "watched".
-        if (watched < 5_000) return
-        val position = if (ch.kind == ContentKind.LIVE) 0L else player?.exo?.currentPosition ?: 0L
+        if (watched < 5_000 && ch.kind == ContentKind.LIVE) return
+        val position = if (player?.exo?.playbackState == androidx.media3.common.Player.STATE_ENDED || ch.kind == ContentKind.LIVE) 0L else player?.exo?.currentPosition ?: 0L
         appContainer.appScope.launch { appContainer.channels.recordWatched(ch, watched, position) }
     }
 
     private fun zap(delta: Int) {
-        if (catchup || channelIds.size < 2) return
+        if (catchup || current?.kind != ContentKind.LIVE || channelIds.size < 2) return
         val next = Math.floorMod(index + delta, channelIds.size)
         loadChannel(next)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
+            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showOptions()
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -198,6 +228,14 @@ class PlayerActivity : AppCompatActivity() {
             (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
             loadChannel(index)
             return true
+        }
+        if (binding.channelOverlay.visibility == View.VISIBLE) {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                binding.channelOverlay.visibility = View.GONE
+                binding.playerView.requestFocus()
+                return true
+            }
+            return super.onKeyDown(keyCode, event)
         }
         val vod = catchup || (current?.kind?.let { it != ContentKind.LIVE } ?: false)
         when (keyCode) {
@@ -208,18 +246,100 @@ class PlayerActivity : AppCompatActivity() {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> { zap(-1); return true }
                 KeyEvent.KEYCODE_DPAD_DOWN -> { zap(1); return true }
-                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_INFO -> {
-                    if (binding.errorBox.visibility == View.VISIBLE) loadChannel(index)
-                    else current?.let { ch ->
-                        lifecycleScope.launch {
-                            showBanner(ch, appContainer.epg.currentProgram(ch.tvgId)?.title)
-                        }
-                    }
-                    return true
-                }
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { showChannels(); return true }
+                KeyEvent.KEYCODE_INFO -> { current?.let { showBanner(it, null) }; return true }
             }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private fun showChannels() {
+        lifecycleScope.launch {
+            val channels = appContainer.channels.getByIds(channelIds).filter { it.kind == ContentKind.LIVE }
+            binding.channelOverlay.adapter = object : RecyclerView.Adapter<ChannelHolder>() {
+                override fun getItemCount() = channels.size
+                override fun onCreateViewHolder(parent: ViewGroup, type: Int) = ChannelHolder(TextView(parent.context).apply {
+                    isFocusable = true; isClickable = true; textSize = 20f
+                    setPadding(20, 18, 20, 18); setBackgroundResource(R.drawable.bg_focusable)
+                    layoutParams = RecyclerView.LayoutParams(-1, -2)
+                })
+                override fun onBindViewHolder(holder: ChannelHolder, position: Int) {
+                    val channel = channels[position]
+                    holder.label.text = "${channel.number ?: ""}  ${channel.name}"
+                    holder.label.isActivated = channel.id == current?.id
+                    holder.label.setOnClickListener {
+                        binding.channelOverlay.visibility = View.GONE
+                        binding.playerView.requestFocus()
+                        loadChannel(channelIds.indexOf(channel.id))
+                    }
+                }
+            }
+            binding.banner.visibility = View.GONE
+            binding.channelOverlay.visibility = View.VISIBLE
+            val selected = channels.indexOfFirst { it.id == current?.id }.coerceAtLeast(0)
+            binding.channelOverlay.scrollToPosition(selected)
+            binding.channelOverlay.post {
+                binding.channelOverlay.findViewHolderForAdapterPosition(selected)?.itemView?.requestFocus()
+                    ?: binding.channelOverlay.requestFocus()
+            }
+        }
+    }
+
+    private class ChannelHolder(val label: TextView) : RecyclerView.ViewHolder(label)
+
+    private fun showOptions() {
+        AlertDialog.Builder(this).setTitle("Playback options")
+            .setItems(arrayOf("Audio tracks", "Subtitles", "Display mode")) { _, which ->
+                when (which) { 0 -> pickTrack(C.TRACK_TYPE_AUDIO); 1 -> pickTrack(C.TRACK_TYPE_TEXT); 2 -> pickDisplayMode() }
+            }.show()
+    }
+
+    private fun pickTrack(type: Int) {
+        val exo = player?.exo ?: return
+        val tracks = exo.currentTracks.groups.filter { it.type == type }
+        val choices = tracks.flatMap { group -> (0 until group.length).filter { group.isTrackSupported(it) }.map { group to it } }
+        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) "Off" else "Automatic") + choices.mapIndexed { index, (group, track) ->
+            val format = group.getTrackFormat(track)
+            listOfNotNull(format.label, format.language, format.channelCount.takeIf { it > 0 }?.let { "$it channels" })
+                .joinToString(" · ").ifBlank { "Track ${index + 1}" }
+        }
+        val disabled = exo.trackSelectionParameters.disabledTrackTypes.contains(type)
+        val selected = if (disabled) 0 else choices.indexOfFirst { (group, track) -> group.isTrackSelected(track) }.let { if (it < 0) 0 else it + 1 }
+        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) "Subtitles" else "Audio tracks")
+            .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
+                val builder = exo.trackSelectionParameters.buildUpon().clearOverridesOfType(type)
+                    .setTrackTypeDisabled(type, type == C.TRACK_TYPE_TEXT && which == 0)
+                if (which > 0) {
+                    val (group, track) = choices[which - 1]
+                    builder.setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, track))
+                }
+                exo.trackSelectionParameters = builder.build()
+                dialog.dismiss()
+            }.show()
+    }
+
+    private fun pickDisplayMode() {
+        lifecycleScope.launch {
+            val selected = appContainer.settings.get().displayMode.ordinal
+            AlertDialog.Builder(this@PlayerActivity).setTitle("Display mode")
+                .setSingleChoiceItems(arrayOf("Normal", "Full", "Zoom", "Reduced"), selected) { dialog, which ->
+                    val mode = DisplayMode.entries[which]
+                    applyDisplayMode(mode)
+                    lifecycleScope.launch { appContainer.settings.setDisplayMode(mode) }
+                    dialog.dismiss()
+                }.show()
+        }
+    }
+
+    private fun applyDisplayMode(mode: DisplayMode) {
+        binding.playerView.resizeMode = when (mode) {
+            DisplayMode.FILL -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+            DisplayMode.ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+        }
+        val scale = if (mode == DisplayMode.REDUCED) 0.8f else 1f
+        binding.playerView.scaleX = scale
+        binding.playerView.scaleY = scale
     }
 
     override fun onDestroy() {

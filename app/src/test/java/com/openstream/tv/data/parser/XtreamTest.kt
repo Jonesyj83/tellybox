@@ -102,6 +102,29 @@ class XtreamTest {
     }
 
     @Test
+    fun movieDetailsTolerateMissingAndMixedMetadata() {
+        val details = XtreamMapper.vodInfo(json("""{"info":{"plot":"A journey", "releasedate":"2024-05-01", "duration_secs":"5400", "actors":"A, B", "director":"C"}}"""))
+        assertEquals("A journey", details.plot)
+        assertEquals("2024-05-01", details.year)
+        assertEquals("90 min", details.duration)
+        assertEquals("A, B", details.cast)
+        assertEquals("C", details.director)
+        assertNull(XtreamMapper.vodInfo(json("[]")).plot)
+        assertNull(XtreamMapper.vodInfo(json("{}")).duration)
+    }
+
+    @Test
+    fun episodeDetailsKeepResumeIdentityAndMetadata() {
+        val details = XtreamMapper.seriesInfo(json("""{"episodes":{"3":[{"id":"301", "episode_num":"1", "info":{"plot":"Opening", "duration_secs":"1234", "movie_image":"http://example.com/poster.jpg"}}]}}"""))
+        val episode = details.episodes.single()
+        assertEquals(301L, episode.id)
+        assertEquals(3, episode.season)
+        assertEquals(1234, episode.durationSecs)
+        assertEquals("Opening", episode.plot)
+        assertEquals("http://example.com/poster.jpg", episode.image)
+    }
+
+    @Test
     fun epgListingsDecodeBase64() {
         val listings = XtreamMapper.epgListings(json("""
             {"epg_listings":[{"id":"1","epg_id":"5","title":"TmV3cyBhdCBTaXg=","description":"SGVhZGxpbmVz",

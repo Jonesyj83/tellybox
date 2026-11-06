@@ -34,6 +34,7 @@ class AppContainer(app: Application) {
     private val stalkerClients = StalkerClientCache(http)
 
     val playlists = PlaylistRepository(app, database, http, stalkerClients)
+    val vod = com.openstream.tv.data.repository.VodRepository(database, http)
     val channels = ChannelRepository(database, stalkerClients)
     val epg = EpgRepository(app, database, http, settings)
     val backgroundRefresh = BackgroundRefresh(playlists, epg, settings)

@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         binding.playlistsButton.setOnClickListener { startActivity(Intent(this, PlaylistsActivity::class.java)) }
         binding.emptyAddButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
         binding.searchButton.setOnClickListener { showSearch() }
+        binding.vodButton.setOnClickListener { startActivity(Intent(this, com.openstream.tv.ui.vod.VodActivity::class.java)) }
         binding.guideButton.setOnClickListener { openGuide() }
         binding.settingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
 
@@ -147,6 +148,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun play(row: ChannelRow, position: Int) {
+        if (row.channel.kind != com.openstream.tv.data.db.ContentKind.LIVE) {
+            startActivity(Intent(this, com.openstream.tv.ui.vod.VodDetailActivity::class.java).putExtra("channel_id", row.channel.id))
+            return
+        }
         val list = channelAdapter.currentList.map { it.channel.id }.toLongArray()
         startActivity(PlayerActivity.intent(this, row.channel.id, list, position))
     }

@@ -243,6 +243,9 @@ interface WatchHistoryDao {
     @Query("SELECT * FROM watch_history WHERE playlistId = :playlistId AND channelKey = :key")
     suspend fun get(playlistId: Long, key: String): WatchHistoryEntity?
 
+    @Query("SELECT * FROM watch_history WHERE playlistId = :playlistId AND channelKey = :key")
+    fun observe(playlistId: Long, key: String): Flow<WatchHistoryEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entry: WatchHistoryEntity)
 

@@ -40,6 +40,9 @@ class XtreamClient(
     suspend fun series(categoryId: String? = null) =
         XtreamMapper.series(call("get_series", categoryParam(categoryId)))
 
+    suspend fun vodInfo(streamId: Long) =
+        XtreamMapper.vodInfo(call("get_vod_info", mapOf("vod_id" to streamId.toString())))
+
     suspend fun seriesInfo(seriesId: Long) =
         XtreamMapper.seriesInfo(call("get_series_info", mapOf("series_id" to seriesId.toString())))
 

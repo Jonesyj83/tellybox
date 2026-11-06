@@ -14,6 +14,7 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import okhttp3.OkHttpClient
@@ -47,6 +48,13 @@ object PlayerFactory {
                 if (config.preferSoftwareDecoders) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
                 else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON,
             )
+
+        if (config.preferSoftwareDecoders) {
+            renderers.setMediaCodecSelector { mimeType, secure, tunneling ->
+                MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling)
+                    .sortedBy { if (it.softwareOnly) 0 else 1 }
+            }
+        }
 
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(

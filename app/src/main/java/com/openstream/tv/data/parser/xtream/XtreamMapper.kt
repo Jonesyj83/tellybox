@@ -88,6 +88,16 @@ object XtreamMapper {
         )
     }
 
+    fun vodInfo(json: JsonElement): VodDetails {
+        val info = (json as? JsonObject)?.obj("info") ?: return VodDetails()
+        return VodDetails(
+            plot = info.str("plot") ?: info.str("description"),
+            year = info.str("releasedate") ?: info.str("releaseDate") ?: info.str("year"),
+            duration = info.str("duration") ?: info.int("duration_secs")?.let { "${it / 60} min" },
+            cast = info.str("cast") ?: info.str("actors"), director = info.str("director"),
+        )
+    }
+
     fun seriesInfo(json: JsonElement): XtreamSeriesInfo {
         val root = json as? JsonObject ?: return XtreamSeriesInfo(null, null, null, emptyList())
         val info = root.obj("info")
@@ -113,7 +123,9 @@ object XtreamMapper {
                 )
             }
         }.sortedWith(compareBy({ it.season }, { it.episodeNum ?: Int.MAX_VALUE }))
-        return XtreamSeriesInfo(info?.str("name"), info?.str("plot"), info?.str("cover"), episodes)
+        return XtreamSeriesInfo(info?.str("name"), info?.str("plot"), info?.str("cover"), episodes,
+            cast = info?.str("cast"), director = info?.str("director"),
+            year = info?.str("releaseDate") ?: info?.str("release_date") ?: info?.str("year"))
     }
 
     /** Handles both `get_short_epg` and `get_simple_data_table`, which share a shape. */

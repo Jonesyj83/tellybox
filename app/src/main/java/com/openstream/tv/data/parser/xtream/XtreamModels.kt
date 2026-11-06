@@ -72,6 +72,9 @@ data class XtreamSeriesInfo(
     val plot: String?,
     val cover: String?,
     val episodes: List<XtreamEpisode>,
+    val cast: String? = null,
+    val director: String? = null,
+    val year: String? = null,
 )
 
 data class XtreamEpgListing(
@@ -86,3 +89,12 @@ data class XtreamEpgListing(
 )
 
 class XtreamAuthException(message: String) : Exception(message)
+
+data class VodDetails(
+    val plot: String? = null,
+    val year: String? = null,
+    val duration: String? = null,
+    val cast: String? = null,
+    val director: String? = null,
+    val episodes: List<XtreamEpisode> = emptyList(),
+)

@@ -55,6 +55,9 @@
             android:exported="false"
             android:screenOrientation="landscape" />
 
+        <activity android:name=".ui.vod.VodActivity" android:exported="false" android:screenOrientation="landscape" />
+        <activity android:name=".ui.vod.VodDetailActivity" android:exported="false" android:screenOrientation="landscape" />
+
         <activity
             android:name=".ui.player.PlayerActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize"
