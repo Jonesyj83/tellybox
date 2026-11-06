@@ -58,6 +58,10 @@ class PlayerActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val hideBanner = Runnable { binding.banner.visibility = View.GONE }
 
+    private var nameTokens = ""
+    private fun displayName(channel: com.openstream.tv.data.db.ChannelEntity) =
+        com.openstream.tv.data.settings.ChannelNames.display(channel.name, nameTokens)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPlayerBinding.inflate(layoutInflater)
@@ -80,6 +84,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         val settings = runBlocking { appContainer.settings.get() }
+        nameTokens = settings.channelNameTokens
         applyDisplayMode(settings.displayMode)
         val p = PlayerFactory.create(this, appContainer.http, settings.playerConfig)
         p.exo.addListener(object : Listener {
@@ -187,7 +192,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun showBanner(channel: ChannelEntity, program: String?) {
         binding.bannerNumber.text = channel.number?.toString().orEmpty()
-        binding.bannerName.text = channel.name
+        binding.bannerName.text = displayName(channel)
         binding.bannerProgram.text = program.orEmpty()
         binding.bannerProgram.visibility = if (program.isNullOrEmpty()) View.GONE else View.VISIBLE
         binding.bannerClock.text = DateFormat.getTimeFormat(this).format(Date())
@@ -265,7 +270,7 @@ class PlayerActivity : AppCompatActivity() {
                 })
                 override fun onBindViewHolder(holder: ChannelHolder, position: Int) {
                     val channel = channels[position]
-                    holder.label.text = "${channel.number ?: ""}  ${channel.name}"
+                    holder.label.text = "${channel.number ?: ""}  ${displayName(channel)}"
                     holder.label.isActivated = channel.id == current?.id
                     holder.label.setOnClickListener {
                         binding.channelOverlay.visibility = View.GONE

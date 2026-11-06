@@ -59,6 +59,9 @@ interface ChannelGroupDao {
     )
     fun observeVisible(kind: ContentKind = ContentKind.LIVE): Flow<List<GroupWithCount>>
 
+    @Query("UPDATE channel_groups SET sortOrder = :position WHERE id = :id")
+    suspend fun setOrder(id: Long, position: Int)
+
     @Query("UPDATE channel_groups SET hidden = :hidden WHERE id = :id")
     suspend fun setHidden(id: Long, hidden: Boolean)
 }
@@ -68,23 +71,29 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(channels: List<ChannelEntity>)
 
+    @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortOrder, id")
+    suspend fun getForPlaylist(playlistId: Long): List<ChannelEntity>
+
+    @Query("UPDATE channels SET sortOrder = :position WHERE id = :id")
+    suspend fun setOrder(id: Long, position: Int)
+
     @Query("DELETE FROM channels WHERE playlistId = :playlistId")
     suspend fun deleteForPlaylist(playlistId: Long)
 
     @Query("SELECT * FROM channels WHERE id = :id")
     suspend fun get(id: Long): ChannelEntity?
 
-    @Query("SELECT * FROM channels WHERE groupId = :groupId AND hidden = 0 ORDER BY sortOrder")
+    @Query("SELECT * FROM channels WHERE groupId = :groupId AND hidden = 0 AND groupId IN (SELECT id FROM channel_groups WHERE hidden = 0) ORDER BY sortOrder, id")
     fun observeByGroup(groupId: Long): Flow<List<ChannelEntity>>
 
-    @Query("SELECT * FROM channels WHERE groupId = :groupId AND hidden = 0 ORDER BY sortOrder")
+    @Query("SELECT * FROM channels WHERE groupId = :groupId AND hidden = 0 AND groupId IN (SELECT id FROM channel_groups WHERE hidden = 0) ORDER BY sortOrder, id")
     suspend fun getByGroup(groupId: Long): List<ChannelEntity>
 
     @Query(
         """
         SELECT c.* FROM channels c
         JOIN playlists p ON p.id = c.playlistId AND p.enabled = 1
-        WHERE c.hidden = 0 AND c.kind = :kind
+        WHERE c.hidden = 0 AND (c.groupId IS NULL OR c.groupId IN (SELECT id FROM channel_groups WHERE hidden = 0)) AND c.kind = :kind
         ORDER BY p.sortOrder, p.id, c.sortOrder
         """,
     )
@@ -95,7 +104,7 @@ interface ChannelDao {
         SELECT c.* FROM channels c
         JOIN favorites f ON f.playlistId = c.playlistId AND f.channelKey = c.channelKey
         JOIN playlists p ON p.id = c.playlistId AND p.enabled = 1
-        WHERE c.hidden = 0
+        WHERE c.hidden = 0 AND (c.groupId IS NULL OR c.groupId IN (SELECT id FROM channel_groups WHERE hidden = 0))
         ORDER BY f.sortOrder, f.addedAt
         """,
     )
@@ -105,7 +114,7 @@ interface ChannelDao {
         """
         SELECT c.* FROM channels c
         JOIN playlists p ON p.id = c.playlistId AND p.enabled = 1
-        WHERE c.hidden = 0 AND c.name LIKE '%' || :query || '%'
+        WHERE c.hidden = 0 AND (c.groupId IS NULL OR c.groupId IN (SELECT id FROM channel_groups WHERE hidden = 0)) AND c.name LIKE '%' || :query || '%'
         ORDER BY c.name LIMIT :limit
         """,
     )
@@ -234,7 +243,7 @@ interface WatchHistoryDao {
         """
         SELECT c.* FROM channels c
         JOIN watch_history h ON h.playlistId = c.playlistId AND h.channelKey = c.channelKey
-        WHERE c.hidden = 0
+        WHERE c.hidden = 0 AND (c.groupId IS NULL OR c.groupId IN (SELECT id FROM channel_groups WHERE hidden = 0))
         ORDER BY h.lastWatched DESC LIMIT :limit
         """,
     )

@@ -59,3 +59,9 @@ suspend fun <T> openSource(
         else -> File(trimmed).inputStream().use(block)
     }
 }
+
+/** Shares the connection pool while applying the playlist's provider request header. */
+internal fun OkHttpClient.withUserAgent(value: String?): OkHttpClient =
+    if (value.isNullOrBlank()) this else newBuilder().addInterceptor { chain ->
+        chain.proceed(chain.request().newBuilder().header("User-Agent", value).build())
+    }.build()

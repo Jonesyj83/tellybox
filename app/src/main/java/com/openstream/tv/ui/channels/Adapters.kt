@@ -81,11 +81,11 @@ class ChannelAdapter(
         val c = row.channel
         with(holder.b) {
             number.text = c.number?.toString().orEmpty()
-            name.text = c.name
+            name.text = row.displayName
             nowPlaying.text = row.nowPlaying
             nowPlaying.visibility = if (row.nowPlaying.isNullOrEmpty()) View.GONE else View.VISIBLE
             favorite.visibility = if (row.favorite) View.VISIBLE else View.GONE
-            logoFallback.text = initials(c.name)
+            logoFallback.text = initials(row.displayName)
             logo.setImageDrawable(null)
             if (!c.logoUrl.isNullOrBlank()) {
                 logo.load(c.logoUrl) {

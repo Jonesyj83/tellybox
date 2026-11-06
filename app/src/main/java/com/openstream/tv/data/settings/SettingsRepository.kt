@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.map
 enum class DisplayMode { FIT, FILL, ZOOM, REDUCED }
 
 data class AppSettings(
+    val channelNameTokens: String = "",
     val buffer: BufferSize = BufferSize.MEDIUM,
     val softwareDecoders: Boolean = false,
     val tunneling: Boolean = false,
@@ -36,6 +37,7 @@ class SettingsRepository(context: Context) {
     private val store = context.applicationContext.dataStore
 
     private object Keys {
+        val channelNameTokens = stringPreferencesKey("channel_name_tokens")
         val buffer = stringPreferencesKey("buffer")
         val softwareDecoders = booleanPreferencesKey("software_decoders")
         val tunneling = booleanPreferencesKey("tunneling")
@@ -48,6 +50,7 @@ class SettingsRepository(context: Context) {
     val settings: Flow<AppSettings> = store.data.map { p ->
         val d = AppSettings()
         AppSettings(
+            channelNameTokens = p[Keys.channelNameTokens].orEmpty(),
             buffer = p[Keys.buffer]?.let { runCatching { BufferSize.valueOf(it) }.getOrNull() } ?: d.buffer,
             softwareDecoders = p[Keys.softwareDecoders] ?: d.softwareDecoders,
             tunneling = p[Keys.tunneling] ?: d.tunneling,
@@ -59,6 +62,8 @@ class SettingsRepository(context: Context) {
     }
 
     suspend fun get(): AppSettings = settings.first()
+
+    suspend fun setChannelNameTokens(v: String) = store.edit { it[Keys.channelNameTokens] = v }
 
     suspend fun setBuffer(v: BufferSize) = store.edit { it[Keys.buffer] = v.name }
     suspend fun setSoftwareDecoders(v: Boolean) = store.edit { it[Keys.softwareDecoders] = v }

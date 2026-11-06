@@ -46,6 +46,7 @@ class StalkerClient(
     portalUrl: String,
     macAddress: String,
     private val http: OkHttpClient,
+    private val userAgent: String? = null,
 ) {
     val mac: String = normalizeMac(macAddress)
     private val candidates: List<HttpUrl> = endpointCandidates(portalUrl)
@@ -126,7 +127,7 @@ class StalkerClient(
         }.build()
 
         val req = Request.Builder().url(url)
-            .header("User-Agent", USER_AGENT)
+            .header("User-Agent", userAgent ?: USER_AGENT)
             .header("X-User-Agent", "Model: MAG250; Link: WiFi")
             .header("Referer", referer)
             .header("Cookie", "mac=${URLEncoder.encode(mac, "UTF-8")}; stb_lang=en; timezone=UTC")

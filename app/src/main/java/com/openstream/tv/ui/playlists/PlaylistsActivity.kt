@@ -53,6 +53,8 @@ class PlaylistsActivity : AppCompatActivity() {
             getString(R.string.playlist_refresh),
             getString(if (playlist.enabled) R.string.playlist_disable else R.string.playlist_enable),
             getString(R.string.playlist_delete),
+            "Edit playlist",
+            "Manage groups and channels",
         )
         AlertDialog.Builder(this)
             .setTitle(playlist.name)
@@ -61,9 +63,67 @@ class PlaylistsActivity : AppCompatActivity() {
                     0 -> refresh(playlist)
                     1 -> lifecycleScope.launch { appContainer.playlists.setEnabled(playlist, !playlist.enabled) }
                     2 -> confirmDelete(playlist)
+                    3 -> editPlaylist(playlist)
+                    4 -> startActivity(Intent(this, GroupManagementActivity::class.java).putExtra("playlist_id", playlist.id))
                 }
             }
             .show()
+    }
+
+    private fun editPlaylist(playlist: PlaylistEntity) {
+        val form = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(32, 16, 32, 16)
+        }
+        fun field(label: String, value: String?, secret: Boolean = false): android.widget.EditText {
+            form.addView(android.widget.TextView(this).apply { text = label })
+            return android.widget.EditText(this).apply {
+                setSingleLine()
+                inputType = if (secret) android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    else android.text.InputType.TYPE_CLASS_TEXT
+                setText(value.orEmpty())
+                form.addView(this)
+            }
+        }
+        val name = field("Playlist name", playlist.name)
+        val url = field("Source URL or file URI", playlist.url)
+        val user = if (playlist.type == PlaylistType.XTREAM) field("Username", playlist.username) else null
+        val password = if (playlist.type == PlaylistType.XTREAM) field("Password", playlist.password, true) else null
+        val mac = if (playlist.type == PlaylistType.STALKER) field("MAC address", playlist.macAddress) else null
+        val ua = field("User agent (optional)", playlist.userAgent)
+        val dialog = AlertDialog.Builder(this).setTitle("Edit playlist")
+            .setView(android.widget.ScrollView(this).apply { addView(form) })
+            .setPositiveButton("Save and re-fetch", null).setNegativeButton(R.string.cancel, null).create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (name.text.isBlank() || url.text.isBlank()) {
+                    Toast.makeText(this, "Name and source are required", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (user != null && (user.text.isBlank() || password!!.text.isBlank())) {
+                    Toast.makeText(this, "Username and password are required", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                val edited = playlist.copy(name = name.text.toString().trim(), url = url.text.toString().trim(),
+                    username = user?.text?.toString() ?: playlist.username,
+                    password = password?.text?.toString() ?: playlist.password,
+                    macAddress = mac?.text?.toString()?.trim() ?: playlist.macAddress,
+                    userAgent = ua.text.toString().trim().ifEmpty { null })
+                dialog.dismiss()
+                binding.status.text = "Updating ${edited.name}…"
+                val container = appContainer
+                container.appScope.launch {
+                    val result = container.playlists.edit(edited)
+                    result.onSuccess { container.epg.refreshForPlaylist(edited.id) }
+                    runOnUiThread {
+                        if (!isDestroyed) {
+                            binding.status.text = result.fold({ "Playlist updated" }, { "Saved; re-fetch failed: ${it.message}" })
+                        }
+                    }
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun confirmDelete(playlist: PlaylistEntity) {

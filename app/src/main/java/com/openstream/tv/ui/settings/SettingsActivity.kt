@@ -73,6 +73,19 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         return listOf(
+            Row("Channel name cleanup", s.channelNameTokens.ifEmpty { "Off" }) {
+                val input = android.widget.EditText(this).apply {
+                    inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                    minLines = 3
+                    hint = "One prefix or suffix per line (UK: , | HD, FHD)"
+                    setText(s.channelNameTokens)
+                }
+                AlertDialog.Builder(this).setTitle("Strip prefixes and suffixes")
+                    .setMessage("One literal token per line. Matching is case-sensitive. Clear to disable.")
+                    .setView(input).setPositiveButton("Save") { _, _ ->
+                        lifecycleScope.launch { repo.setChannelNameTokens(input.text.toString()) }
+                    }.setNegativeButton(R.string.cancel, null).show()
+            },
             header(R.string.settings_player),
             Row(getString(R.string.setting_buffer), bufferLabel(s.buffer)) {
                 pick(R.string.setting_buffer, buffers, s.buffer, repo::setBuffer)

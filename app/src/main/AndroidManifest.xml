@@ -39,6 +39,8 @@
             android:exported="false"
             android:screenOrientation="landscape" />
 
+        <activity android:name=".ui.playlists.GroupManagementActivity" android:exported="false" android:screenOrientation="landscape" />
+
         <activity
             android:name=".ui.playlists.AddPlaylistActivity"
             android:exported="false"

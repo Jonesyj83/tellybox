@@ -35,6 +35,7 @@ data class ChannelRow(
     val channel: ChannelEntity,
     val nowPlaying: String?,
     val favorite: Boolean,
+    val displayName: String = channel.name,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -83,6 +84,9 @@ class MainViewModel(private val app: AppContainer) : ViewModel() {
                     favorite = (c.playlistId to c.channelKey) in favs,
                 )
             }
+        }
+        .combine(app.settings.settings) { rows, settings ->
+            rows.map { it.copy(displayName = com.openstream.tv.data.settings.ChannelNames.display(it.channel.name, settings.channelNameTokens)) }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 

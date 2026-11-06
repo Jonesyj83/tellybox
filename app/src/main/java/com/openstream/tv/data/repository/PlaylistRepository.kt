@@ -65,6 +65,22 @@ class PlaylistRepository(
         db.playlists().update(playlist.copy(enabled = enabled))
     }
 
+    suspend fun edit(edited: PlaylistEntity): Result<RefreshSummary> = refreshLocks.withLock(edited.id) {
+        require(edited.name.isNotBlank() && edited.url.isNotBlank()) { "Name and source are required" }
+        db.withTransaction {
+            val old = db.playlists().get(edited.id)
+            if (old?.type == PlaylistType.XTREAM &&
+                (old.url != edited.url || old.username != edited.username || old.password != edited.password)) {
+                val oldGuide = runCatching { XtreamCredentials.from(old.url, old.username, old.password).xmltvUrl() }.getOrNull()
+                db.epg().getSourcesForPlaylist(edited.id).filter { it.url == oldGuide }
+                    .forEach { db.epg().deleteSource(it.id) }
+            }
+            db.playlists().update(edited)
+        }
+        stalkerClients.forget(edited.id)
+        doRefresh(edited.id)
+    }
+
     private val refreshLocks = KeyedLock<Long>()
 
     suspend fun refresh(playlistId: Long): Result<RefreshSummary> =
@@ -141,7 +157,7 @@ class PlaylistRepository(
 
     private suspend fun refreshXtream(playlist: PlaylistEntity): RefreshSummary {
         val creds = XtreamCredentials.from(playlist.url, playlist.username, playlist.password)
-        val client = XtreamClient(creds, http)
+        val client = XtreamClient(creds, http.withUserAgent(playlist.userAgent))
         val account = client.authenticate()
         val liveExt = if (account.allowedOutputFormats.isEmpty() || "ts" in account.allowedOutputFormats) "ts" else "m3u8"
 
@@ -262,9 +278,11 @@ class PlaylistRepository(
         channels.forEach { groupKeys.putIfAbsent(it.kind to it.groupName, ImportedGroup(it.groupName, it.kind)) }
 
         // Keep the user's hidden/ordering choices for groups that still exist.
-        val previous = db.groups().getForPlaylist(playlistId).associateBy { it.kind to it.name }
-
         db.withTransaction {
+            val previous = db.groups().getForPlaylist(playlistId).associateBy { it.kind to it.name }
+            val oldChannels = db.channels().getForPlaylist(playlistId).associateBy { it.channelKey }
+            val nextGroupOrder = (previous.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
+            val nextChannelOrder = (oldChannels.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
             db.channels().deleteForPlaylist(playlistId)
             db.groups().deleteForPlaylist(playlistId)
 
@@ -275,9 +293,7 @@ class PlaylistRepository(
                     name = g.name,
                     kind = g.kind,
                     remoteId = g.remoteId,
-                    sortOrder = i,
-                    hidden = old?.hidden ?: false,
-                )
+                ).withLocalChoices(old, nextGroupOrder + i)
             }
             val ids = db.groups().insertAll(groupEntities)
             val idByKey = groupEntities.zip(ids).associate { (g, id) -> (g.kind to g.name) to id }
@@ -295,7 +311,7 @@ class PlaylistRepository(
                         channelKey = key,
                         groupId = idByKey[ic.kind to ic.groupName],
                         number = ic.channel.number ?: position,
-                    )
+                    ).withLocalChoices(oldChannels[key], nextChannelOrder + position)
                 }
                 .chunked(INSERT_CHUNK)
                 .forEach { db.channels().insertAll(it) }
@@ -325,7 +341,7 @@ class StalkerClientCache(private val http: OkHttpClient) {
     @Synchronized
     fun get(playlist: PlaylistEntity): StalkerClient =
         clients.getOrPut(playlist.id) {
-            StalkerClient(playlist.url, playlist.macAddress.orEmpty(), http)
+            StalkerClient(playlist.url, playlist.macAddress.orEmpty(), http, playlist.userAgent)
         }
 
     @Synchronized

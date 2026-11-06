@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity() {
     private fun toggleFavorite(row: ChannelRow) {
         viewModel.toggleFavorite(row.channel) { added ->
             val msg = if (added) R.string.favorite_added else R.string.favorite_removed
-            Toast.makeText(this, getString(msg, row.channel.name), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(msg, row.displayName), Toast.LENGTH_SHORT).show()
         }
     }
 

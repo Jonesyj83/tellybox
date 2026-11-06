@@ -55,6 +55,8 @@ class GuideActivity : AppCompatActivity(), GuideGridView.Callback {
                 appContainer.channels.observeAll().first()
             }
             binding.empty.visibility = if (channels.isEmpty()) View.VISIBLE else View.GONE
+            val tokens = appContainer.settings.get().channelNameTokens
+            channels = channels.map { it.copy(name = com.openstream.tv.data.settings.ChannelNames.display(it.name, tokens)) }
             binding.grid.setChannels(
                 channels.map { GuideChannel(it.id, it.number, it.name, it.tvgId?.lowercase(), it.catchupDays) },
                 intent.getLongExtra(EXTRA_FOCUS_ID, -1),
