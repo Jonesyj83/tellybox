@@ -1,5 +1,165 @@
 package com.openstream.tv.ui
 
+import android.content.Intent
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.openstream.tv.R
+import com.openstream.tv.appContainer
+import com.openstream.tv.databinding.ActivityMainBinding
+import com.openstream.tv.ui.channels.ChannelAdapter
+import com.openstream.tv.ui.channels.ChannelRow
+import com.openstream.tv.ui.channels.GroupAdapter
+import com.openstream.tv.ui.channels.GroupSelection
+import com.openstream.tv.ui.channels.MainViewModel
+import com.openstream.tv.ui.player.PlayerActivity
+import com.openstream.tv.ui.playlists.AddPlaylistActivity
+import com.openstream.tv.ui.playlists.PlaylistsActivity
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity()
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels {
+        viewModelFactory { initializer { MainViewModel(appContainer) } }
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var pendingSelect: Runnable? = null
+
+    private val groupAdapter = GroupAdapter(
+        onFocused = { row -> selectSoon(row.selection) },
+        onClick = { row ->
+            viewModel.select(row.selection)
+            binding.channels.requestFocus()
+        },
+    )
+
+    private val channelAdapter = ChannelAdapter(
+        onClick = { row, position -> play(row, position) },
+        onMenu = { row -> toggleFavorite(row) },
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.groups.layoutManager = LinearLayoutManager(this)
+        binding.groups.adapter = groupAdapter
+        binding.groups.itemAnimator = null
+        binding.channels.layoutManager = LinearLayoutManager(this)
+        binding.channels.adapter = channelAdapter
+        binding.channels.itemAnimator = null
+
+        binding.playlistsButton.setOnClickListener { startActivity(Intent(this, PlaylistsActivity::class.java)) }
+        binding.emptyAddButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
+        binding.searchButton.setOnClickListener { showSearch() }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.playlists.collect { list ->
+                        if (list == null) return@collect
+                        val empty = list.isEmpty()
+                        binding.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
+                        binding.content.visibility = if (empty) View.GONE else View.VISIBLE
+                        if (empty) binding.emptyAddButton.requestFocus()
+                    }
+                }
+                launch {
+                    viewModel.groups.combine(viewModel.search) { g, s -> viewModel.groupRows(g, s) }
+                        .collect { groupAdapter.submitList(it) }
+                }
+                launch {
+                    viewModel.selection.collect { groupAdapter.activeSelection = it }
+                }
+                launch {
+                    viewModel.channels.collect { rows ->
+                        if (rows == null) return@collect
+                        val firstLoad = channelAdapter.itemCount == 0 && rows.isNotEmpty()
+                        channelAdapter.submitList(rows) {
+                            // Land on the channel list rather than the header buttons.
+                            if (firstLoad && !binding.channels.hasFocus() && !binding.groups.hasFocus()) {
+                                binding.channels.post { binding.channels.getChildAt(0)?.requestFocus() }
+                            }
+                        }
+                        binding.channelsEmpty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+                        binding.channelsEmpty.setText(
+                            if (viewModel.selection.value == GroupSelection.Favorites) R.string.empty_favorites
+                            else R.string.empty_group,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /** Switch groups as focus moves, but not on every row flicked past. */
+    private fun selectSoon(selection: GroupSelection) {
+        pendingSelect?.let(handler::removeCallbacks)
+        pendingSelect = Runnable { viewModel.select(selection) }.also { handler.postDelayed(it, 250) }
+    }
+
+    private fun play(row: ChannelRow, position: Int) {
+        val list = channelAdapter.currentList.map { it.channel.id }.toLongArray()
+        startActivity(PlayerActivity.intent(this, row.channel.id, list, position))
+    }
+
+    private fun toggleFavorite(row: ChannelRow) {
+        viewModel.toggleFavorite(row.channel) { added ->
+            val msg = if (added) R.string.favorite_added else R.string.favorite_removed
+            Toast.makeText(this, getString(msg, row.channel.name), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showSearch() {
+        val input = EditText(this).apply {
+            hint = getString(R.string.search_hint)
+            setSingleLine()
+            imeOptions = EditorInfo.IME_ACTION_SEARCH
+            setText(viewModel.search.value.orEmpty())
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.action_search)
+            .setView(input)
+            .setPositiveButton(R.string.action_search) { _, _ -> runSearch(input.text.toString()) }
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        input.setOnEditorActionListener { _, action, _ ->
+            if (action == EditorInfo.IME_ACTION_SEARCH) {
+                runSearch(input.text.toString())
+                dialog.dismiss()
+                true
+            } else {
+                false
+            }
+        }
+        dialog.show()
+    }
+
+    private fun runSearch(query: String) {
+        viewModel.search(query)
+        binding.groups.scrollToPosition(0)
+        binding.channels.requestFocus()
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
+}

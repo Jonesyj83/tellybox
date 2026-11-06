@@ -41,5 +41,13 @@
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".ui.player.PlayerActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            android:supportsPictureInPicture="true"
+            android:theme="@style/Theme.OpenStream.Player" />
     </application>
 </manifest>

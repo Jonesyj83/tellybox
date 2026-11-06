@@ -84,5 +84,10 @@
     <string name="player_error">Can\'t play this channel</string>
     <string name="player_retry">Press OK to try again</string>
     <string name="player_connecting">Connecting…</string>
+    <string name="error_http">The server turned the stream down (HTTP %1$d).</string>
+    <string name="error_network">Couldn\'t reach the server. Check the connection.</string>
+    <string name="error_timeout">The server took too long to respond.</string>
+    <string name="error_format">This stream\'s format isn\'t supported.</string>
+    <string name="error_decoder">This device can\'t decode the stream.</string>
     <string name="now_next">Now: %1$s</string>
 </resources>
