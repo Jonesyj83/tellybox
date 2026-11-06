@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var pendingSelect: Runnable? = null
+    private var focusChannelsOnUpdate = false
 
     private val groupAdapter = GroupAdapter(
         onFocused = { row -> selectSoon(row.selection) },
@@ -98,7 +99,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 launch {
                     viewModel.groups.combine(viewModel.search) { g, s -> viewModel.groupRows(g, s) }
-                        .collect { groupAdapter.submitList(it) }
+                        .collect { rows ->
+                            val searchAdded = rows.firstOrNull()?.selection is GroupSelection.Search &&
+                                groupAdapter.currentList.firstOrNull()?.selection != rows.first().selection
+                            groupAdapter.submitList(rows) {
+                                // A new search row goes in at the top; make sure it's on screen.
+                                if (searchAdded) binding.groups.scrollToPosition(0)
+                            }
+                        }
                 }
                 launch {
                     viewModel.selection.collect { groupAdapter.activeSelection = it }
@@ -109,7 +117,11 @@ class MainActivity : AppCompatActivity() {
                         val firstLoad = channelAdapter.itemCount == 0 && rows.isNotEmpty()
                         channelAdapter.submitList(rows) {
                             // Land on the channel list rather than the header buttons.
-                            if (firstLoad && !binding.channels.hasFocus() && !binding.groups.hasFocus()) {
+                            val wanted = focusChannelsOnUpdate ||
+                                (firstLoad && !binding.channels.hasFocus() && !binding.groups.hasFocus())
+                            if (wanted && rows.isNotEmpty()) {
+                                focusChannelsOnUpdate = false
+                                binding.channels.scrollToPosition(0)
                                 binding.channels.post { binding.channels.getChildAt(0)?.requestFocus() }
                             }
                         }
@@ -168,9 +180,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun runSearch(query: String) {
+        focusChannelsOnUpdate = query.isNotBlank()
         viewModel.search(query)
-        binding.groups.scrollToPosition(0)
-        binding.channels.requestFocus()
     }
 
     override fun onDestroy() {
