@@ -107,6 +107,9 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             Row(getString(R.string.setting_display_mode), displayModeLabel(s.displayMode)) {
                 pick(R.string.setting_display_mode, modes, s.displayMode, repo::setDisplayMode)
             },
+            Row(getString(R.string.setting_background_playback), onOff(s.backgroundPlayback)) {
+                pick(R.string.setting_background_playback, onOff, s.backgroundPlayback, repo::setBackgroundPlayback)
+            },
             header(R.string.settings_recording),
             Row(getString(R.string.recordings_title), "") {
                 startActivity(android.content.Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))

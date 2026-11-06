@@ -159,6 +159,7 @@ class PlaylistRepository(
         val creds = XtreamCredentials.from(playlist.url, playlist.username, playlist.password)
         val client = XtreamClient(creds, http.withUserAgent(playlist.userAgent))
         val account = client.authenticate()
+        db.playlists().setMaxConnections(playlist.id, account.maxConnections?.takeIf { it > 0 })
         val liveExt = if (account.allowedOutputFormats.isEmpty() || "ts" in account.allowedOutputFormats) "ts" else "m3u8"
 
         val out = ArrayList<ImportedChannel>()

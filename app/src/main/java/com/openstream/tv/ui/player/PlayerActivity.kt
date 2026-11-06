@@ -3,7 +3,15 @@ package com.openstream.tv.ui.player
 import com.openstream.tv.ui.parental.requestPin
 import android.content.Context
 import android.content.Intent
+import android.app.PictureInPictureParams
+import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
+import androidx.annotation.RequiresApi
+import com.openstream.tv.player.PipAspect
+import com.openstream.tv.ui.multiview.MultiviewActivity
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -33,7 +41,6 @@ import com.openstream.tv.data.db.ChannelEntity
 import com.openstream.tv.data.db.ContentKind
 import com.openstream.tv.databinding.ActivityPlayerBinding
 import com.openstream.tv.player.Player
-import com.openstream.tv.player.PlayerFactory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -84,25 +91,39 @@ class PlayerActivity : AppCompatActivity() {
         outState.putLong("archive_position", player?.exo?.currentPosition ?: archivePosition)
     }
 
+    private val listener = object : Listener {
+        override fun onPlayerError(error: PlaybackException) = handleError(error)
+        override fun onPlaybackStateChanged(state: Int) {
+            if (state == androidx.media3.common.Player.STATE_READY) {
+                binding.errorBox.visibility = View.GONE
+                // Only count time once the stream actually plays; failed channels aren't "watched".
+                if (watchStartedAt == 0L) watchStartedAt = SystemClock.elapsedRealtime()
+            }
+        }
+        override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) = updatePip()
+        override fun onIsPlayingChanged(isPlaying: Boolean) = updatePip()
+    }
+    private var backgroundPlayback = true
+
     override fun onStart() {
         super.onStart()
         val settings = runBlocking { appContainer.settings.get() }
         nameTokens = settings.channelNameTokens
+        backgroundPlayback = settings.backgroundPlayback
         applyDisplayMode(settings.displayMode)
-        val p = PlayerFactory.create(this, appContainer.http, settings.playerConfig)
-        p.exo.addListener(object : Listener {
-            override fun onPlayerError(error: PlaybackException) = handleError(error)
-            override fun onPlaybackStateChanged(state: Int) {
-                if (state == androidx.media3.common.Player.STATE_READY) {
-                    binding.errorBox.visibility = View.GONE
-                    // Only count time once the stream actually plays; failed channels aren't "watched".
-                    if (watchStartedAt == 0L) watchStartedAt = SystemClock.elapsedRealtime()
-                }
-            }
-        })
+        val playback = appContainer.playback
+        val p = playback.acquire(settings.playerConfig, this)
+        p.exo.addListener(listener)
         binding.playerView.player = p.exo
         player = p
-        loadChannel(index)
+        playback.handoffChannelId?.let { id ->
+            playback.handoffChannelId = null
+            channelIds.indexOf(id).takeIf { it >= 0 }?.let { index = it }
+        }
+        // Still playing from before (picture-in-picture, background): carry on without reconnecting.
+        val resume = playback.key == playbackKey(index) &&
+            p.exo.playbackState != androidx.media3.common.Player.STATE_IDLE
+        loadChannel(index, resume)
         protectionJob = lifecycleScope.launch {
             appContainer.parental.changes.collect {
                 binding.channelOverlay.visibility = View.GONE
@@ -119,18 +140,71 @@ class PlayerActivity : AppCompatActivity() {
         recordWatch()
         loadJob?.cancel()
         protectionJob?.cancel()
+        player?.exo?.removeListener(listener)
         binding.playerView.player = null
-        player?.release()
+        // Closing the picture-in-picture window, or leaving with background playback off, ends playback.
+        val keep = !isFinishing && !inPip() && backgroundPlayback && player?.exo?.playWhenReady == true
+        if (!keep) appContainer.playback.release(this)
         player = null
         super.onStop()
     }
 
+    private fun playbackKey(i: Int): String =
+        if (fileMode) "file:" + intent.getStringExtra(EXTRA_FILE)
+        else "ch:${channelIds.getOrNull(i)}:${intent.getLongExtra("episode_id", -1)}:${intent.getLongExtra(EXTRA_ARCHIVE_START, -1)}"
+
+    private fun inPip() = Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode
+
+    private fun pipSupported() = Build.VERSION.SDK_INT >= 26 &&
+        packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+    @RequiresApi(26)
+    private fun pipParams(): PictureInPictureParams {
+        val size = player?.exo?.videoSize
+        val (w, h) = PipAspect.of(size?.width ?: 0, size?.height ?: 0, size?.pixelWidthHeightRatio ?: 1f)
+        val builder = PictureInPictureParams.Builder().setAspectRatio(Rational(w, h))
+        if (Build.VERSION.SDK_INT >= 31) {
+            builder.setAutoEnterEnabled(player?.exo?.playWhenReady == true).setSeamlessResizeEnabled(true)
+        }
+        return builder.build()
+    }
+
+    private fun updatePip() {
+        if (pipSupported()) runCatching { setPictureInPictureParams(pipParams()) }
+    }
+
+    private fun enterPip(): Boolean {
+        if (!pipSupported() || player == null) return false
+        return runCatching { enterPictureInPictureMode(pipParams()) }.getOrDefault(false)
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Newer systems enter on their own via setAutoEnterEnabled.
+        if (Build.VERSION.SDK_INT < 31 && player?.exo?.playWhenReady == true && !inPip()) enterPip()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            handler.removeCallbacks(hideBanner)
+            binding.banner.visibility = View.GONE
+            binding.channelOverlay.visibility = View.GONE
+            binding.playerView.hideController()
+            binding.playerView.useController = false
+        } else {
+            binding.playerView.useController = controllerWanted
+        }
+    }
+
+    private var controllerWanted = false
+
     private var pinPending = false
-    private fun loadChannel(i: Int) {
-        if (fileMode) return playFile()
+    private fun loadChannel(i: Int, resume: Boolean = false) {
+        if (fileMode) return playFile(resume)
         if (channelIds.isEmpty()) return finish()
         recordWatch()
-        player?.exo?.stop()
+        if (!resume) player?.exo?.stop()
         lastUrl = null
         binding.banner.visibility = View.GONE
         binding.channelOverlay.visibility = View.GONE
@@ -142,6 +216,7 @@ class PlayerActivity : AppCompatActivity() {
             val container = appContainer
             val stored = container.channels.get(channelIds[i]) ?: return@launch
             if (!container.parental.allowed(stored, container.database) || (container.parental.allScreens && !container.parental.unlocked)) {
+                player?.exo?.stop()
                 if (!pinPending) {
                     pinPending = true
                     requestPin(cancel = { pinPending = false; finish() }) { pinPending = false; loadChannel(i) }
@@ -158,14 +233,22 @@ class PlayerActivity : AppCompatActivity() {
             showBanner(channel, null)
 
             val isVod = channel.kind != ContentKind.LIVE
-            binding.playerView.useController = isVod || catchup
+            controllerWanted = isVod || catchup
+            binding.playerView.useController = controllerWanted && !inPip()
+            container.playback.setSessionActivity(
+                Intent(intent).putExtra(EXTRA_POSITION, i).putExtra(EXTRA_CHANNEL_ID, channelIds[i]),
+            )
 
-            try {
+            if (resume) {
+                lastUrl = player?.exo?.currentMediaItem?.localConfiguration?.uri?.toString()
+                if (player?.exo?.isPlaying == true) watchStartedAt = SystemClock.elapsedRealtime()
+            } else try {
                 val url = if (catchup) container.channels.resolveCatchupUrl(channel,
                     intent.getLongExtra(EXTRA_ARCHIVE_START, 0), intent.getLongExtra(EXTRA_ARCHIVE_STOP, 0))
                 else container.channels.resolveStreamUrl(channel)
                 lastUrl = url
                 player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
+                container.playback.key = playbackKey(i)
                 val resume = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
                     container.database.history().get(channel.playlistId, channel.channelKey)?.positionMs ?: 0L else 0L
                 if (resume > 0) player?.exo?.seekTo(resume)
@@ -181,12 +264,16 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun playFile() {
+    private fun playFile(resume: Boolean) {
         val file = java.io.File(intent.getStringExtra(EXTRA_FILE).orEmpty())
         binding.errorBox.visibility = View.GONE
-        binding.playerView.useController = true
+        controllerWanted = true
+        binding.playerView.useController = !inPip()
+        appContainer.playback.setSessionActivity(intent)
+        if (resume) return
         if (!file.exists()) return showError(getString(R.string.recording_file_missing))
         player?.play(android.net.Uri.fromFile(file).toString(), intent.getStringExtra(EXTRA_FILE_TITLE), null)
+        appContainer.playback.key = playbackKey(index)
         if (archivePosition > 0) player?.exo?.seekTo(archivePosition)
     }
 
@@ -373,16 +460,21 @@ class PlayerActivity : AppCompatActivity() {
     private fun showOptions() {
         val channel = current
         lifecycleScope.launch {
-            val items = mutableListOf("Audio tracks", "Subtitles", "Display mode")
-            val canRecord = channel != null && !catchup && !fileMode && channel.kind == ContentKind.LIVE
-            if (canRecord) {
+            val items = mutableListOf<Pair<String, () -> Unit>>(
+                "Audio tracks" to { pickTrack(C.TRACK_TYPE_AUDIO) },
+                "Subtitles" to { pickTrack(C.TRACK_TYPE_TEXT) },
+                "Display mode" to { pickDisplayMode() },
+            )
+            val live = channel != null && !catchup && !fileMode && channel.kind == ContentKind.LIVE
+            if (live) {
                 val active = appContainer.recordings.activeFor(channel!!)
-                items += getString(if (active != null) R.string.guide_stop_recording else R.string.guide_record)
+                items += getString(if (active != null) R.string.guide_stop_recording else R.string.guide_record) to { instantRecord() }
+                items += getString(R.string.multiview) to { openMultiview() }
             }
+            if (pipSupported()) items += getString(R.string.pip) to { enterPip(); Unit }
             AlertDialog.Builder(this@PlayerActivity).setTitle("Playback options")
-                .setItems(items.toTypedArray()) { _, which ->
-                    when (which) { 0 -> pickTrack(C.TRACK_TYPE_AUDIO); 1 -> pickTrack(C.TRACK_TYPE_TEXT); 2 -> pickDisplayMode(); 3 -> instantRecord() }
-                }.show()
+                .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
+                .show()
         }
     }
 
@@ -434,7 +526,20 @@ class PlayerActivity : AppCompatActivity() {
         binding.playerView.scaleY = scale
     }
 
+    private fun openMultiview() {
+        val channel = current ?: return
+        recordWatch()
+        // Free this stream's connection before the tiles open theirs.
+        player?.exo?.removeListener(listener)
+        binding.playerView.player = null
+        player = null
+        appContainer.playback.release()
+        startActivity(MultiviewActivity.intent(this, channel.id, channelIds))
+    }
+
     override fun onDestroy() {
+        // Cleared from the back stack while playing in the background.
+        if (isFinishing) appContainer.playback.release(this)
         handler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }

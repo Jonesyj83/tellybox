@@ -116,6 +116,24 @@
     <string name="buffer_medium">Medium</string>
     <string name="buffer_large">Large</string>
     <string name="buffer_very_large">Very large (for unstable streams)</string>
+    <string name="setting_background_playback">Keep playing after leaving the player</string>
+    <string name="pip">Picture-in-picture</string>
+    <string name="multiview">Multiview</string>
+    <string name="retry">Retry</string>
+    <string name="multiview_change_channel">Change channel</string>
+    <string name="multiview_enlarge">Enlarge screen</string>
+    <string name="multiview_reduce">Reduce screen</string>
+    <string name="multiview_add">Add screen</string>
+    <string name="multiview_remove">Remove screen</string>
+    <string name="multiview_full_screen">Watch full screen</string>
+    <string name="multiview_unavailable">Channel unavailable</string>
+    <string name="multiview_refused">Refused (HTTP %1$d). The provider may not allow another connection.</string>
+    <string name="multiview_limit_title">Connection limit</string>
+    <plurals name="multiview_limit_message">
+        <item quantity="one">%2$s allows %1$d connection at a time, and it is already in use. Another screen may fail or stop the others.</item>
+        <item quantity="other">%2$s allows %1$d connections at a time, and they are all in use. Another screen may fail or stop the others.</item>
+    </plurals>
+    <string name="multiview_add_anyway">Add anyway</string>
     <string name="setting_decoders">Video decoder</string>
     <string name="decoder_hardware">Hardware</string>
     <string name="decoder_software">Software when available</string>

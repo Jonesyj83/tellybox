@@ -71,6 +71,7 @@ class AppContainer(app: Application) {
     val recordings = com.openstream.tv.data.recording.RecordingRepository(app, database, settings)
     val reminders = com.openstream.tv.reminders.ReminderRepository(app, database, settings)
     val foreground = ForegroundTracker()
+    val playback = com.openstream.tv.player.Playback(app, http)
 }
 
 val android.content.Context.appContainer: AppContainer

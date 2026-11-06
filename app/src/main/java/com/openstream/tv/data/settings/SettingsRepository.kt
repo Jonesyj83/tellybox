@@ -34,6 +34,8 @@ data class AppSettings(
     val instantRecordMinutes: Int = 60,
     val reminderMinutes: Int = 2,
     val reminderPopupSeconds: Int = 30,
+    /** Keep a live stream going after leaving the player without picture-in-picture. */
+    val backgroundPlayback: Boolean = true,
 ) {
     val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling)
 }
@@ -57,6 +59,7 @@ class SettingsRepository(context: Context) {
         val instantRecordMinutes = intPreferencesKey("instant_record_minutes")
         val reminderMinutes = intPreferencesKey("reminder_minutes")
         val reminderPopupSeconds = intPreferencesKey("reminder_popup_seconds")
+        val backgroundPlayback = booleanPreferencesKey("background_playback")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -75,6 +78,7 @@ class SettingsRepository(context: Context) {
             instantRecordMinutes = p[Keys.instantRecordMinutes] ?: d.instantRecordMinutes,
             reminderMinutes = p[Keys.reminderMinutes] ?: d.reminderMinutes,
             reminderPopupSeconds = p[Keys.reminderPopupSeconds] ?: d.reminderPopupSeconds,
+            backgroundPlayback = p[Keys.backgroundPlayback] ?: d.backgroundPlayback,
         )
     }
 
@@ -94,4 +98,5 @@ class SettingsRepository(context: Context) {
     suspend fun setInstantRecordMinutes(v: Int) = store.edit { it[Keys.instantRecordMinutes] = v }
     suspend fun setReminderMinutes(v: Int) = store.edit { it[Keys.reminderMinutes] = v }
     suspend fun setReminderPopupSeconds(v: Int) = store.edit { it[Keys.reminderPopupSeconds] = v }
+    suspend fun setBackgroundPlayback(v: Boolean) = store.edit { it[Keys.backgroundPlayback] = v }
 }

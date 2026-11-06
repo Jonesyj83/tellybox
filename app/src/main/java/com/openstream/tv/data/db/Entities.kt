@@ -27,6 +27,8 @@ data class PlaylistEntity(
     val lastUpdated: Long = 0,
     val lastError: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    /** Simultaneous streams the provider allows, when it says (Xtream accounts do). */
+    val maxConnections: Int? = null,
 )
 
 @Entity(

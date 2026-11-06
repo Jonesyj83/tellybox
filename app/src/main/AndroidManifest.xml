@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <!-- Lets a reminder pop up over another app, if the user allows it. -->
@@ -81,6 +82,12 @@
             android:supportsPictureInPicture="true"
             android:theme="@style/Theme.OpenStream.Player" />
 
+        <activity
+            android:name=".ui.multiview.MultiviewActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.OpenStream.Player" />
         <activity android:name=".ui.recordings.RecordingsActivity" android:exported="false" android:screenOrientation="landscape" />
         <activity android:name=".ui.reminders.RemindersActivity" android:exported="false" android:screenOrientation="landscape" />
         <activity
@@ -97,6 +104,15 @@
             android:name=".recording.RecordingService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".player.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
 
         <receiver android:name=".recording.RecordingAlarmReceiver" android:exported="false" />
         <receiver android:name=".reminders.ReminderReceiver" android:exported="false" />

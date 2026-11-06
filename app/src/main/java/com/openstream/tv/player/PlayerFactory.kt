@@ -31,6 +31,10 @@ data class PlayerConfig(
     val buffer: BufferSize = BufferSize.MEDIUM,
     val preferSoftwareDecoders: Boolean = false,
     val tunneling: Boolean = false,
+    /** Only one player may own audio focus; multiview tiles mix their own volume instead. */
+    val handleAudioFocus: Boolean = true,
+    /** Caps the picked video variant, so several streams at once stay within decoder limits. */
+    val maxVideoHeight: Int? = null,
 )
 
 @OptIn(UnstableApi::class)
@@ -70,6 +74,9 @@ object PlayerFactory {
             if (config.tunneling) {
                 setParameters(buildUponParameters().setTunnelingEnabled(true))
             }
+            config.maxVideoHeight?.let { h ->
+                setParameters(buildUponParameters().setMaxVideoSize(h * 16 / 9, h))
+            }
         }
 
         val exo = ExoPlayer.Builder(context, renderers)
@@ -81,7 +88,7 @@ object PlayerFactory {
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                     .build(),
-                true,
+                config.handleAudioFocus,
             )
             .setHandleAudioBecomingNoisy(true)
             .build()

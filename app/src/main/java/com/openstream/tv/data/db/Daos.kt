@@ -24,6 +24,9 @@ interface PlaylistDao {
     @Update
     suspend fun update(playlist: PlaylistEntity)
 
+    @Query("UPDATE playlists SET maxConnections = :max WHERE id = :id")
+    suspend fun setMaxConnections(id: Long, max: Int?)
+
     @Query("UPDATE playlists SET lastUpdated = :time, lastError = :error WHERE id = :id")
     suspend fun setRefreshResult(id: Long, time: Long, error: String?)
 
