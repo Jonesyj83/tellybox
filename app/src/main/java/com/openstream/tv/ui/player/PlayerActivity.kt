@@ -54,6 +54,8 @@ class PlayerActivity : AppCompatActivity() {
     private var loadJob: Job? = null
     private var watchStartedAt = 0L
     private val catchup get() = intent.hasExtra(EXTRA_ARCHIVE_START)
+    /** Playing a saved recording rather than a channel. */
+    private val fileMode get() = intent.hasExtra(EXTRA_FILE)
     private var archivePosition = 0L
 
     private val handler = Handler(Looper.getMainLooper())
@@ -113,7 +115,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private var protectionJob: Job? = null
     override fun onStop() {
-        if (catchup) archivePosition = player?.exo?.currentPosition ?: archivePosition
+        if (catchup || fileMode) archivePosition = player?.exo?.currentPosition ?: archivePosition
         recordWatch()
         loadJob?.cancel()
         protectionJob?.cancel()
@@ -125,6 +127,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private var pinPending = false
     private fun loadChannel(i: Int) {
+        if (fileMode) return playFile()
         if (channelIds.isEmpty()) return finish()
         recordWatch()
         player?.exo?.stop()
@@ -175,6 +178,53 @@ class PlayerActivity : AppCompatActivity() {
 
             val now = container.epg.currentProgram(channel.tvgId)
             if (current?.id == channel.id) showBanner(channel, if (catchup) intent.getStringExtra(EXTRA_ARCHIVE_TITLE) else now?.title)
+        }
+    }
+
+    private fun playFile() {
+        val file = java.io.File(intent.getStringExtra(EXTRA_FILE).orEmpty())
+        binding.errorBox.visibility = View.GONE
+        binding.playerView.useController = true
+        if (!file.exists()) return showError(getString(R.string.recording_file_missing))
+        player?.play(android.net.Uri.fromFile(file).toString(), intent.getStringExtra(EXTRA_FILE_TITLE), null)
+        if (archivePosition > 0) player?.exo?.seekTo(archivePosition)
+    }
+
+    /** Record button or the options menu: capture the channel being watched. */
+    private fun instantRecord() {
+        val channel = current ?: return
+        if (catchup || fileMode || channel.kind != ContentKind.LIVE) return
+        lifecycleScope.launch {
+            val c = appContainer
+            val active = c.recordings.activeFor(channel)
+            if (active != null) {
+                c.recordings.stop(active.id)
+                android.widget.Toast.makeText(this@PlayerActivity, R.string.recording_stopped, android.widget.Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val now = System.currentTimeMillis()
+            val program = c.epg.currentProgram(channel.tvgId, now)
+            val default = c.settings.get().instantRecordMinutes
+            val options = mutableListOf<Pair<String, Long>>()
+            if (program != null && program.stop > now) {
+                options += getString(R.string.instant_until_end, DateFormat.getTimeFormat(this@PlayerActivity).format(Date(program.stop))) to
+                    (program.stop - now + c.settings.get().recordPadAfter * 60_000L)
+            }
+            (listOf(default) + listOf(30, 60, 120, 180).filter { it != default }).forEach { m ->
+                options += resources.getQuantityString(R.plurals.minutes, m, m) to m * 60_000L
+            }
+            AlertDialog.Builder(this@PlayerActivity).setTitle(R.string.instant_record_title)
+                .setItems(options.map { it.first }.toTypedArray()) { _, which ->
+                    lifecycleScope.launch {
+                        val title = program?.title ?: displayName(channel)
+                        val result = c.recordings.recordNow(channel, displayName(channel), title, options[which].second)
+                        val msg = result.fold(
+                            { getString(R.string.recording_started, title) },
+                            { getString(R.string.recording_failed_to_schedule, it.message) },
+                        )
+                        android.widget.Toast.makeText(this@PlayerActivity, msg, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }.show()
         }
     }
 
@@ -266,7 +316,11 @@ class PlayerActivity : AppCompatActivity() {
             }
             return super.onKeyDown(keyCode, event)
         }
-        val vod = catchup || (current?.kind?.let { it != ContentKind.LIVE } ?: false)
+        if (keyCode == KeyEvent.KEYCODE_MEDIA_RECORD) {
+            instantRecord()
+            return true
+        }
+        val vod = catchup || fileMode || (current?.kind?.let { it != ContentKind.LIVE } ?: false)
         when (keyCode) {
             KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> { zap(-1); return true }
             KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> { zap(1); return true }
@@ -317,10 +371,19 @@ class PlayerActivity : AppCompatActivity() {
     private class ChannelHolder(val label: TextView) : RecyclerView.ViewHolder(label)
 
     private fun showOptions() {
-        AlertDialog.Builder(this).setTitle("Playback options")
-            .setItems(arrayOf("Audio tracks", "Subtitles", "Display mode")) { _, which ->
-                when (which) { 0 -> pickTrack(C.TRACK_TYPE_AUDIO); 1 -> pickTrack(C.TRACK_TYPE_TEXT); 2 -> pickDisplayMode() }
-            }.show()
+        val channel = current
+        lifecycleScope.launch {
+            val items = mutableListOf("Audio tracks", "Subtitles", "Display mode")
+            val canRecord = channel != null && !catchup && !fileMode && channel.kind == ContentKind.LIVE
+            if (canRecord) {
+                val active = appContainer.recordings.activeFor(channel!!)
+                items += getString(if (active != null) R.string.guide_stop_recording else R.string.guide_record)
+            }
+            AlertDialog.Builder(this@PlayerActivity).setTitle("Playback options")
+                .setItems(items.toTypedArray()) { _, which ->
+                    when (which) { 0 -> pickTrack(C.TRACK_TYPE_AUDIO); 1 -> pickTrack(C.TRACK_TYPE_TEXT); 2 -> pickDisplayMode(); 3 -> instantRecord() }
+                }.show()
+        }
     }
 
     private fun pickTrack(type: Int) {
@@ -380,6 +443,13 @@ class PlayerActivity : AppCompatActivity() {
         private const val EXTRA_ARCHIVE_START = "archive_start"
         private const val EXTRA_ARCHIVE_STOP = "archive_stop"
         private const val EXTRA_ARCHIVE_TITLE = "archive_title"
+        private const val EXTRA_FILE = "file"
+        private const val EXTRA_FILE_TITLE = "file_title"
+
+        fun fileIntent(context: Context, path: String, title: String): Intent =
+            Intent(context, PlayerActivity::class.java)
+                .putExtra(EXTRA_FILE, path)
+                .putExtra(EXTRA_FILE_TITLE, title)
 
         fun catchupIntent(context: Context, channelId: Long, start: Long, stop: Long, title: String): Intent =
             intent(context, channelId, longArrayOf(channelId), 0)

@@ -66,6 +66,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         val modes = DisplayMode.entries.map { displayModeLabel(it) to it }
         val intervals = listOf(6, 12, 24, 48).map { resources.getQuantityString(R.plurals.hours, it, it) to it }
         val offsets = (-12 * 60..12 * 60 step 30).map { formatOffset(it) to it }
+        val padOptions = listOf(0, 1, 2, 3, 5, 10, 15, 20, 30).map { minutes(it) to it }
         val reimportGuides = {
             val c = appContainer
             c.appScope.launch { c.backgroundRefresh.refreshAllGuides() }
@@ -105,6 +106,31 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             },
             Row(getString(R.string.setting_display_mode), displayModeLabel(s.displayMode)) {
                 pick(R.string.setting_display_mode, modes, s.displayMode, repo::setDisplayMode)
+            },
+            header(R.string.settings_recording),
+            Row(getString(R.string.recordings_title), "") {
+                startActivity(android.content.Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))
+            },
+            Row(getString(R.string.reminders_title), "") {
+                startActivity(android.content.Intent(this, com.openstream.tv.ui.reminders.RemindersActivity::class.java))
+            },
+            Row(getString(R.string.setting_pad_before), minutes(s.recordPadBefore)) {
+                pick(R.string.setting_pad_before, padOptions, s.recordPadBefore, repo::setRecordPadBefore)
+            },
+            Row(getString(R.string.setting_pad_after), minutes(s.recordPadAfter)) {
+                pick(R.string.setting_pad_after, padOptions, s.recordPadAfter, repo::setRecordPadAfter)
+            },
+            Row(getString(R.string.setting_instant_length), minutes(s.instantRecordMinutes)) {
+                pick(R.string.setting_instant_length, listOf(15, 30, 60, 90, 120, 180, 240).map { minutes(it) to it },
+                    s.instantRecordMinutes, repo::setInstantRecordMinutes)
+            },
+            Row(getString(R.string.setting_reminder_before), minutes(s.reminderMinutes)) {
+                pick(R.string.setting_reminder_before, listOf(0, 1, 2, 5, 10, 15, 30).map { minutes(it) to it },
+                    s.reminderMinutes, repo::setReminderMinutes)
+            },
+            Row(getString(R.string.setting_reminder_popup), seconds(s.reminderPopupSeconds)) {
+                pick(R.string.setting_reminder_popup, listOf(10, 20, 30, 60, 120).map { seconds(it) to it },
+                    s.reminderPopupSeconds, repo::setReminderPopupSeconds)
             },
             header(R.string.settings_guide),
             Row(getString(R.string.setting_guide_interval), resources.getQuantityString(R.plurals.hours, s.guideRefreshHours, s.guideRefreshHours)) {
@@ -146,6 +172,9 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         val target = rows.getOrNull(focused) ?: rows.firstOrNull { it.root.isFocusable }
         target?.root?.requestFocus()
     }
+
+    private fun minutes(m: Int) = resources.getQuantityString(R.plurals.minutes, m, m)
+    private fun seconds(v: Int) = resources.getQuantityString(R.plurals.seconds, v, v)
 
     private fun bufferLabel(b: BufferSize) = getString(
         when (b) {

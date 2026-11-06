@@ -100,7 +100,7 @@
     <string name="action_guide">TV guide</string>
     <string name="guide_no_info">No information</string>
     <string name="guide_empty">No channels to show.</string>
-    <string name="guide_hint">OK: watch · Hold OK or Menu: options · CH+/CH−: page · Fast-forward/Rewind: ±1 day</string>
+    <string name="guide_hint">OK: watch · Menu: record, remind and more · CH+/CH−: page · Fast-forward/Rewind: ±1 day</string>
     <string name="guide_future">That programme hasn\'t started yet.</string>
     <string name="guide_no_catchup">No catch-up available for this channel.</string>
     <string name="guide_watch_live">Watch channel</string>
@@ -133,4 +133,70 @@
     <string name="on">On</string>
     <string name="off">Off</string>
     <plurals name="hours"><item quantity="one">%d hour</item><item quantity="other">%d hours</item></plurals>
+    <!-- recordings -->
+    <string name="action_recordings">Recordings</string>
+    <string name="recordings_title">Recordings</string>
+    <string name="recordings_all">All</string>
+    <string name="recordings_scheduled">Scheduled</string>
+    <string name="recordings_completed">Completed</string>
+    <string name="recordings_failed">Failed</string>
+    <string name="recordings_empty">No recordings yet. Press Menu on a programme in the TV guide, or press Record while watching.</string>
+    <string name="recordings_saved_to">Saved to %1$s</string>
+    <string name="recordings_inexact">Exact alarms aren\'t allowed for OpenStream, so scheduled recordings and reminders may start a few minutes late.</string>
+    <string name="recording_status_scheduled">Scheduled</string>
+    <string name="recording_status_recording">● Recording</string>
+    <string name="recording_status_completed">Completed</string>
+    <string name="recording_status_failed">Failed</string>
+    <string name="recording_status_cancelled">Cancelled</string>
+    <string name="recording_from_archive">from catch-up archive</string>
+    <string name="recording_play">Play</string>
+    <string name="recording_stop">Stop recording</string>
+    <string name="recording_cancel">Cancel recording</string>
+    <string name="recording_details">Why it failed</string>
+    <string name="recording_delete_confirm">Delete %1$s and its file?</string>
+    <string name="recording_file_missing">The recording\'s file is missing.</string>
+    <string name="recording_scheduled">Recording scheduled: %1$s</string>
+    <string name="recording_started">Recording %1$s</string>
+    <string name="recording_archive_started">Downloading %1$s from the catch-up archive</string>
+    <string name="recording_failed_to_schedule">Can\'t record: %1$s</string>
+    <string name="recording_stopped">Recording stopped</string>
+    <string name="recording_cancelled">Recording cancelled</string>
+    <string name="guide_record">Record</string>
+    <string name="guide_record_archive">Record from catch-up</string>
+    <string name="guide_cancel_recording">Cancel recording</string>
+    <string name="guide_stop_recording">Stop recording</string>
+    <string name="guide_remind">Remind me</string>
+    <string name="guide_cancel_reminder">Cancel reminder</string>
+    <string name="instant_record_title">Record this channel</string>
+    <string name="instant_until_end">Until the programme ends (%1$s)</string>
+    <plurals name="minutes"><item quantity="one">%d minute</item><item quantity="other">%d minutes</item></plurals>
+
+    <!-- reminders -->
+    <string name="reminders_title">Reminders</string>
+    <string name="reminders_empty">No reminders. Press Menu on an upcoming programme in the TV guide and choose Remind me.</string>
+    <string name="reminders_notice">A popup appears before each programme starts. OK on a reminder deletes it.</string>
+    <string name="reminders_overlay_notice">While another app is on screen, Android only lets OpenStream pop up if it may display over other apps. Otherwise you get a notification. OK on a reminder deletes it.</string>
+    <string name="reminders_allow_popups">Allow popups over other apps</string>
+    <string name="reminders_overlay_unavailable">This device has no setting for that. Reminders still pop up while OpenStream is open.</string>
+    <string name="reminder_watch">Watch now</string>
+    <string name="reminder_dismiss">Dismiss</string>
+    <string name="reminder_closes_in">Closes in %1$d s</string>
+    <string name="reminder_starting_now">Starting now</string>
+    <plurals name="reminder_starting_in"><item quantity="one">Starts in %d minute</item><item quantity="other">Starts in %d minutes</item></plurals>
+    <string name="reminder_channel_time">%1$s at %2$s</string>
+    <string name="reminder_channel_gone">That channel is no longer in your playlists.</string>
+    <string name="reminder_alert_at">alert at %1$s</string>
+    <string name="reminder_delete_confirm">Delete this reminder?</string>
+    <string name="reminder_set">Reminder set for %1$s</string>
+    <string name="reminder_removed">Reminder removed</string>
+    <string name="reminder_failed">Can\'t set a reminder: %1$s</string>
+
+    <!-- recording settings -->
+    <string name="settings_recording">Recording and reminders</string>
+    <string name="setting_pad_before">Start recording early</string>
+    <string name="setting_pad_after">Keep recording after the end</string>
+    <string name="setting_instant_length">Instant recording length</string>
+    <string name="setting_reminder_before">Remind before start</string>
+    <string name="setting_reminder_popup">Reminder popup stays for</string>
+    <plurals name="seconds"><item quantity="one">%d second</item><item quantity="other">%d seconds</item></plurals>
 </resources>

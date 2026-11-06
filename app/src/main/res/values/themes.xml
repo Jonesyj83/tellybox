@@ -18,6 +18,15 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
+    <style name="Theme.OpenStream.Popup" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowBackground">@drawable/bg_popup</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:defaultFocusHighlightEnabled" tools:targetApi="o">false</item>
+    </style>
+
     <style name="Text.Title" parent="">
         <item name="android:textSize">26sp</item>
         <item name="android:textColor">@color/text_primary</item>

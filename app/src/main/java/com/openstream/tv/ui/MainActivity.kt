@@ -75,6 +75,9 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         binding.searchButton.setOnClickListener { showSearch() }
         binding.vodButton.setOnClickListener { startActivity(Intent(this, com.openstream.tv.ui.vod.VodActivity::class.java)) }
         binding.guideButton.setOnClickListener { openGuide() }
+        binding.recordingsButton.setOnClickListener {
+            startActivity(Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))
+        }
         binding.settingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
 
         if (savedInstanceState == null) {

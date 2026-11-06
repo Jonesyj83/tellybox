@@ -46,6 +46,14 @@
                 android:text="@string/action_guide" />
 
             <Button
+                android:id="@+id/recordingsButton"
+                style="@style/Button.TV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:text="@string/action_recordings" />
+
+            <Button
                 android:id="@+id/searchButton"
                 style="@style/Button.TV"
                 android:layout_width="wrap_content"
