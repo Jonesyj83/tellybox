@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.openstream.tv.R
 import com.openstream.tv.appContainer
+import com.openstream.tv.data.repository.RefreshStatus
 import com.openstream.tv.databinding.ActivityMainBinding
 import com.openstream.tv.ui.channels.ChannelAdapter
 import com.openstream.tv.ui.channels.ChannelRow
@@ -70,8 +71,22 @@ class MainActivity : AppCompatActivity() {
         binding.emptyAddButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
         binding.searchButton.setOnClickListener { showSearch() }
 
+        if (savedInstanceState == null) {
+            val container = appContainer
+            container.appScope.launch { container.backgroundRefresh.refreshStale() }
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    appContainer.backgroundRefresh.status.collect { status ->
+                        binding.status.text = when (status) {
+                            RefreshStatus.Idle -> ""
+                            RefreshStatus.Guide -> getString(R.string.refreshing_guide)
+                            is RefreshStatus.Playlist -> getString(R.string.refreshing_playlist, status.name)
+                        }
+                    }
+                }
                 launch {
                     viewModel.playlists.collect { list ->
                         if (list == null) return@collect

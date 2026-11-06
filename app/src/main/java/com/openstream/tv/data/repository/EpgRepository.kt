@@ -32,6 +32,9 @@ class EpgRepository(
         return db.epg().getEnabledSources().map { it to refresh(it) }
     }
 
+    suspend fun staleSources(updatedBefore: Long): List<EpgSourceEntity> =
+        db.epg().getEnabledSources().filter { it.lastUpdated < updatedBefore }
+
     suspend fun refreshForPlaylist(playlistId: Long) {
         db.epg().getSourcesForPlaylist(playlistId).filter { it.enabled }.forEach { refresh(it) }
     }
@@ -41,7 +44,12 @@ class EpgRepository(
      * stored, which keeps the database small when a provider ships a guide for thousands
      * of channels the user's playlist doesn't contain.
      */
-    suspend fun refresh(source: EpgSourceEntity): Result<XmltvStats> {
+    private val refreshLocks = KeyedLock<Long>()
+
+    suspend fun refresh(source: EpgSourceEntity): Result<XmltvStats> =
+        refreshLocks.withLock(source.id) { doRefresh(source) }
+
+    private suspend fun doRefresh(source: EpgSourceEntity): Result<XmltvStats> {
         val wanted = db.epg().knownTvgIds(source.playlistId).toHashSet()
         val cutoff = System.currentTimeMillis() - KEEP_PAST
         return try {

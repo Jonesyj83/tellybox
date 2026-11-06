@@ -17,8 +17,8 @@
     <string name="search_hint">Channel name</string>
     <string name="favorite_added">Added %1$s to Favorites</string>
     <string name="favorite_removed">Removed %1$s from Favorites</string>
+    <string name="refreshing_playlist">Updating %1$s…</string>
     <string name="refreshing_guide">Updating TV guide…</string>
-    <string name="guide_updated">TV guide updated</string>
 
     <!-- playlists -->
     <string name="playlists_title">Playlists</string>

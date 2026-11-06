@@ -2,6 +2,7 @@ package com.openstream.tv
 
 import android.app.Application
 import com.openstream.tv.data.db.OpenStreamDatabase
+import com.openstream.tv.data.repository.BackgroundRefresh
 import com.openstream.tv.data.repository.ChannelRepository
 import com.openstream.tv.data.repository.EpgRepository
 import com.openstream.tv.data.repository.PlaylistRepository
@@ -33,6 +34,7 @@ class AppContainer(app: Application) {
     val playlists = PlaylistRepository(app, database, http, stalkerClients)
     val channels = ChannelRepository(database, stalkerClients)
     val epg = EpgRepository(app, database, http)
+    val backgroundRefresh = BackgroundRefresh(playlists, epg)
 }
 
 val android.content.Context.appContainer: AppContainer

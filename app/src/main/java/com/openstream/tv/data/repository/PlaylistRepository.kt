@@ -65,7 +65,12 @@ class PlaylistRepository(
         db.playlists().update(playlist.copy(enabled = enabled))
     }
 
-    suspend fun refresh(playlistId: Long): Result<RefreshSummary> {
+    private val refreshLocks = KeyedLock<Long>()
+
+    suspend fun refresh(playlistId: Long): Result<RefreshSummary> =
+        refreshLocks.withLock(playlistId) { doRefresh(playlistId) }
+
+    private suspend fun doRefresh(playlistId: Long): Result<RefreshSummary> {
         val playlist = db.playlists().get(playlistId)
             ?: return Result.failure(IllegalArgumentException("Playlist $playlistId not found"))
         return try {
