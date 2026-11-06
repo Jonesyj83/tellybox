@@ -23,9 +23,10 @@
             <TextView
                 android:id="@+id/title"
                 style="@style/Text.Title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_marginEnd="16dp"
+                android:maxLines="1"
                 android:text="@string/app_name" />
 
             <TextView
@@ -34,6 +35,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp" />
+
+            <HorizontalScrollView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end|center_vertical"
+                android:orientation="horizontal">
 
             <Button android:id="@+id/vodButton" style="@style/Button.TV" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Movies / Series" android:layout_marginEnd="12dp" />
 
@@ -75,6 +89,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/action_settings" />
+            </LinearLayout>
+            </HorizontalScrollView>
         </LinearLayout>
 
         <LinearLayout

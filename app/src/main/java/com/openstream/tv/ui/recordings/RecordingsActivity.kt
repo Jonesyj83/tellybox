@@ -99,7 +99,7 @@ class RecordingsActivity : ProtectedActivity() {
         filterButtons.forEach { (f, b) -> b.isActivated = f == filter }
         val focusedId = binding.list.focusedChild?.let { binding.list.getChildItemId(it) }
         val rows = recordings.filter(::matches).map { r ->
-            SimpleRow(r.id, "${statusLabel(r)}  ·  ${r.title}", detail(r), highlight = r.status == RecordingStatus.RECORDING)
+            SimpleRow(r.id, "${statusLabel(r)}  ·  ${r.title}", detail(r))
         }
         adapter.submit(rows)
         binding.empty.setText(R.string.recordings_empty)

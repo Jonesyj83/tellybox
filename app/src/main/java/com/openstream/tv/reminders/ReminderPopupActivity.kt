@@ -51,6 +51,8 @@ class ReminderPopupActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         binding = ActivityReminderPopupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // Dialog windows wrap to their minimum width otherwise, squeezing the buttons.
+        window.setLayout((600 * resources.displayMetrics.density).toInt(), WindowManager.LayoutParams.WRAP_CONTENT)
         setFinishOnTouchOutside(false)
 
         NotificationManagerCompat.from(this).cancel(ReminderReceiver.NOTIFICATION_BASE + intent.getLongExtra(EXTRA_ID, 0).toInt())

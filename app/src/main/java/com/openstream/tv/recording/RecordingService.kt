@@ -155,6 +155,8 @@ class RecordingService : Service() {
             finish(failure("Not enough free storage (less than 200 MB left)"))
             return
         }
+        // Picking up a recording the system or a reboot cut short: the gap can't be filled.
+        val resumed = rec.status == RecordingStatus.RECORDING && (rec.filePath?.let { File(it).length() } ?: 0L) > 0
         val file = rec.filePath?.let(::File) ?: uniqueFile(dir, RecordingPlan.fileName(rec.channelName, rec.title, rec.programStart))
         val started = rec.copy(status = RecordingStatus.RECORDING, filePath = file.path, error = null)
         dao.update(started)
@@ -190,6 +192,7 @@ class RecordingService : Service() {
         val note = when {
             timedOut -> "Stopped early: Android limits background downloads to 6 hours a day"
             result.bytes > 0 && result.error != null -> "Ended early or has gaps: ${result.error}"
+            resumed && result.bytes > 0 -> "Resumed after an interruption, so there may be a short gap"
             else -> result.error
         }
         finish(
