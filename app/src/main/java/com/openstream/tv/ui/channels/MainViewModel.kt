@@ -33,7 +33,6 @@ data class GroupRow(val selection: GroupSelection, val name: String, val count: 
 
 data class ChannelRow(
     val channel: ChannelEntity,
-    val nowPlaying: String?,
     val favorite: Boolean,
     val displayName: String = channel.name,
 )
@@ -64,29 +63,19 @@ class MainViewModel(private val app: AppContainer) : ViewModel() {
         is GroupSelection.Group -> app.channels.observeGroup(sel.id)
     }
 
-    /** Changes whenever a guide import finishes, so now-playing gets looked up again. */
-    private val epgVersion = app.epg.observeSources()
+    /** Changes whenever a guide import finishes, so the guide reloads its programmes. */
+    val epgVersion: Flow<Long> = app.epg.observeSources()
         .map { sources -> sources.sumOf { it.lastUpdated } }
         .distinctUntilChanged()
 
-    val channels: StateFlow<List<ChannelRow>?> = _selection
-        .flatMapLatest { channelsFor(it) }
-        .combine(epgVersion) { list, _ -> list }
-        .mapLatest { list ->
-            val now = app.epg.currentPrograms(list.mapNotNull { it.tvgId })
-            list to now
+    /** Rows for the current selection, tagged with the selection they belong to. */
+    val channels: StateFlow<Pair<GroupSelection, List<ChannelRow>>?> = _selection
+        .flatMapLatest { sel -> channelsFor(sel).map { sel to it } }
+        .combine(favoriteKeys) { (sel, list), favs ->
+            sel to list.map { c -> ChannelRow(channel = c, favorite = (c.playlistId to c.channelKey) in favs) }
         }
-        .combine(favoriteKeys) { (list, now), favs ->
-            list.map { c ->
-                ChannelRow(
-                    channel = c,
-                    nowPlaying = c.tvgId?.let { now[it.lowercase()]?.title },
-                    favorite = (c.playlistId to c.channelKey) in favs,
-                )
-            }
-        }
-        .combine(app.settings.settings) { rows, settings ->
-            rows.map { it.copy(displayName = com.openstream.tv.data.settings.ChannelNames.display(it.channel.name, settings.channelNameTokens)) }
+        .combine(app.settings.settings) { (sel, rows), settings ->
+            sel to rows.map { it.copy(displayName = com.openstream.tv.data.settings.ChannelNames.display(it.channel.name, settings.channelNameTokens)) }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 

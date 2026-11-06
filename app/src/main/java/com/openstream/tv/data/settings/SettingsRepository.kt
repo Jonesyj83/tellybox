@@ -36,6 +36,8 @@ data class AppSettings(
     val reminderPopupSeconds: Int = 30,
     /** Keep a live stream going after leaving the player without picture-in-picture. */
     val backgroundPlayback: Boolean = true,
+    /** Home screen: preview whichever channel focus rests on, rather than waiting for OK. */
+    val previewFollowsFocus: Boolean = false,
 ) {
     val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling)
 }
@@ -60,6 +62,7 @@ class SettingsRepository(context: Context) {
         val reminderMinutes = intPreferencesKey("reminder_minutes")
         val reminderPopupSeconds = intPreferencesKey("reminder_popup_seconds")
         val backgroundPlayback = booleanPreferencesKey("background_playback")
+        val previewFollowsFocus = booleanPreferencesKey("preview_follows_focus")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -79,6 +82,7 @@ class SettingsRepository(context: Context) {
             reminderMinutes = p[Keys.reminderMinutes] ?: d.reminderMinutes,
             reminderPopupSeconds = p[Keys.reminderPopupSeconds] ?: d.reminderPopupSeconds,
             backgroundPlayback = p[Keys.backgroundPlayback] ?: d.backgroundPlayback,
+            previewFollowsFocus = p[Keys.previewFollowsFocus] ?: d.previewFollowsFocus,
         )
     }
 
@@ -99,4 +103,5 @@ class SettingsRepository(context: Context) {
     suspend fun setReminderMinutes(v: Int) = store.edit { it[Keys.reminderMinutes] = v }
     suspend fun setReminderPopupSeconds(v: Int) = store.edit { it[Keys.reminderPopupSeconds] = v }
     suspend fun setBackgroundPlayback(v: Boolean) = store.edit { it[Keys.backgroundPlayback] = v }
+    suspend fun setPreviewFollowsFocus(v: Boolean) = store.edit { it[Keys.previewFollowsFocus] = v }
 }

@@ -17,7 +17,7 @@
     <string name="group_channels_empty">No channels in this group.</string>
     <string name="vod_empty_all">Nothing here yet. Movies and series come from Xtream playlists, and from M3U lists that include them.</string>
     <string name="empty_group">Nothing here.</string>
-    <string name="empty_favorites">Press Menu on a channel, or hold OK, to add it to Favorites.</string>
+    <string name="empty_favorites">Press Menu on a channel, or hold OK on the preview, to add it to Favorites.</string>
     <string name="search_hint">Channel name</string>
     <string name="favorite_added">Added %1$s to Favorites</string>
     <string name="favorite_removed">Removed %1$s from Favorites</string>
@@ -222,4 +222,16 @@
     <string name="setting_reminder_before">Remind before start</string>
     <string name="setting_reminder_popup">Reminder popup stays for</string>
     <plurals name="seconds"><item quantity="one">%d second</item><item quantity="other">%d seconds</item></plurals>
+    <string name="setting_preview_follows_focus">Preview the channel under focus</string>
+    <string name="preview_hint">Press OK on a channel to preview it here</string>
+    <string name="preview_watch">▶ Watch</string>
+    <string name="preview_error">Can\'t play this channel</string>
+    <string name="preview_elsewhere">Playing in picture-in-picture</string>
+    <string name="preview_watch_full">Watch full screen</string>
+    <string name="preview_start">Preview</string>
+    <string name="preview_stop">Stop preview</string>
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+    <string name="open_full_guide">Open full guide</string>
+    <string name="guide_watch_archive">Watch from catch-up</string>
 </resources>

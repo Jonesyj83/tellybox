@@ -66,13 +66,14 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
         grid.reload()
     }
 
-    data class Info(val title: String, val time: String, val description: String)
+    /** [time] includes the channel name when there's a programme; [timeOnly] never does. */
+    data class Info(val title: String, val time: String, val description: String, val timeOnly: String = time)
 
     fun describe(channel: GuideChannel, block: GuideBlock): Info {
         val p = block.program
         if (block.strip != null) {
             val text = if (block.strip == GuideBlock.Strip.NO_DATA) activity.getString(R.string.guide_no_data) else ""
-            return Info(channel.name, text, "")
+            return Info(channel.name, text, "", text)
         }
         val fmt = DateFormat.getTimeFormat(activity)
         val day = DateFormat.getMediumDateFormat(activity)
@@ -81,6 +82,7 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
             title = p?.title ?: channel.name,
             time = if (p != null) "${channel.name} · $time" else time,
             description = listOfNotNull(p?.subtitle, p?.description).joinToString(" — "),
+            timeOnly = time,
         )
     }
 

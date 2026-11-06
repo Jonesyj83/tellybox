@@ -29,10 +29,23 @@ class Playback(private val context: Context, private val http: OkHttpClient) {
     /** Channel the multiview screen left focused, for the player screen to continue with. */
     var handoffChannelId: Long? = null
 
+    /** Live channel currently loaded (not catch-up, VOD or a recording), so the home preview can carry on with it. */
+    var liveChannelId: Long? = null
+
+    /** A screen that shares the player and needs to know when another one takes it over. */
+    interface Holder {
+        fun onPlaybackTaken()
+    }
+
     val mediaSession: MediaSession? get() = session
 
     fun acquire(config: PlayerConfig, owner: Any): Player {
         val existing = player
+        val previous = this.owner
+        if (previous != null && previous !== owner) {
+            this.owner = owner
+            (previous as? Holder)?.onPlaybackTaken()
+        }
         if (existing != null && config == this.config) {
             this.owner = owner
             return existing
@@ -51,6 +64,17 @@ class Playback(private val context: Context, private val http: OkHttpClient) {
 
     fun isOwner(owner: Any) = this.owner === owner
 
+    /** Nobody is using the player right now, though it may still be loaded and playing. */
+    val isUnowned get() = owner == null
+
+    /**
+     * [owner] is going away but expects the screen below to carry on with the same stream:
+     * the player stays loaded, unowned, until that screen acquires it (or releases it).
+     */
+    fun handBack(owner: Any) {
+        if (this.owner === owner) this.owner = null
+    }
+
     fun setSessionActivity(intent: Intent) {
         val pending = PendingIntent.getActivity(
             context, 0, Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
@@ -68,6 +92,7 @@ class Playback(private val context: Context, private val http: OkHttpClient) {
         player = null
         config = null
         key = null
+        liveChannelId = null
         this.owner = null
         s?.release()
         p?.release()
@@ -105,6 +130,24 @@ class PlaybackService : MediaSessionService() {
     override fun onDestroy() {
         playback.mediaSession?.let { if (isSessionAdded(it)) removeSession(it) }
         super.onDestroy()
+    }
+}
+
+/** Short, user-facing reason a stream failed. */
+object PlaybackErrors {
+    fun describe(context: Context, error: androidx.media3.common.PlaybackException): String {
+        val http = generateSequence<Throwable>(error) { it.cause }
+            .filterIsInstance<androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException>()
+            .firstOrNull()
+        return when {
+            http != null -> context.getString(com.openstream.tv.R.string.error_http, http.responseCode)
+            error.errorCode == androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
+                context.getString(com.openstream.tv.R.string.error_timeout)
+            error.errorCode in 2000..2999 -> context.getString(com.openstream.tv.R.string.error_network)
+            error.errorCode in 3000..3999 -> context.getString(com.openstream.tv.R.string.error_format)
+            error.errorCode in 4000..4999 -> context.getString(com.openstream.tv.R.string.error_decoder)
+            else -> error.errorCodeName
+        }
     }
 }
 

@@ -48,7 +48,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 @OptIn(UnstableApi::class)
-class PlayerActivity : AppCompatActivity() {
+class PlayerActivity : AppCompatActivity(), com.openstream.tv.player.Playback.Holder {
 
     private lateinit var binding: ActivityPlayerBinding
     private var player: Player? = null
@@ -61,6 +61,8 @@ class PlayerActivity : AppCompatActivity() {
     private var loadJob: Job? = null
     private var watchStartedAt = 0L
     private val catchup get() = intent.hasExtra(EXTRA_ARCHIVE_START)
+    /** Opened from the home preview: on the way out, leave the stream running for it. */
+    private val returnToPreview get() = intent.getBooleanExtra(EXTRA_RETURN_TO_PREVIEW, false)
     /** Playing a saved recording rather than a channel. */
     private val fileMode get() = intent.hasExtra(EXTRA_FILE)
     private var archivePosition = 0L
@@ -134,6 +136,24 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
+    override fun onPause() {
+        // Before the home screen starts again, so it can pick the player straight back up.
+        if (isFinishing && returnToPreview && player != null) {
+            recordWatch()
+            appContainer.playback.handBack(this)
+        }
+        super.onPause()
+    }
+
+    /** The home preview (or another screen) took the player over, e.g. while this was in picture-in-picture. */
+    override fun onPlaybackTaken() {
+        player?.exo?.removeListener(listener)
+        binding.playerView.player = null
+        player = null
+        loadJob?.cancel()
+        if (!isFinishing) finish()
+    }
+
     private var protectionJob: Job? = null
     override fun onStop() {
         if (catchup || fileMode) archivePosition = player?.exo?.currentPosition ?: archivePosition
@@ -151,7 +171,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun playbackKey(i: Int): String =
         if (fileMode) "file:" + intent.getStringExtra(EXTRA_FILE)
-        else "ch:${channelIds.getOrNull(i)}:${intent.getLongExtra("episode_id", -1)}:${intent.getLongExtra(EXTRA_ARCHIVE_START, -1)}"
+        else channelKey(channelIds.getOrNull(i), intent.getLongExtra("episode_id", -1), intent.getLongExtra(EXTRA_ARCHIVE_START, -1))
 
     private fun inPip() = Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode
 
@@ -249,6 +269,8 @@ class PlayerActivity : AppCompatActivity() {
                 lastUrl = url
                 player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
                 container.playback.key = playbackKey(i)
+                container.playback.liveChannelId =
+                    channel.id.takeIf { !catchup && !isVod && intent.getLongExtra("episode_id", -1) < 0 }
                 val resume = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
                     container.database.history().get(channel.playlistId, channel.channelKey)?.positionMs ?: 0L else 0L
                 if (resume > 0) player?.exo?.seekTo(resume)
@@ -274,6 +296,7 @@ class PlayerActivity : AppCompatActivity() {
         if (!file.exists()) return showError(getString(R.string.recording_file_missing))
         player?.play(android.net.Uri.fromFile(file).toString(), intent.getStringExtra(EXTRA_FILE_TITLE), null)
         appContainer.playback.key = playbackKey(index)
+        appContainer.playback.liveChannelId = null
         if (archivePosition > 0) player?.exo?.seekTo(archivePosition)
     }
 
@@ -331,20 +354,7 @@ class PlayerActivity : AppCompatActivity() {
         showError(describe(error))
     }
 
-    private fun describe(error: PlaybackException): String {
-        val http = generateSequence<Throwable>(error) { it.cause }
-            .filterIsInstance<HttpDataSource.InvalidResponseCodeException>()
-            .firstOrNull()
-        return when {
-            http != null -> getString(R.string.error_http, http.responseCode)
-            error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
-                getString(R.string.error_timeout)
-            error.errorCode in 2000..2999 -> getString(R.string.error_network)
-            error.errorCode in 3000..3999 -> getString(R.string.error_format)
-            error.errorCode in 4000..4999 -> getString(R.string.error_decoder)
-            else -> error.errorCodeName
-        }
-    }
+    private fun describe(error: PlaybackException): String = com.openstream.tv.player.PlaybackErrors.describe(this, error)
 
     private fun showError(detail: String?) {
         binding.errorDetail.text = detail.orEmpty()
@@ -561,6 +571,14 @@ class PlayerActivity : AppCompatActivity() {
                 .putExtra(EXTRA_ARCHIVE_START, start)
                 .putExtra(EXTRA_ARCHIVE_STOP, stop)
                 .putExtra(EXTRA_ARCHIVE_TITLE, title)
+
+        private const val EXTRA_RETURN_TO_PREVIEW = "return_to_preview"
+
+        /** What [Playback.key] holds while a channel plays live, shared with the home preview. */
+        fun channelKey(channelId: Long?, episodeId: Long = -1, archiveStart: Long = -1) = "ch:$channelId:$episodeId:$archiveStart"
+
+        /** Marks a player launch from the home screen, whose preview hands over and takes back the stream. */
+        fun fromPreview(intent: Intent): Intent = intent.putExtra(EXTRA_RETURN_TO_PREVIEW, true)
 
         private const val EXTRA_CHANNEL_ID = "channel_id"
         private const val EXTRA_CHANNEL_LIST = "channel_list"
