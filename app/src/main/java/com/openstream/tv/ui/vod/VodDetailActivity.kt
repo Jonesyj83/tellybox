@@ -1,5 +1,6 @@
 package com.openstream.tv.ui.vod
 
+import com.openstream.tv.ui.parental.requestPin
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +15,7 @@ import com.openstream.tv.ui.player.PlayerActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-class VodDetailActivity : AppCompatActivity() {
+class VodDetailActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     private var historyJob: kotlinx.coroutines.Job? = null
     private var loadJob: kotlinx.coroutines.Job? = null
     private lateinit var content: LinearLayout
@@ -29,6 +30,8 @@ class VodDetailActivity : AppCompatActivity() {
         load()
     }
 
+    override fun onParentalUnlock() { load() }
+
     private fun load() {
         historyJob?.cancel()
         loadJob?.cancel()
@@ -38,6 +41,11 @@ class VodDetailActivity : AppCompatActivity() {
             val channel = appContainer.channels.get(intent.getLongExtra("channel_id", -1))
             content.removeAllViews()
             if (channel == null) { text("Title no longer available"); return@launch }
+            if (appContainer.parental.allScreens && !appContainer.parental.unlocked) return@launch
+            if (!appContainer.parental.allowed(channel, appContainer.database)) {
+                requestPin(cancel = { finish() }) { load() }
+                return@launch
+            }
             text(channel.name, 28f)
             content.addView(ImageView(this@VodDetailActivity).apply { load(channel.logoUrl); scaleType = ImageView.ScaleType.FIT_START }, LinearLayout.LayoutParams(200, 260))
             if (channel.kind != ContentKind.SERIES) playbackButtons(channel, null)

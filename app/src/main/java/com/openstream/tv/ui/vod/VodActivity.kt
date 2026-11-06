@@ -18,7 +18,7 @@ import com.openstream.tv.data.db.ContentKind
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-class VodActivity : AppCompatActivity() {
+class VodActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     private lateinit var categories: LinearLayout
     private lateinit var grid: RecyclerView
     private lateinit var status: TextView

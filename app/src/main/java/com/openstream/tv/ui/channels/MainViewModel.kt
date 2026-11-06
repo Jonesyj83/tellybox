@@ -60,7 +60,7 @@ class MainViewModel(private val app: AppContainer) : ViewModel() {
         GroupSelection.Favorites -> app.channels.observeFavorites()
         GroupSelection.Recent -> app.channels.observeRecent()
         GroupSelection.All -> app.channels.observeAll()
-        is GroupSelection.Search -> flow { emit(app.channels.search(sel.query)) }
+        is GroupSelection.Search -> app.parental.changes.mapLatest { app.channels.search(sel.query) }.distinctUntilChanged()
         is GroupSelection.Group -> app.channels.observeGroup(sel.id)
     }
 

@@ -8,21 +8,28 @@ import com.openstream.tv.data.db.OpenStreamDatabase
 import com.openstream.tv.data.db.PlaylistType
 import com.openstream.tv.data.db.WatchHistoryEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class ChannelRepository(
     private val db: OpenStreamDatabase,
     private val stalkerClients: StalkerClientCache,
+    private val parental: com.openstream.tv.data.parental.ParentalRepository,
 ) {
     fun observeGroups(kind: ContentKind = ContentKind.LIVE): Flow<List<GroupWithCount>> =
-        db.groups().observeVisible(kind)
+        combine(db.groups().observeVisible(kind), parental.changes) { groups, _ ->
+            groups.filter { g -> parental.unlocked || !parental.blocked("g:${g.playlistId}:${g.kind}:${g.name}") }
+        }.distinctUntilChanged()
 
-    fun observeGroup(groupId: Long): Flow<List<ChannelEntity>> = db.channels().observeByGroup(groupId)
+    fun observeGroup(groupId: Long): Flow<List<ChannelEntity>> = visible(db.channels().observeByGroup(groupId))
 
-    fun observeAll(kind: ContentKind = ContentKind.LIVE): Flow<List<ChannelEntity>> = db.channels().observeAll(kind)
+    fun observeAll(kind: ContentKind = ContentKind.LIVE): Flow<List<ChannelEntity>> = visible(db.channels().observeAll(kind))
 
-    fun observeFavorites(): Flow<List<ChannelEntity>> = db.channels().observeFavorites()
+    fun observeFavorites(): Flow<List<ChannelEntity>> = visible(db.channels().observeFavorites())
 
-    fun observeRecent(): Flow<List<ChannelEntity>> = db.history().observeRecent()
+    fun observeRecent(): Flow<List<ChannelEntity>> = visible(db.history().observeRecent())
+
+    private fun visible(source: Flow<List<ChannelEntity>>) = combine(source, parental.changes) { items, _ -> parental.visible(items, db) }.distinctUntilChanged()
 
     suspend fun get(id: Long): ChannelEntity? = db.channels().get(id)
 
@@ -30,12 +37,12 @@ class ChannelRepository(
     suspend fun getByIds(ids: LongArray): List<ChannelEntity> {
         val found = HashMap<Long, ChannelEntity>()
         ids.toList().chunked(900).forEach { chunk -> db.channels().getByIds(chunk).forEach { found[it.id] = it } }
-        return ids.toList().mapNotNull { found[it] }
+        return parental.visible(ids.toList().mapNotNull { found[it] }, db)
     }
 
-    suspend fun channelsInGroup(groupId: Long): List<ChannelEntity> = db.channels().getByGroup(groupId)
+    suspend fun channelsInGroup(groupId: Long): List<ChannelEntity> = parental.visible(db.channels().getByGroup(groupId), db)
 
-    suspend fun search(query: String): List<ChannelEntity> = db.channels().search(query.trim())
+    suspend fun search(query: String): List<ChannelEntity> = parental.visible(db.channels().search(query.trim()), db)
 
     suspend fun isFavorite(channel: ChannelEntity) = db.favorites().isFavorite(channel.playlistId, channel.channelKey)
 

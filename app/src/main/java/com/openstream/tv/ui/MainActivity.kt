@@ -34,7 +34,7 @@ import com.openstream.tv.ui.playlists.PlaylistsActivity
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels {

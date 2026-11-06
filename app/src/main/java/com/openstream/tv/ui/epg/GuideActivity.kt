@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-class GuideActivity : AppCompatActivity(), GuideGridView.Callback {
+class GuideActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGridView.Callback {
 
     private lateinit var binding: ActivityGuideBinding
     private var channels: List<ChannelEntity> = emptyList()
@@ -48,20 +48,26 @@ class GuideActivity : AppCompatActivity(), GuideGridView.Callback {
         binding.grid.callback = this
 
         lifecycleScope.launch {
-            val ids = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST)
-            channels = if (ids != null && ids.isNotEmpty()) {
-                appContainer.channels.getByIds(ids)
-            } else {
-                appContainer.channels.observeAll().first()
+            var lastIds: List<Long>? = null
+            appContainer.parental.changes.collect {
+                val ids = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST)
+                channels = if (ids != null && ids.isNotEmpty()) {
+                    appContainer.channels.getByIds(ids)
+                } else {
+                    appContainer.channels.observeAll().first()
+                }
+                val visibleIds = channels.map { it.id }
+                if (visibleIds == lastIds) return@collect
+                lastIds = visibleIds
+                binding.empty.visibility = if (channels.isEmpty()) View.VISIBLE else View.GONE
+                val tokens = appContainer.settings.get().channelNameTokens
+                channels = channels.map { it.copy(name = com.openstream.tv.data.settings.ChannelNames.display(it.name, tokens)) }
+                binding.grid.setChannels(
+                    channels.map { GuideChannel(it.id, it.number, it.name, it.tvgId?.lowercase(), it.catchupDays) },
+                    intent.getLongExtra(EXTRA_FOCUS_ID, -1),
+                )
+                if (!binding.grid.hasFocus()) binding.grid.requestFocus()
             }
-            binding.empty.visibility = if (channels.isEmpty()) View.VISIBLE else View.GONE
-            val tokens = appContainer.settings.get().channelNameTokens
-            channels = channels.map { it.copy(name = com.openstream.tv.data.settings.ChannelNames.display(it.name, tokens)) }
-            binding.grid.setChannels(
-                channels.map { GuideChannel(it.id, it.number, it.name, it.tvgId?.lowercase(), it.catchupDays) },
-                intent.getLongExtra(EXTRA_FOCUS_ID, -1),
-            )
-            binding.grid.requestFocus()
         }
     }
 

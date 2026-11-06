@@ -16,7 +16,7 @@ import com.openstream.tv.data.db.ChannelGroupEntity
 import kotlinx.coroutines.launch
 
 /** Ordering mode keeps focus on the moved row for repeated remote presses. */
-class GroupManagementActivity : AppCompatActivity() {
+class GroupManagementActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     private lateinit var list: LinearLayout
     private lateinit var hint: TextView
     private var groupId: Long? = null

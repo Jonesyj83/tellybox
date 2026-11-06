@@ -26,7 +26,7 @@ import com.openstream.tv.databinding.ItemChoiceBinding
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
-class AddPlaylistActivity : AppCompatActivity() {
+class AddPlaylistActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private enum class Mode { M3U_URL, M3U_FILE, XTREAM, STALKER }
 

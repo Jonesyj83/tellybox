@@ -28,6 +28,7 @@ class AppContainer(app: Application) {
     /** For work that should outlive a screen, like a playlist refresh started from the wizard. */
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    val parental = com.openstream.tv.data.parental.ParentalRepository(app)
     val settings = SettingsRepository(app)
     val database = OpenStreamDatabase.create(app)
     val http = createHttpClient()
@@ -35,7 +36,7 @@ class AppContainer(app: Application) {
 
     val playlists = PlaylistRepository(app, database, http, stalkerClients)
     val vod = com.openstream.tv.data.repository.VodRepository(database, http)
-    val channels = ChannelRepository(database, stalkerClients)
+    val channels = ChannelRepository(database, stalkerClients, parental)
     val epg = EpgRepository(app, database, http, settings)
     val backgroundRefresh = BackgroundRefresh(playlists, epg, settings)
 }

@@ -1,5 +1,6 @@
 package com.openstream.tv.ui.player
 
+import com.openstream.tv.ui.parental.requestPin
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -100,27 +101,50 @@ class PlayerActivity : AppCompatActivity() {
         binding.playerView.player = p.exo
         player = p
         loadChannel(index)
+        protectionJob = lifecycleScope.launch {
+            appContainer.parental.changes.collect {
+                binding.channelOverlay.visibility = View.GONE
+                val ch = current
+                if (ch != null && (!appContainer.parental.allowed(ch, appContainer.database) ||
+                    (appContainer.parental.allScreens && !appContainer.parental.unlocked))) loadChannel(index)
+            }
+        }
     }
 
+    private var protectionJob: Job? = null
     override fun onStop() {
         if (catchup) archivePosition = player?.exo?.currentPosition ?: archivePosition
         recordWatch()
         loadJob?.cancel()
+        protectionJob?.cancel()
         binding.playerView.player = null
         player?.release()
         player = null
         super.onStop()
     }
 
+    private var pinPending = false
     private fun loadChannel(i: Int) {
         if (channelIds.isEmpty()) return finish()
         recordWatch()
+        player?.exo?.stop()
+        lastUrl = null
+        binding.banner.visibility = View.GONE
+        binding.channelOverlay.visibility = View.GONE
+        current = null
         index = i
         binding.errorBox.visibility = View.GONE
         loadJob?.cancel()
         loadJob = lifecycleScope.launch {
             val container = appContainer
             val stored = container.channels.get(channelIds[i]) ?: return@launch
+            if (!container.parental.allowed(stored, container.database) || (container.parental.allScreens && !container.parental.unlocked)) {
+                if (!pinPending) {
+                    pinPending = true
+                    requestPin(cancel = { pinPending = false; finish() }) { pinPending = false; loadChannel(i) }
+                }
+                return@launch
+            }
             val channel = try {
                 val episode = intent.getLongExtra("episode_id", -1)
                 if (episode >= 0) container.vod.episode(stored, episode) else stored

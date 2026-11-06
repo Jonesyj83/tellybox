@@ -47,6 +47,8 @@
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity android:name=".ui.parental.ParentalActivity" android:exported="false" android:screenOrientation="landscape" />
+
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:exported="false"

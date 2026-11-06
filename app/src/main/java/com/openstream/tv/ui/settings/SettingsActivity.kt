@@ -17,7 +17,7 @@ import com.openstream.tv.player.BufferSize
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private val rows = ArrayList<ItemChoiceBinding>()
@@ -73,6 +73,9 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         return listOf(
+            Row("Parental controls", "PIN, blocks and unlock duration") {
+                startActivity(android.content.Intent(this, com.openstream.tv.ui.parental.ParentalActivity::class.java))
+            },
             Row("Channel name cleanup", s.channelNameTokens.ifEmpty { "Off" }) {
                 val input = android.widget.EditText(this).apply {
                     inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE

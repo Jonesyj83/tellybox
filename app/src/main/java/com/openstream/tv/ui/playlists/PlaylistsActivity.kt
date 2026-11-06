@@ -23,7 +23,7 @@ import com.openstream.tv.databinding.ActivityPlaylistsBinding
 import com.openstream.tv.databinding.ItemPlaylistBinding
 import kotlinx.coroutines.launch
 
-class PlaylistsActivity : AppCompatActivity() {
+class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private lateinit var binding: ActivityPlaylistsBinding
     private val adapter = PlaylistAdapter { showActions(it) }
