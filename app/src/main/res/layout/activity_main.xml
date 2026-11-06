@@ -160,12 +160,26 @@
             android:text="@string/empty_body"
             android:textColor="@color/text_secondary" />
 
-        <Button
-            android:id="@+id/emptyAddButton"
-            style="@style/Button.TV"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="@string/action_add_playlist" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/emptyAddButton"
+                style="@style/Button.TV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_add_playlist" />
+
+            <Button
+                android:id="@+id/emptySettingsButton"
+                style="@style/Button.TV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/settings_title" />
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

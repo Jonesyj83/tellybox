@@ -45,6 +45,17 @@
             android:text="@string/action_add_playlist" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/empty"
+        style="@style/Text.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="32dp"
+        android:gravity="center"
+        android:text="@string/playlists_empty"
+        android:textColor="@color/text_secondary"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"

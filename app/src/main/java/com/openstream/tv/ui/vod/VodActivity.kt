@@ -86,7 +86,11 @@ class VodActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val flow = if (group == null) appContainer.channels.observeAll(selectedKind) else appContainer.channels.observeGroup(group)
                 flow.collect { items ->
-                    status.text = if (items.isEmpty()) "No titles in this category" else "${items.size} titles"
+                    status.text = when {
+                        items.isNotEmpty() -> "${items.size} titles"
+                        group == null -> getString(R.string.vod_empty_all)
+                        else -> "No titles in this category"
+                    }
                     grid.adapter = Posters(items) { channel ->
                         startActivity(Intent(this@VodActivity, VodDetailActivity::class.java).putExtra("channel_id", channel.id))
                     }

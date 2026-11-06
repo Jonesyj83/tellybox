@@ -79,6 +79,27 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             startActivity(Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))
         }
         binding.settingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+        binding.emptySettingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+
+        // Back steps out of the channel column, then out of a search, before leaving the app.
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val content = binding.content.visibility == View.VISIBLE
+                when {
+                    content && binding.channels.hasFocus() -> {
+                        val selected = (0 until binding.groups.childCount).map { binding.groups.getChildAt(it) }
+                            .firstOrNull { it.isActivated }
+                        if (selected?.requestFocus() != true) binding.groups.requestFocus()
+                    }
+                    content && viewModel.search.value != null -> runSearch("")
+                    else -> {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
+                }
+            }
+        })
 
         if (savedInstanceState == null) {
             val container = appContainer
@@ -165,6 +186,12 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         val focused = binding.channels.focusedChild?.let { binding.channels.getChildAdapterPosition(it) }
             ?.takeIf { it >= 0 }?.let { rows.getOrNull(it)?.channel?.id }
         startActivity(GuideActivity.intent(this, rows.map { it.channel.id }.toLongArray().takeIf { it.isNotEmpty() }, focused))
+    }
+
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        // The channel column is the rightmost; without this Right escapes up to the header buttons.
+        if (event.keyCode == android.view.KeyEvent.KEYCODE_DPAD_RIGHT && binding.channels.hasFocus()) return true
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent): Boolean {

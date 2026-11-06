@@ -12,6 +12,10 @@
     <string name="action_add_playlist">Add playlist</string>
     <string name="empty_title">No playlists yet</string>
     <string name="empty_body">Add an M3U link, an Xtream Codes login or a Stalker portal to get started.</string>
+    <string name="playlists_empty">No playlists. Choose Add playlist to set one up.</string>
+    <string name="groups_empty">This playlist has no groups yet. Refresh it from the playlists screen first.</string>
+    <string name="group_channels_empty">No channels in this group.</string>
+    <string name="vod_empty_all">Nothing here yet. Movies and series come from Xtream playlists, and from M3U lists that include them.</string>
     <string name="empty_group">Nothing here.</string>
     <string name="empty_favorites">Press Menu on a channel, or hold OK, to add it to Favorites.</string>
     <string name="search_hint">Channel name</string>

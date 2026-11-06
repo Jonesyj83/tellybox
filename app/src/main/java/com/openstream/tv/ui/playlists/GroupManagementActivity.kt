@@ -44,8 +44,13 @@ class GroupManagementActivity : com.openstream.tv.ui.parental.ProtectedActivity(
             val selected = groups.find { it.id == groupId }
             val channels = selected?.let { group -> db.channels().getForPlaylist(playlistId).filter { it.groupId == group.id } }
             val tokens = appContainer.settings.get().channelNameTokens
-            hint.text = if (movingId != null) "Move: press Up / Down. OK or Back finishes."
-                else selected?.let { "${it.name} — select a channel to reorder" } ?: "Select a group to hide, show, or reorder"
+            hint.text = when {
+                movingId != null -> "Move: press Up / Down. OK or Back finishes."
+                selected != null && channels.isNullOrEmpty() -> "${selected.name} — " + getString(R.string.group_channels_empty)
+                selected != null -> "${selected.name} — select a channel to reorder"
+                groups.isEmpty() -> getString(R.string.groups_empty)
+                else -> "Select a group to hide, show, or reorder"
+            }
             list.removeAllViews()
             if (selected != null) {
                 list.addView(Button(this@GroupManagementActivity).apply {
@@ -93,6 +98,8 @@ class GroupManagementActivity : com.openstream.tv.ui.parental.ProtectedActivity(
                 list.addView(button)
                 if (id == focusId) button.requestFocusFromTouch()
             }
+            // Whatever was focused was just removed; don't leave the remote with nothing to act on.
+            if (list.findFocus() == null) list.getChildAt(0)?.requestFocus()
         }
     }
 

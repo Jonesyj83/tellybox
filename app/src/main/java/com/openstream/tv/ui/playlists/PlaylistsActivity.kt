@@ -42,6 +42,8 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.playlists.observePlaylists().collect { list ->
                     adapter.submitList(list)
+                    binding.empty.visibility = if (list.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+                    binding.refreshAllButton.isEnabled = list.isNotEmpty()
                     if (list.isEmpty()) binding.addButton.requestFocus()
                 }
             }
