@@ -128,6 +128,9 @@ interface ChannelDao {
 
     @Query("UPDATE channels SET hidden = :hidden WHERE id = :id")
     suspend fun setHidden(id: Long, hidden: Boolean)
+
+    @Query("SELECT * FROM channels WHERE playlistId = :playlistId AND channelKey = :channelKey")
+    suspend fun findByKey(playlistId: Long, channelKey: String): ChannelEntity?
 }
 
 @Dao
@@ -260,4 +263,63 @@ interface WatchHistoryDao {
 
     @Query("DELETE FROM watch_history")
     suspend fun clear()
+}
+
+@Dao
+interface RecordingDao {
+    @Query(
+        """
+        SELECT * FROM recordings ORDER BY
+        CASE status WHEN 'RECORDING' THEN 0 WHEN 'SCHEDULED' THEN 1 ELSE 2 END,
+        CASE WHEN status = 'SCHEDULED' THEN startAt ELSE -startAt END
+        """,
+    )
+    fun observeAll(): Flow<List<RecordingEntity>>
+
+    @Query("SELECT * FROM recordings WHERE id = :id")
+    suspend fun get(id: Long): RecordingEntity?
+
+    @Query("SELECT * FROM recordings WHERE status IN (:statuses)")
+    suspend fun withStatus(statuses: List<RecordingStatus>): List<RecordingEntity>
+
+    @Query(
+        """
+        SELECT * FROM recordings WHERE playlistId = :playlistId AND channelKey = :channelKey
+        AND status IN ('SCHEDULED', 'RECORDING') AND startAt < :to AND stopAt > :from
+        """,
+    )
+    suspend fun activeOverlapping(playlistId: Long, channelKey: String, from: Long, to: Long): List<RecordingEntity>
+
+    @Insert
+    suspend fun insert(recording: RecordingEntity): Long
+
+    @Update
+    suspend fun update(recording: RecordingEntity)
+
+    @Query("UPDATE recordings SET bytes = :bytes WHERE id = :id")
+    suspend fun setBytes(id: Long, bytes: Long)
+
+    @Query("DELETE FROM recordings WHERE id = :id")
+    suspend fun delete(id: Long)
+}
+
+@Dao
+interface ReminderDao {
+    @Query("SELECT * FROM reminders ORDER BY programStart")
+    fun observeAll(): Flow<List<ReminderEntity>>
+
+    @Query("SELECT * FROM reminders")
+    suspend fun getAll(): List<ReminderEntity>
+
+    @Query("SELECT * FROM reminders WHERE id = :id")
+    suspend fun get(id: Long): ReminderEntity?
+
+    @Query("SELECT * FROM reminders WHERE playlistId = :playlistId AND channelKey = :channelKey AND programStart = :programStart")
+    suspend fun find(playlistId: Long, channelKey: String, programStart: Long): ReminderEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(reminder: ReminderEntity): Long
+
+    @Query("DELETE FROM reminders WHERE id = :id")
+    suspend fun delete(id: Long)
 }

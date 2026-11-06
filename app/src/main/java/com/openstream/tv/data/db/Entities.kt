@@ -223,3 +223,49 @@ data class GroupWithCount(
     val kind: ContentKind,
     val channelCount: Int,
 )
+
+enum class RecordingStatus { SCHEDULED, RECORDING, COMPLETED, FAILED, CANCELLED }
+
+/** LIVE captures the stream as it airs; CATCHUP downloads the provider's archive of a past programme. */
+enum class RecordingSource { LIVE, CATCHUP }
+
+/**
+ * A scheduled, running or finished recording. Channels are referenced by (playlistId,
+ * channelKey) because channel row ids change every time a playlist is refreshed.
+ */
+@Entity(tableName = "recordings", indices = [Index("status"), Index("startAt")])
+data class RecordingEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val playlistId: Long,
+    val channelKey: String,
+    val channelName: String,
+    val title: String,
+    /** The programme (or requested span) before padding. */
+    val programStart: Long,
+    val programStop: Long,
+    /** Wall-clock window the recorder runs in, padding included. For catch-up, the archive span. */
+    val startAt: Long,
+    val stopAt: Long,
+    val source: RecordingSource = RecordingSource.LIVE,
+    val status: RecordingStatus = RecordingStatus.SCHEDULED,
+    val filePath: String? = null,
+    @ColumnInfo(defaultValue = "0") val bytes: Long = 0,
+    val error: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+@Entity(
+    tableName = "reminders",
+    indices = [Index(value = ["playlistId", "channelKey", "programStart"], unique = true), Index("remindAt")],
+)
+data class ReminderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val playlistId: Long,
+    val channelKey: String,
+    val channelName: String,
+    val title: String,
+    val programStart: Long,
+    val programStop: Long,
+    val remindAt: Long,
+    val createdAt: Long = System.currentTimeMillis(),
+)
