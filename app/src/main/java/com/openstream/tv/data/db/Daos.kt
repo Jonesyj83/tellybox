@@ -147,6 +147,16 @@ interface EpgDao {
     @Insert
     suspend fun insertPrograms(programs: List<EpgProgramEntity>)
 
+    /** Blocking variant for use from inside the streaming XMLTV parser callbacks. */
+    @Insert
+    fun insertProgramsBlocking(programs: List<EpgProgramEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertChannelsBlocking(channels: List<EpgChannelEntity>)
+
+    @Query("SELECT DISTINCT LOWER(tvgId) FROM channels WHERE tvgId IS NOT NULL AND (:playlistId IS NULL OR playlistId = :playlistId)")
+    suspend fun knownTvgIds(playlistId: Long?): List<String>
+
     @Query("DELETE FROM epg_programs WHERE sourceId = :sourceId")
     suspend fun deleteProgramsForSource(sourceId: Long)
 
