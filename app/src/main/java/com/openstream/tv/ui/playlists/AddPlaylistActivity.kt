@@ -218,7 +218,7 @@ class AddPlaylistActivity : AppCompatActivity() {
                 container.appScope.launch { container.epg.refreshForPlaylist(id) }
                 Toast.makeText(
                     this@AddPlaylistActivity,
-                    getString(R.string.playlist_refresh_done, playlist.name, it.channels, it.movies, it.series),
+                    getString(R.string.playlist_refresh_done, playlist.name, it.describe(this@AddPlaylistActivity)),
                     Toast.LENGTH_LONG,
                 ).show()
                 finish()

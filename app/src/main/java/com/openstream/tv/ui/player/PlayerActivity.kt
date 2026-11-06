@@ -68,7 +68,11 @@ class PlayerActivity : AppCompatActivity() {
         p.exo.addListener(object : Listener {
             override fun onPlayerError(error: PlaybackException) = handleError(error)
             override fun onPlaybackStateChanged(state: Int) {
-                if (state == androidx.media3.common.Player.STATE_READY) binding.errorBox.visibility = View.GONE
+                if (state == androidx.media3.common.Player.STATE_READY) {
+                    binding.errorBox.visibility = View.GONE
+                    // Only count time once the stream actually plays; failed channels aren't "watched".
+                    if (watchStartedAt == 0L) watchStartedAt = SystemClock.elapsedRealtime()
+                }
             }
         })
         binding.playerView.player = p.exo
@@ -105,7 +109,6 @@ class PlayerActivity : AppCompatActivity() {
                 val url = container.channels.resolveStreamUrl(channel)
                 lastUrl = url
                 player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
-                watchStartedAt = SystemClock.elapsedRealtime()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -152,7 +155,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun showBanner(channel: ChannelEntity, program: String?) {
-        binding.bannerNumber.text = channel.number?.toString() ?: (index + 1).toString()
+        binding.bannerNumber.text = channel.number?.toString().orEmpty()
         binding.bannerName.text = channel.name
         binding.bannerProgram.text = program.orEmpty()
         binding.bannerProgram.visibility = if (program.isNullOrEmpty()) View.GONE else View.VISIBLE

@@ -278,12 +278,19 @@ class PlaylistRepository(
             val idByKey = groupEntities.zip(ids).associate { (g, id) -> (g.kind to g.name) to id }
 
             val seenKeys = HashMap<String, Int>()
+            val nextNumber = HashMap<ContentKind, Int>()
             channels.asSequence()
                 .map { ic ->
                     // Duplicate URLs happen in hand-made lists; keep every entry but make keys unique.
                     val n = seenKeys.merge(ic.channel.channelKey, 1, Int::plus)!!
                     val key = if (n == 1) ic.channel.channelKey else "${ic.channel.channelKey}#$n"
-                    ic.channel.copy(channelKey = key, groupId = idByKey[ic.kind to ic.groupName])
+                    // Channels without a provider number are numbered in playlist order.
+                    val position = nextNumber.merge(ic.kind, 1, Int::plus)!!
+                    ic.channel.copy(
+                        channelKey = key,
+                        groupId = idByKey[ic.kind to ic.groupName],
+                        number = ic.channel.number ?: position,
+                    )
                 }
                 .chunked(INSERT_CHUNK)
                 .forEach { db.channels().insertAll(it) }

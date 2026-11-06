@@ -80,7 +80,7 @@ class ChannelAdapter(
         val row = getItem(position)
         val c = row.channel
         with(holder.b) {
-            number.text = c.number?.toString() ?: (position + 1).toString()
+            number.text = c.number?.toString().orEmpty()
             name.text = c.name
             nowPlaying.text = row.nowPlaying
             nowPlaying.visibility = if (row.nowPlaying.isNullOrEmpty()) View.GONE else View.VISIBLE

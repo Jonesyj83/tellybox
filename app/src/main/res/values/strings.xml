@@ -32,7 +32,11 @@
     <string name="playlist_delete">Delete</string>
     <string name="playlist_delete_confirm">Delete %1$s? Its channels, favorites and guide data will be removed.</string>
     <string name="playlist_refreshing">Updating %1$s…</string>
-    <string name="playlist_refresh_done">%1$s: %2$d channels, %3$d movies, %4$d series</string>
+    <string name="playlist_refresh_done">%1$s: %2$s</string>
+    <string name="playlist_updated_now">Updated just now</string>
+    <plurals name="count_channels"><item quantity="one">%d channel</item><item quantity="other">%d channels</item></plurals>
+    <plurals name="count_movies"><item quantity="one">%d movie</item><item quantity="other">%d movies</item></plurals>
+    <plurals name="count_series"><item quantity="one">%d series</item><item quantity="other">%d series</item></plurals>
     <string name="playlist_refresh_failed">Couldn\'t update %1$s: %2$s</string>
     <string name="refresh_all">Update all</string>
     <string name="cancel">Cancel</string>

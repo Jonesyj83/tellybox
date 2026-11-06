@@ -88,7 +88,7 @@ class PlaylistsActivity : AppCompatActivity() {
                 binding.status.text = ""
                 val msg = result.fold(
                     onSuccess = {
-                        getString(R.string.playlist_refresh_done, playlist.name, it.channels, it.movies, it.series)
+                        getString(R.string.playlist_refresh_done, playlist.name, it.describe(this@PlaylistsActivity))
                     },
                     onFailure = { getString(R.string.playlist_refresh_failed, playlist.name, it.message ?: "") },
                 )
@@ -124,6 +124,7 @@ private class PlaylistAdapter(
             !p.enabled -> ctx.getString(R.string.playlist_disabled)
             p.lastError != null -> ctx.getString(R.string.playlist_failed, p.lastError)
             p.lastUpdated == 0L -> ctx.getString(R.string.playlist_never_updated)
+            System.currentTimeMillis() - p.lastUpdated < 60_000 -> ctx.getString(R.string.playlist_updated_now)
             else -> ctx.getString(
                 R.string.playlist_updated,
                 DateUtils.getRelativeTimeSpanString(p.lastUpdated, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS),
