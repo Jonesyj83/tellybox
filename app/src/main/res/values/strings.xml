@@ -76,6 +76,7 @@
     <string name="loading_playlist">Loading channels…</string>
     <string name="error_required">%1$s is required</string>
     <string name="error_bad_mac">That doesn\'t look like a MAC address</string>
+    <string name="error_storage_denied">Storage access is needed to read that file.</string>
     <string name="error_no_picker">This device has no file browser. Type the file path instead.</string>
     <string name="load_failed_title">Couldn\'t load the playlist</string>
     <string name="load_failed_edit">Edit details</string>

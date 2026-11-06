@@ -1,8 +1,11 @@
 package com.openstream.tv.ui.playlists
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.View
@@ -11,6 +14,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.openstream.tv.R
 import com.openstream.tv.appContainer
@@ -43,6 +47,22 @@ class AddPlaylistActivity : AppCompatActivity() {
             binding.nameInput.setText(name.substringBeforeLast('.'))
         }
         binding.saveButton.requestFocus()
+    }
+
+    private val requestStorage = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) save() else showError(getString(R.string.error_storage_denied))
+    }
+
+    /**
+     * A typed path like /storage/emulated/0/Download/list.m3u needs the storage permission
+     * on Android 12 and older. Returns true if we had to ask (save resumes afterwards).
+     */
+    private fun needsStoragePermission(location: String): Boolean {
+        if (!location.startsWith("/") || Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) return false
+        val perm = Manifest.permission.READ_EXTERNAL_STORAGE
+        if (ContextCompat.checkSelfPermission(this, perm) == PackageManager.PERMISSION_GRANTED) return false
+        requestStorage.launch(perm)
+        return true
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -165,6 +185,7 @@ class AddPlaylistActivity : AppCompatActivity() {
             Mode.M3U_FILE -> {
                 val location = pickedUri?.toString() ?: url
                 if (location.isEmpty()) return showError(required(R.string.field_file))
+                if (pickedUri == null && needsStoragePermission(location)) return
                 PlaylistEntity(
                     name = text(binding.nameInput).ifEmpty { getString(R.string.default_name_m3u) },
                     type = PlaylistType.M3U,
