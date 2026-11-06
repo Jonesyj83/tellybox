@@ -56,7 +56,15 @@
                 style="@style/Button.TV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
                 android:text="@string/action_playlists" />
+
+            <Button
+                android:id="@+id/settingsButton"
+                style="@style/Button.TV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_settings" />
         </LinearLayout>
 
         <LinearLayout

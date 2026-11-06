@@ -28,6 +28,7 @@ import com.openstream.tv.ui.channels.GroupSelection
 import com.openstream.tv.ui.channels.MainViewModel
 import com.openstream.tv.ui.epg.GuideActivity
 import com.openstream.tv.ui.player.PlayerActivity
+import com.openstream.tv.ui.settings.SettingsActivity
 import com.openstream.tv.ui.playlists.AddPlaylistActivity
 import com.openstream.tv.ui.playlists.PlaylistsActivity
 import kotlinx.coroutines.flow.combine
@@ -73,6 +74,7 @@ class MainActivity : AppCompatActivity() {
         binding.emptyAddButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
         binding.searchButton.setOnClickListener { showSearch() }
         binding.guideButton.setOnClickListener { openGuide() }
+        binding.settingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
 
         if (savedInstanceState == null) {
             val container = appContainer

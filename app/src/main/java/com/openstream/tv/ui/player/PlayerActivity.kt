@@ -27,6 +27,7 @@ import com.openstream.tv.player.PlayerFactory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 @OptIn(UnstableApi::class)
@@ -64,7 +65,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        val p = PlayerFactory.create(this, appContainer.http)
+        val p = PlayerFactory.create(this, appContainer.http, runBlocking { appContainer.settings.get() }.playerConfig)
         p.exo.addListener(object : Listener {
             override fun onPlayerError(error: PlaybackException) = handleError(error)
             override fun onPlaybackStateChanged(state: Int) {

@@ -1,0 +1,70 @@
+package com.openstream.tv.data.settings
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.openstream.tv.player.BufferSize
+import com.openstream.tv.player.PlayerConfig
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+
+/** How the video fills the screen. */
+enum class DisplayMode { FIT, FILL, ZOOM, REDUCED }
+
+data class AppSettings(
+    val buffer: BufferSize = BufferSize.MEDIUM,
+    val softwareDecoders: Boolean = false,
+    val tunneling: Boolean = false,
+    val guideRefreshHours: Int = 12,
+    /** Added to every programme time on import, for guides published in the wrong zone. */
+    val epgOffsetMinutes: Int = 0,
+    val storeDescriptions: Boolean = true,
+    val displayMode: DisplayMode = DisplayMode.FIT,
+) {
+    val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling)
+}
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
+class SettingsRepository(context: Context) {
+    private val store = context.applicationContext.dataStore
+
+    private object Keys {
+        val buffer = stringPreferencesKey("buffer")
+        val softwareDecoders = booleanPreferencesKey("software_decoders")
+        val tunneling = booleanPreferencesKey("tunneling")
+        val guideRefreshHours = intPreferencesKey("guide_refresh_hours")
+        val epgOffset = intPreferencesKey("epg_offset_minutes")
+        val storeDescriptions = booleanPreferencesKey("store_descriptions")
+        val displayMode = stringPreferencesKey("display_mode")
+    }
+
+    val settings: Flow<AppSettings> = store.data.map { p ->
+        val d = AppSettings()
+        AppSettings(
+            buffer = p[Keys.buffer]?.let { runCatching { BufferSize.valueOf(it) }.getOrNull() } ?: d.buffer,
+            softwareDecoders = p[Keys.softwareDecoders] ?: d.softwareDecoders,
+            tunneling = p[Keys.tunneling] ?: d.tunneling,
+            guideRefreshHours = p[Keys.guideRefreshHours] ?: d.guideRefreshHours,
+            epgOffsetMinutes = p[Keys.epgOffset] ?: d.epgOffsetMinutes,
+            storeDescriptions = p[Keys.storeDescriptions] ?: d.storeDescriptions,
+            displayMode = p[Keys.displayMode]?.let { runCatching { DisplayMode.valueOf(it) }.getOrNull() } ?: d.displayMode,
+        )
+    }
+
+    suspend fun get(): AppSettings = settings.first()
+
+    suspend fun setBuffer(v: BufferSize) = store.edit { it[Keys.buffer] = v.name }
+    suspend fun setSoftwareDecoders(v: Boolean) = store.edit { it[Keys.softwareDecoders] = v }
+    suspend fun setTunneling(v: Boolean) = store.edit { it[Keys.tunneling] = v }
+    suspend fun setGuideRefreshHours(v: Int) = store.edit { it[Keys.guideRefreshHours] = v }
+    suspend fun setEpgOffsetMinutes(v: Int) = store.edit { it[Keys.epgOffset] = v }
+    suspend fun setStoreDescriptions(v: Boolean) = store.edit { it[Keys.storeDescriptions] = v }
+    suspend fun setDisplayMode(v: DisplayMode) = store.edit { it[Keys.displayMode] = v.name }
+}

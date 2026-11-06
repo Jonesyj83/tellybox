@@ -12,6 +12,7 @@ import com.openstream.tv.data.parser.xmltv.XmltvProgramme
 import com.openstream.tv.data.parser.xmltv.XmltvStats
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import com.openstream.tv.data.settings.SettingsRepository
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -19,6 +20,7 @@ class EpgRepository(
     private val context: Context,
     private val db: OpenStreamDatabase,
     private val http: OkHttpClient,
+    private val settings: SettingsRepository,
 ) {
     fun observeSources(): Flow<List<EpgSourceEntity>> = db.epg().observeSources()
 
@@ -52,6 +54,9 @@ class EpgRepository(
     private suspend fun doRefresh(source: EpgSourceEntity): Result<XmltvStats> {
         val wanted = db.epg().knownTvgIds(source.playlistId).toHashSet()
         val cutoff = System.currentTimeMillis() - KEEP_PAST
+        val prefs = settings.get()
+        val offset = TimeUnit.MINUTES.toMillis(prefs.epgOffsetMinutes.toLong())
+        val keepDescriptions = prefs.storeDescriptions
         return try {
             db.epg().deleteProgramsForSource(source.id)
             db.epg().deleteChannelsForSource(source.id)
@@ -69,16 +74,16 @@ class EpgRepository(
 
                     override fun onProgramme(programme: XmltvProgramme) {
                         val id = programme.channelId.lowercase()
-                        if (programme.stop < cutoff) return
+                        if (programme.stop + offset < cutoff) return
                         if (wanted.isNotEmpty() && id !in wanted) return
                         programmes += EpgProgramEntity(
                             sourceId = source.id,
                             channelXmltvId = id,
-                            start = programme.start,
-                            stop = programme.stop,
+                            start = programme.start + offset,
+                            stop = programme.stop + offset,
                             title = programme.title,
                             subtitle = programme.subtitle,
-                            description = programme.description,
+                            description = if (keepDescriptions) programme.description else null,
                             category = programme.category,
                             iconUrl = programme.iconUrl,
                             episode = programme.episode,
