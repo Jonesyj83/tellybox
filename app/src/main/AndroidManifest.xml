@@ -30,5 +30,16 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.playlists.PlaylistsActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name=".ui.playlists.AddPlaylistActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 </manifest>

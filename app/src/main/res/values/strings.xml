@@ -1,4 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OpenStream</string>
+
+    <!-- main screen -->
+    <string name="group_favorites">Favorites</string>
+    <string name="group_recent">Recently watched</string>
+    <string name="group_all">All channels</string>
+    <string name="group_search">Search: %1$s</string>
+    <string name="action_search">Search</string>
+    <string name="action_playlists">Playlists</string>
+    <string name="action_add_playlist">Add playlist</string>
+    <string name="empty_title">No playlists yet</string>
+    <string name="empty_body">Add an M3U link, an Xtream Codes login or a Stalker portal to get started.</string>
+    <string name="empty_group">Nothing here.</string>
+    <string name="empty_favorites">Press Menu on a channel, or hold OK, to add it to Favorites.</string>
+    <string name="search_hint">Channel name</string>
+    <string name="favorite_added">Added %1$s to Favorites</string>
+    <string name="favorite_removed">Removed %1$s from Favorites</string>
+    <string name="refreshing_guide">Updating TV guide…</string>
+    <string name="guide_updated">TV guide updated</string>
+
+    <!-- playlists -->
+    <string name="playlists_title">Playlists</string>
+    <string name="playlist_never_updated">Not loaded yet</string>
+    <string name="playlist_updated">Updated %1$s</string>
+    <string name="playlist_failed">Last update failed: %1$s</string>
+    <string name="playlist_disabled">Disabled</string>
+    <string name="playlist_refresh">Update now</string>
+    <string name="playlist_enable">Enable</string>
+    <string name="playlist_disable">Disable</string>
+    <string name="playlist_delete">Delete</string>
+    <string name="playlist_delete_confirm">Delete %1$s? Its channels, favorites and guide data will be removed.</string>
+    <string name="playlist_refreshing">Updating %1$s…</string>
+    <string name="playlist_refresh_done">%1$s: %2$d channels, %3$d movies, %4$d series</string>
+    <string name="playlist_refresh_failed">Couldn\'t update %1$s: %2$s</string>
+    <string name="refresh_all">Update all</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+
+    <!-- add playlist wizard -->
+    <string name="add_title">Add playlist</string>
+    <string name="add_choose_type">What kind of source is it?</string>
+    <string name="type_m3u_url">M3U link</string>
+    <string name="type_m3u_url_desc">A web address ending in .m3u or .m3u8, or a get.php link</string>
+    <string name="type_m3u_file">M3U file on this device</string>
+    <string name="type_m3u_file_desc">A playlist file in local storage or on a USB drive</string>
+    <string name="type_xtream">Xtream Codes</string>
+    <string name="type_xtream_desc">Server address with a username and password</string>
+    <string name="type_stalker">Stalker portal</string>
+    <string name="type_stalker_desc">Portal address and the MAC address registered with your provider</string>
+    <string name="field_name">Name</string>
+    <string name="field_url">Playlist URL</string>
+    <string name="field_file">File</string>
+    <string name="field_file_path">Or type a file path</string>
+    <string name="field_file_pick">Choose file</string>
+    <string name="field_file_none">No file chosen. You can also type a path below.</string>
+    <string name="field_file_path_hint">/storage/emulated/0/Download/playlist.m3u</string>
+    <string name="field_server">Server</string>
+    <string name="field_server_hint">http://example.com:8080</string>
+    <string name="field_username">Username</string>
+    <string name="field_password">Password</string>
+    <string name="field_portal">Portal URL</string>
+    <string name="field_portal_hint">http://example.com/c/</string>
+    <string name="field_mac">MAC address</string>
+    <string name="field_mac_hint">00:1A:79:00:00:00</string>
+    <string name="field_epg">TV guide URL (optional)</string>
+    <string name="field_epg_hint">XMLTV link, .xml or .xml.gz</string>
+    <string name="field_user_agent">User agent (optional)</string>
+    <string name="action_save">Save and load</string>
+    <string name="action_back">Back</string>
+    <string name="loading_playlist">Loading channels…</string>
+    <string name="error_required">%1$s is required</string>
+    <string name="error_bad_mac">That doesn\'t look like a MAC address</string>
+    <string name="error_no_picker">This device has no file browser. Type the file path instead.</string>
+    <string name="load_failed_title">Couldn\'t load the playlist</string>
+    <string name="load_failed_edit">Edit details</string>
+    <string name="load_failed_keep">Keep it anyway</string>
+    <string name="default_name_m3u">My playlist</string>
+    <string name="default_name_xtream">Xtream</string>
+    <string name="default_name_stalker">Portal</string>
+
+    <!-- player -->
+    <string name="player_error">Can\'t play this channel</string>
+    <string name="player_retry">Press OK to try again</string>
+    <string name="player_connecting">Connecting…</string>
+    <string name="now_next">Now: %1$s</string>
 </resources>

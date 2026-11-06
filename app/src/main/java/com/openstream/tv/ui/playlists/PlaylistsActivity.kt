@@ -1,0 +1,140 @@
+package com.openstream.tv.ui.playlists
+
+import android.content.Intent
+import android.os.Bundle
+import android.text.format.DateUtils
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.openstream.tv.R
+import com.openstream.tv.appContainer
+import com.openstream.tv.data.db.PlaylistEntity
+import com.openstream.tv.data.db.PlaylistType
+import com.openstream.tv.databinding.ActivityPlaylistsBinding
+import com.openstream.tv.databinding.ItemPlaylistBinding
+import kotlinx.coroutines.launch
+
+class PlaylistsActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityPlaylistsBinding
+    private val adapter = PlaylistAdapter { showActions(it) }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityPlaylistsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.list.layoutManager = LinearLayoutManager(this)
+        binding.list.adapter = adapter
+        binding.addButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
+        binding.refreshAllButton.setOnClickListener { refreshAll() }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                appContainer.playlists.observePlaylists().collect { list ->
+                    adapter.submitList(list)
+                    if (list.isEmpty()) binding.addButton.requestFocus()
+                }
+            }
+        }
+    }
+
+    private fun showActions(playlist: PlaylistEntity) {
+        val actions = listOf(
+            getString(R.string.playlist_refresh),
+            getString(if (playlist.enabled) R.string.playlist_disable else R.string.playlist_enable),
+            getString(R.string.playlist_delete),
+        )
+        AlertDialog.Builder(this)
+            .setTitle(playlist.name)
+            .setItems(actions.toTypedArray()) { _, which ->
+                when (which) {
+                    0 -> refresh(playlist)
+                    1 -> lifecycleScope.launch { appContainer.playlists.setEnabled(playlist, !playlist.enabled) }
+                    2 -> confirmDelete(playlist)
+                }
+            }
+            .show()
+    }
+
+    private fun confirmDelete(playlist: PlaylistEntity) {
+        AlertDialog.Builder(this)
+            .setMessage(getString(R.string.playlist_delete_confirm, playlist.name))
+            .setPositiveButton(R.string.delete) { _, _ ->
+                lifecycleScope.launch { appContainer.playlists.delete(playlist.id) }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun refresh(playlist: PlaylistEntity) {
+        val container = appContainer
+        binding.status.text = getString(R.string.playlist_refreshing, playlist.name)
+        // Run in the app scope so leaving the screen doesn't abandon a half-done import.
+        container.appScope.launch {
+            val result = container.playlists.refresh(playlist.id)
+            result.onSuccess { container.epg.refreshForPlaylist(playlist.id) }
+            runOnUiThread {
+                if (isDestroyed) return@runOnUiThread
+                binding.status.text = ""
+                val msg = result.fold(
+                    onSuccess = {
+                        getString(R.string.playlist_refresh_done, playlist.name, it.channels, it.movies, it.series)
+                    },
+                    onFailure = { getString(R.string.playlist_refresh_failed, playlist.name, it.message ?: "") },
+                )
+                Toast.makeText(this@PlaylistsActivity, msg, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun refreshAll() {
+        adapter.currentList.filter { it.enabled }.forEach { refresh(it) }
+    }
+}
+
+private class PlaylistAdapter(
+    private val onClick: (PlaylistEntity) -> Unit,
+) : ListAdapter<PlaylistEntity, PlaylistAdapter.Holder>(Diff) {
+
+    class Holder(val b: ItemPlaylistBinding) : RecyclerView.ViewHolder(b.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        Holder(ItemPlaylistBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+
+    override fun onBindViewHolder(holder: Holder, position: Int) {
+        val p = getItem(position)
+        val ctx = holder.b.root.context
+        holder.b.name.text = p.name
+        holder.b.type.text = when (p.type) {
+            PlaylistType.M3U -> "M3U"
+            PlaylistType.XTREAM -> "Xtream Codes"
+            PlaylistType.STALKER -> "Stalker"
+        }
+        holder.b.detail.text = when {
+            !p.enabled -> ctx.getString(R.string.playlist_disabled)
+            p.lastError != null -> ctx.getString(R.string.playlist_failed, p.lastError)
+            p.lastUpdated == 0L -> ctx.getString(R.string.playlist_never_updated)
+            else -> ctx.getString(
+                R.string.playlist_updated,
+                DateUtils.getRelativeTimeSpanString(p.lastUpdated, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS),
+            )
+        }
+        holder.b.root.alpha = if (p.enabled) 1f else 0.55f
+        holder.b.root.setOnClickListener { onClick(p) }
+    }
+
+    private object Diff : DiffUtil.ItemCallback<PlaylistEntity>() {
+        override fun areItemsTheSame(a: PlaylistEntity, b: PlaylistEntity) = a.id == b.id
+        override fun areContentsTheSame(a: PlaylistEntity, b: PlaylistEntity) = a == b
+    }
+}
