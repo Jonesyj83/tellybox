@@ -69,6 +69,17 @@ class StalkerClient(
             ?: throw StalkerException("Portal returned no stream link")
     }
 
+    suspend fun createArchiveLink(cmd: String, start: Long, stop: Long): String {
+        val js = call("tv_archive", "create_link", mapOf(
+            "cmd" to cmd, "utc" to (start / 1000).toString(),
+            "lutc" to (stop / 1000).toString(), "forced_storage" to "undefined",
+        ))
+        val linked = (js as? JsonObject)?.str("cmd")
+            ?: throw StalkerException("Portal returned no archive link")
+        return StalkerMapper.urlFromCmd(linked)
+            ?: throw StalkerException("Portal returned no archive link")
+    }
+
     private suspend fun call(type: String, action: String, params: Map<String, String> = emptyMap()): JsonElement? {
         lock.withLock { ensureSessionLocked(force = false) }
         return try {

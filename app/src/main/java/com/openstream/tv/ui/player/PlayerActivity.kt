@@ -43,6 +43,8 @@ class PlayerActivity : AppCompatActivity() {
     private var triedHls = false
     private var loadJob: Job? = null
     private var watchStartedAt = 0L
+    private val catchup get() = intent.hasExtra(EXTRA_ARCHIVE_START)
+    private var archivePosition = 0L
 
     private val handler = Handler(Looper.getMainLooper())
     private val hideBanner = Runnable { binding.banner.visibility = View.GONE }
@@ -52,6 +54,7 @@ class PlayerActivity : AppCompatActivity() {
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        archivePosition = savedInstanceState?.getLong("archive_position") ?: 0L
         val requested = intent.getLongExtra(EXTRA_CHANNEL_ID, -1)
         channelIds = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST) ?: longArrayOf(requested)
         index = savedInstanceState?.getInt(STATE_INDEX)
@@ -61,6 +64,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_INDEX, index)
+        outState.putLong("archive_position", player?.exo?.currentPosition ?: archivePosition)
     }
 
     override fun onStart() {
@@ -82,6 +86,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        if (catchup) archivePosition = player?.exo?.currentPosition ?: archivePosition
         recordWatch()
         loadJob?.cancel()
         binding.playerView.player = null
@@ -104,12 +109,15 @@ class PlayerActivity : AppCompatActivity() {
             showBanner(channel, null)
 
             val isVod = channel.kind != ContentKind.LIVE
-            binding.playerView.useController = isVod
+            binding.playerView.useController = isVod || catchup
 
             try {
-                val url = container.channels.resolveStreamUrl(channel)
+                val url = if (catchup) container.channels.resolveCatchupUrl(channel,
+                    intent.getLongExtra(EXTRA_ARCHIVE_START, 0), intent.getLongExtra(EXTRA_ARCHIVE_STOP, 0))
+                else container.channels.resolveStreamUrl(channel)
                 lastUrl = url
                 player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
+                if (catchup && archivePosition > 0) player?.exo?.seekTo(archivePosition)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -117,7 +125,7 @@ class PlayerActivity : AppCompatActivity() {
             }
 
             val now = container.epg.currentProgram(channel.tvgId)
-            if (current?.id == channel.id) showBanner(channel, now?.title)
+            if (current?.id == channel.id) showBanner(channel, if (catchup) intent.getStringExtra(EXTRA_ARCHIVE_TITLE) else now?.title)
         }
     }
 
@@ -180,13 +188,18 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun zap(delta: Int) {
-        if (channelIds.size < 2) return
+        if (catchup || channelIds.size < 2) return
         val next = Math.floorMod(index + delta, channelIds.size)
         loadChannel(next)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        val vod = current?.kind?.let { it != ContentKind.LIVE } ?: false
+        if (binding.errorBox.visibility == View.VISIBLE &&
+            (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
+            loadChannel(index)
+            return true
+        }
+        val vod = catchup || (current?.kind?.let { it != ContentKind.LIVE } ?: false)
         when (keyCode) {
             KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> { zap(-1); return true }
             KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> { zap(1); return true }
@@ -215,6 +228,16 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val EXTRA_ARCHIVE_START = "archive_start"
+        private const val EXTRA_ARCHIVE_STOP = "archive_stop"
+        private const val EXTRA_ARCHIVE_TITLE = "archive_title"
+
+        fun catchupIntent(context: Context, channelId: Long, start: Long, stop: Long, title: String): Intent =
+            intent(context, channelId, longArrayOf(channelId), 0)
+                .putExtra(EXTRA_ARCHIVE_START, start)
+                .putExtra(EXTRA_ARCHIVE_STOP, stop)
+                .putExtra(EXTRA_ARCHIVE_TITLE, title)
+
         private const val EXTRA_CHANNEL_ID = "channel_id"
         private const val EXTRA_CHANNEL_LIST = "channel_list"
         private const val EXTRA_POSITION = "position"

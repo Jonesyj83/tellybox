@@ -77,6 +77,27 @@ class ChannelRepository(
         }
     }
 
+    suspend fun resolveCatchupUrl(channel: ChannelEntity, start: Long, stop: Long): String {
+        val now = System.currentTimeMillis()
+        require(com.openstream.tv.data.catchup.CatchupUrls.available(channel.catchupDays, start, stop, now)) {
+            "No catch-up available for this program"
+        }
+        val playlist = requireNotNull(db.playlists().get(channel.playlistId))
+        return when (playlist.type) {
+            PlaylistType.XTREAM -> {
+                val credentials = com.openstream.tv.data.parser.xtream.XtreamCredentials.from(
+                    playlist.url, playlist.username, playlist.password,
+                )
+                credentials.timeshiftUrl(channel.channelKey.substringAfter("live:").toLong(), start,
+                    ((stop - start + 59_999) / 60_000).toInt())
+            }
+            PlaylistType.STALKER -> stalkerClients.get(playlist).createArchiveLink(channel.streamUrl, start, stop)
+            PlaylistType.M3U -> com.openstream.tv.data.catchup.CatchupUrls.build(
+                channel.streamUrl, channel.catchupType, channel.catchupSource, start, stop, now,
+            ) ?: error("No catch-up source for this channel")
+        }
+    }
+
     suspend fun userAgentFor(channel: ChannelEntity): String? =
         channel.userAgent ?: db.playlists().get(channel.playlistId)?.userAgent
 }

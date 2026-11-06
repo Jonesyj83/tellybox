@@ -129,7 +129,13 @@ class GuideActivity : AppCompatActivity(), GuideGridView.Callback {
     }
 
     private fun playPast(row: Int, block: GuideBlock) {
-        Toast.makeText(this, R.string.guide_no_catchup, Toast.LENGTH_SHORT).show()
+        val channel = channels[row]
+        if (block.program == null || !com.openstream.tv.data.catchup.CatchupUrls.available(
+                channel.catchupDays, block.start, block.stop, System.currentTimeMillis())) {
+            Toast.makeText(this, R.string.guide_no_catchup, Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(PlayerActivity.catchupIntent(this, channel.id, block.start, block.stop, block.program.title))
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

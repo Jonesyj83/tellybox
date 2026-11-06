@@ -22,6 +22,10 @@ import java.util.concurrent.TimeUnit
  * `{utc:Y-m-d H:M:S}`, and the same names written `${start}`.
  */
 object CatchupUrls {
+    fun available(days: Int, start: Long, stop: Long, now: Long): Boolean =
+        days > 0 && start < stop && stop <= now &&
+            start >= now - TimeUnit.DAYS.toMillis(days.toLong())
+
 
     /** Times are epoch millis. Returns null when the channel can't do catch-up this way. */
     fun build(

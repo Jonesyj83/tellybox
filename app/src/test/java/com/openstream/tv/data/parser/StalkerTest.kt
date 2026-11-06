@@ -12,6 +12,41 @@ import org.junit.Test
 class StalkerTest {
 
     @Test
+    fun archiveLinkUsesArchiveEndpoint() = kotlinx.coroutines.runBlocking {
+        val requests = java.util.concurrent.CopyOnWriteArrayList<String>()
+        val server = java.net.ServerSocket(0)
+        val worker = Thread {
+            repeat(3) {
+                server.accept().use { socket ->
+                    val input = socket.getInputStream().bufferedReader()
+                    val query = input.readLine()
+                    requests += query
+                    while (!input.readLine().isNullOrEmpty()) { }
+                    val body = when {
+                        "action=handshake" in query -> """{"js":{"token":"session"}}"""
+                        "action=get_profile" in query -> """{"js":{}}"""
+                        else -> """{"js":{"cmd":"ffmpeg http://archive.example/video.ts"}}"""
+                    }
+                    socket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Length: ${body.toByteArray().size}\r\nConnection: close\r\n\r\n" + body).toByteArray())
+                }
+            }
+        }.apply { isDaemon = true; start() }
+        try {
+            val client = StalkerClient("http://127.0.0.1:${server.localPort}/portal.php",
+                "00:1A:79:AB:CD:EF", okhttp3.OkHttpClient())
+            assertEquals("http://archive.example/video.ts", client.createArchiveLink("auto http://localhost/ch/1", 100000, 220000))
+            val query = requests.last()
+            assertTrue(query.contains("type=tv_archive"))
+            assertTrue(query.contains("action=create_link"))
+            assertTrue(query.contains("utc=100"))
+            assertTrue(query.contains("lutc=220"))
+        } finally {
+            server.close()
+            worker.join(1000)
+        }
+    }
+
+    @Test
     fun macNormalisation() {
         assertEquals("00:1A:79:AB:CD:EF", StalkerClient.normalizeMac("00-1a-79-ab-cd-ef"))
         assertEquals("00:1A:79:AB:CD:EF", StalkerClient.normalizeMac("001A79ABCDEF"))

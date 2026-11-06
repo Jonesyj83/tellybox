@@ -285,7 +285,9 @@ class GuideGridView @JvmOverloads constructor(
                 }
                 canvas.drawRoundRect(rect, 4 * dp, 4 * dp, paint)
                 if (focused) canvas.drawRoundRect(rect, 4 * dp, 4 * dp, focusStroke)
-                val title = block.program?.title ?: context.getString(R.string.guide_no_info)
+                val canReplay = block.program != null && com.openstream.tv.data.catchup.CatchupUrls.available(
+                    channels[row].catchupDays, block.start, block.stop, now)
+                val title = (if (canReplay) "↶ " else "") + (block.program?.title ?: context.getString(R.string.guide_no_info))
                 val avail = right - left - 2 * pad
                 if (avail > 12 * dp) {
                     val tp = if (block.stop <= now || block.program == null) dimTitlePaint else titlePaint
