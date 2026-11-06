@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.coil)
     implementation(libs.datastore.preferences)
+    implementation(libs.work.runtime)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

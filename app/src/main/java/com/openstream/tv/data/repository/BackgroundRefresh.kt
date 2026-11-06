@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.openstream.tv.data.settings.SettingsRepository
-import java.util.concurrent.TimeUnit
 
 /** What the background refresh is doing right now, for a status line in the UI. */
 sealed interface RefreshStatus {
@@ -15,7 +14,7 @@ sealed interface RefreshStatus {
 }
 
 /**
- * Brings stale playlists and guides up to date when the app starts. Anything refreshed
+ * Brings stale playlists and guides up to date, on app start and from [RefreshWorker]. Anything refreshed
  * within the configured guide refresh interval is left alone so restarting the app doesn't hammer providers.
  */
 class BackgroundRefresh(
@@ -39,11 +38,10 @@ class BackgroundRefresh(
         }
     }
 
-    suspend fun refreshStale() {
+    suspend fun refreshStale(slackMs: Long = 0) {
         if (!lock.tryLock()) return
         try {
-            val maxAge = TimeUnit.HOURS.toMillis(settings.get().guideRefreshHours.toLong())
-            val cutoff = System.currentTimeMillis() - maxAge
+            val cutoff = RefreshSchedule.staleCutoff(System.currentTimeMillis(), settings.get().guideRefreshHours, slackMs)
             playlists.getPlaylists()
                 .filter { it.enabled && it.lastUpdated < cutoff }
                 .forEach {

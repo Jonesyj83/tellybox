@@ -12,6 +12,8 @@ import com.openstream.tv.data.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class OpenStreamApp : Application() {
@@ -27,6 +29,12 @@ class OpenStreamApp : Application() {
         container.appScope.launch {
             container.recordings.restore()
             container.reminders.restore()
+        }
+        // Follows the guide refresh interval setting, including later changes to it.
+        container.appScope.launch {
+            container.settings.settings.map { it.guideRefreshHours }.distinctUntilChanged().collect {
+                com.openstream.tv.data.repository.RefreshWorker.schedule(this@OpenStreamApp, it)
+            }
         }
     }
 }
