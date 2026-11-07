@@ -293,4 +293,18 @@
     <string name="open_full_guide">Open full guide</string>
     <string name="guide_watch_archive">Watch from catch-up</string>
     <string name="guide_no_programmes">No programmes in this time range</string>
+    <string name="action_sleep">☾ Sleep</string>
+    <string name="action_sleep_left">☾ Sleep %d min</string>
+    <string name="sleep_title">Sleep timer</string>
+    <string name="sleep_banner">Sleep %d min left</string>
+    <string name="sleep_end_of_programme">End of programme (%1$s)</string>
+    <string name="sleep_cancel">Cancel sleep timer (%d min left)</string>
+    <string name="sleep_set">Playback stops in %d min</string>
+    <string name="sleep_set_programme">Playback stops when the programme ends</string>
+    <string name="sleep_cancelled">Sleep timer cancelled</string>
+    <string name="sleep_fired">Sleep timer: playback stopped</string>
+    <string name="external_player">Open in external player</string>
+    <string name="external_player_none">No installed app can play this stream</string>
+    <string name="external_player_failed">Could not open the stream: %1$s</string>
+    <string name="setting_resume_last_channel">Open last channel on start</string>
 </resources>

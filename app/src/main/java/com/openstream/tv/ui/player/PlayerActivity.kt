@@ -48,7 +48,8 @@ import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 @OptIn(UnstableApi::class)
-class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.player.Playback.Holder {
+class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.player.Playback.Holder,
+    com.openstream.tv.player.SleepSchedule.Listener {
 
     private lateinit var binding: ActivityPlayerBinding
     private var player: Player? = null
@@ -85,6 +86,90 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         channelIds = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST) ?: longArrayOf(requested)
         index = savedInstanceState?.getInt(STATE_INDEX)
             ?: intent.getIntExtra(EXTRA_POSITION, channelIds.indexOf(requested)).coerceIn(0, (channelIds.size - 1).coerceAtLeast(0))
+        binding.recordButton.setOnClickListener { instantRecord() }
+        binding.sleepButton.setOnClickListener { showSleep() }
+        appContainer.sleep.addListener(this)
+        updateSleep()
+    }
+
+    /** The sleep timer went off: playback is already stopped, so just leave. */
+    override fun onSleep() {
+        player?.exo?.removeListener(listener)
+        binding.playerView.player = null
+        player = null
+        loadJob?.cancel()
+        android.widget.Toast.makeText(this, R.string.sleep_fired, android.widget.Toast.LENGTH_LONG).show()
+        if (!isFinishing) finish()
+    }
+
+    override fun onSleepChanged() = updateSleep()
+
+    /** Countdown on the Sleep button and in the banner. */
+    private fun updateSleep() {
+        val left = appContainer.sleep.remainingMinutes()
+        binding.sleepButton.text = if (left != null) getString(R.string.action_sleep_left, left) else getString(R.string.action_sleep)
+        binding.bannerSleep.text = left?.let { getString(R.string.sleep_banner, it) }.orEmpty()
+        binding.bannerSleep.visibility = if (left != null) View.VISIBLE else View.GONE
+    }
+
+    /** Only live channels can be recorded; the button is hidden for catch-up, VOD and files. */
+    private fun updateButtons() {
+        val pip = inPip()
+        val live = !catchup && !fileMode && current?.kind == ContentKind.LIVE
+        binding.cornerButtons.visibility = if (pip) View.GONE else View.VISIBLE
+        binding.recordButton.visibility = if (live) View.VISIBLE else View.GONE
+        binding.recordButton.isFocusable = !pip
+        binding.sleepButton.isFocusable = !pip
+    }
+
+    private fun showSleep() {
+        val sleep = appContainer.sleep
+        lifecycleScope.launch {
+            val now = System.currentTimeMillis()
+            val channel = current
+            // "End of programme" needs a live programme with a known end.
+            val program = if (channel != null && !catchup && !fileMode && channel.kind == ContentKind.LIVE)
+                appContainer.epg.currentProgram(channel.id.toString(), now)?.takeIf { it.stop > now } else null
+            val items = mutableListOf<Pair<String, () -> Unit>>()
+            sleep.remainingMinutes()?.let { left ->
+                items += getString(R.string.sleep_cancel, left) to {
+                    sleep.cancel()
+                    android.widget.Toast.makeText(this@PlayerActivity, R.string.sleep_cancelled, android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            com.openstream.tv.player.SleepTimer.CHOICES.forEach { m ->
+                items += resources.getQuantityString(R.plurals.minutes, m, m) to {
+                    sleep.start(m)
+                    android.widget.Toast.makeText(this@PlayerActivity, getString(R.string.sleep_set, m), android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            if (program != null) {
+                items += getString(R.string.sleep_end_of_programme, DateFormat.getTimeFormat(this@PlayerActivity).format(Date(program.stop))) to {
+                    if (sleep.startUntil(program.stop)) {
+                        android.widget.Toast.makeText(this@PlayerActivity, R.string.sleep_set_programme, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            AlertDialog.Builder(this@PlayerActivity).setTitle(R.string.sleep_title)
+                .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
+                .show()
+        }
+    }
+
+    /** Hands the stream to another app, and frees our connection to it once that app opens. */
+    private fun openExternal() {
+        val channel = current ?: return
+        lifecycleScope.launch {
+            val opened = if (catchup) ExternalPlayer.open(this@PlayerActivity, channel,
+                intent.getStringExtra(EXTRA_ARCHIVE_TITLE),
+                intent.getLongExtra(EXTRA_ARCHIVE_START, 0), intent.getLongExtra(EXTRA_ARCHIVE_STOP, 0))
+            else ExternalPlayer.open(this@PlayerActivity, channel, displayName(channel))
+            if (opened) {
+                if (catchup || channel.kind != ContentKind.LIVE) archivePosition = player?.exo?.currentPosition ?: archivePosition
+                recordWatch()
+                player?.exo?.stop()
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -215,6 +300,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         } else {
             binding.playerView.useController = controllerWanted
         }
+        updateButtons()
     }
 
     private var controllerWanted = false
@@ -249,6 +335,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) { showError("Unable to open episode"); return@launch }
             current = channel
+            updateButtons()
             triedHls = false
             showBanner(channel, null)
 
@@ -271,6 +358,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
                 container.playback.key = playbackKey(i)
                 container.playback.liveChannelId =
                     channel.id.takeIf { !catchup && !isVod && intent.getLongExtra("episode_id", -1) < 0 }
+                if (container.playback.liveChannelId != null) container.lastChannel.save(channel)
                 val resume = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
                     container.database.history().get(channel.playlistId, channel.channelKey)?.positionMs ?: 0L else 0L
                 if (resume > 0) player?.exo?.seekTo(resume)
@@ -291,11 +379,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         binding.errorBox.visibility = View.GONE
         controllerWanted = true
         binding.playerView.useController = !inPip()
-        binding.recordButton.setOnClickListener { instantRecord() }
-        binding.recordButton.isFocusable = !inPip()
-        // Only live channels can be recorded; the button disappears for catch-up and files.
-        binding.recordButton.visibility =
-            if (!catchup && !fileMode) View.VISIBLE else View.GONE
+        updateButtons()
         appContainer.playback.setSessionActivity(intent)
         if (resume) return
         if (!file.exists()) return showError(getString(R.string.recording_file_missing))
@@ -372,6 +456,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         binding.bannerProgram.text = program.orEmpty()
         binding.bannerProgram.visibility = if (program.isNullOrEmpty()) View.GONE else View.VISIBLE
         binding.bannerClock.text = DateFormat.getTimeFormat(this).format(Date())
+        updateSleep()
         binding.bannerLogo.setImageDrawable(null)
         if (!channel.logoUrl.isNullOrBlank()) binding.bannerLogo.load(channel.logoUrl)
         binding.banner.visibility = View.VISIBLE
@@ -396,10 +481,39 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         loadChannel(next)
     }
 
+    /** The OK press being held, replayed on release if it turns out not to be a long press. */
+    private var okDown: KeyEvent? = null
+    private var okLongPressed = false
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.isLongPress) {
-            instantRecord()
-            return true
+        // Remotes here have no Menu key, so holding OK opens the player menu. A short press
+        // is only known on release; it then goes through as a normal press (channel list,
+        // retry, the focused button, the playback controls).
+        val ok = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
+        if (ok && !inPip()) {
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    if (event.repeatCount == 0) {
+                        okDown = KeyEvent(event)
+                        okLongPressed = false
+                    } else if (event.isLongPress && !okLongPressed) {
+                        okLongPressed = true
+                        okDown = null
+                        showOptions()
+                    }
+                    return true
+                }
+                KeyEvent.ACTION_UP -> {
+                    val down = okDown
+                    okDown = null
+                    if (okLongPressed || down == null) {
+                        okLongPressed = false
+                        return true
+                    }
+                    super.dispatchKeyEvent(down)
+                    return super.dispatchKeyEvent(event)
+                }
+            }
         }
         if (event.keyCode == KeyEvent.KEYCODE_MENU) {
             if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showOptions()
@@ -479,17 +593,19 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
     private fun showOptions() {
         val channel = current
         lifecycleScope.launch {
-            val items = mutableListOf<Pair<String, () -> Unit>>(
-                "Audio tracks" to { pickTrack(C.TRACK_TYPE_AUDIO) },
-                "Subtitles" to { pickTrack(C.TRACK_TYPE_TEXT) },
-                "Display mode" to { pickDisplayMode() },
-            )
+            val items = mutableListOf<Pair<String, () -> Unit>>()
             val live = channel != null && !catchup && !fileMode && channel.kind == ContentKind.LIVE
             if (live) {
                 val active = appContainer.recordings.activeFor(channel!!)
                 items += getString(if (active != null) R.string.guide_stop_recording else R.string.guide_record) to { instantRecord() }
-                items += getString(R.string.multiview) to { openMultiview() }
             }
+            val left = appContainer.sleep.remainingMinutes()
+            items += (if (left != null) getString(R.string.sleep_banner, left) else getString(R.string.sleep_title)) to { showSleep() }
+            if (channel != null && !fileMode) items += getString(R.string.external_player) to { openExternal() }
+            items += "Audio tracks" to { pickTrack(C.TRACK_TYPE_AUDIO) }
+            items += "Subtitles" to { pickTrack(C.TRACK_TYPE_TEXT) }
+            items += "Display mode" to { pickDisplayMode() }
+            if (live) items += getString(R.string.multiview) to { openMultiview() }
             if (pipSupported()) items += getString(R.string.pip) to { enterPip(); Unit }
             AlertDialog.Builder(this@PlayerActivity).setTitle("Playback options")
                 .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
@@ -559,6 +675,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
     override fun onDestroy() {
         // Cleared from the back stack while playing in the background.
         if (isFinishing) appContainer.playback.release(this)
+        appContainer.sleep.removeListener(this)
         handler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
