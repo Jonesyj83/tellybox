@@ -11,38 +11,48 @@ import com.openstream.tv.R
 import com.openstream.tv.appContainer
 import com.openstream.tv.data.settings.AppSettings
 import com.openstream.tv.data.settings.DisplayMode
-import com.openstream.tv.databinding.ActivitySettingsBinding
-import com.openstream.tv.databinding.ItemSettingBinding
+import com.openstream.tv.ui.chrome.Category
+import com.openstream.tv.ui.chrome.Section
+import com.openstream.tv.ui.chrome.SectionActivity
+import com.openstream.tv.ui.chrome.SimpleRow
+import com.openstream.tv.ui.chrome.SimpleRowAdapter
+import com.openstream.tv.ui.chrome.TwoColumn
 import com.openstream.tv.player.BufferSize
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlin.math.abs
 
-class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
+class SettingsActivity : SectionActivity() {
+
+    override val section = Section.SETTINGS
+    private lateinit var view: TwoColumn
+    private var rowActions: List<() -> Unit> = emptyList()
+    private val adapter = SimpleRowAdapter { row -> rowActions.getOrNull(row.id.toInt())?.invoke() }
 
     private var matchSummary = "Guide matches 0 of 0 channels"
     private var guideIdSummary = ""
-    private var section: String? = null
-    private var sectionFocus = 0
+    private var current: String = SECTIONS.first()
     private var currentSettings: AppSettings? = null
     private val exportFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { it?.let(::exportBackup) }
     private val importFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(::importBackup) }
-    private lateinit var binding: ActivitySettingsBinding
-    private val rows = ArrayList<ItemSettingBinding>()
 
     private class Row(val title: String, val value: String, val isHeader: Boolean = false, val description: String = "", val onClick: () -> Unit)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        section = savedInstanceState?.getString("section")
-        sectionFocus = savedInstanceState?.getInt("sectionFocus") ?: 0
-        binding = ActivitySettingsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (section != null) showSectionList() else finish()
-            }
-        })
+        current = savedInstanceState?.getString("section")?.takeIf { it in SECTIONS } ?: SECTIONS.first()
+        view = TwoColumn(layoutInflater, chrome.sectionContent) { c ->
+            current = c.key
+            view.b.list.scrollToPosition(0)
+            currentSettings?.let(::render)
+        }
+        columns = view
+        setSectionContent(view.b.root)
+        view.b.list.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        view.b.list.adapter = adapter
+        view.categories.submit(SECTIONS.map { Category(it, it) })
+        view.categories.activeKey = current
+        view.b.list.post { view.focusCategories() }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // How many channels even carry a tvg-id: without one, no guide can attach.
@@ -65,8 +75,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString("section", section)
-        outState.putInt("sectionFocus", sectionFocus)
+        outState.putString("section", current)
     }
 
     private fun header(text: Int) = Row(getString(text), "", isHeader = true) {}
@@ -161,12 +170,8 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 pick(R.string.setting_preview_follows_focus, onOff, s.previewFollowsFocus, repo::setPreviewFollowsFocus)
             },
             header(R.string.settings_recording),
-            Row(getString(R.string.recordings_title), "") {
-                startActivity(android.content.Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))
-            },
-            Row(getString(R.string.reminders_title), "") {
-                startActivity(android.content.Intent(this, com.openstream.tv.ui.reminders.RemindersActivity::class.java))
-            },
+            Row(getString(R.string.recordings_title), "") { openSection(Section.RECORDINGS) },
+            Row(getString(R.string.reminders_title), "") { openSection(Section.REMINDERS) },
             Row(getString(R.string.setting_pad_before), minutes(s.recordPadBefore)) {
                 pick(R.string.setting_pad_before, padOptions, s.recordPadBefore, repo::setRecordPadBefore)
             },
@@ -254,19 +259,17 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             }.show()
     }
 
-    private fun showSectionList() {
-        section = null
-        currentSettings?.let { render(it, sectionFocus) }
+    override fun onDestroy() {
+        view.release()
+        super.onDestroy()
     }
 
-    private fun render(s: AppSettings, focusIndex: Int? = null) {
-        currentSettings = s
+    private fun openSection(to: Section) = onRailPick(to)
+
+    private fun rowsFor(name: String, s: AppSettings): List<Row> {
         val all = buildRows(s)
-        val sections = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
-        val summaries = listOf("Channel names and cache maintenance", "Add, edit and refresh your playlists", "Guide sources, matching and refresh options", "Decoders, buffering and playback behaviour", "Clock, guide shading and panel appearance", "Recordings, padding and default duration", "Reminder timing and popup duration", "PIN, blocked channels and unlock duration", "Save or restore your configuration", "Version information and open-source licences")
-        val list = if (section == null) sections.mapIndexed { index, name -> Row(name, "", description = summaries[index]) { sectionFocus = index; section = name; render(s, 2) } }
-        else listOf(Row("‹ Settings", "") { showSectionList() }, Row(section!!, "", isHeader = true) {}) + when (section) {
-            "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { startActivity(android.content.Intent(this, com.openstream.tv.ui.playlists.PlaylistsActivity::class.java)) })
+        return when (name) {
+            "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { openSection(Section.PLAYLISTS) })
             "Parental" -> all.take(1)
             "General" -> all.filter { it.title == "Channel name cleanup" } + maintenance()
             "EPG" -> all.dropWhile { it.title != getString(R.string.settings_guide) }.filterNot { it.isHeader } + all.filter { it.title == "Full guide scan" } + listOf(Row("Guide sources and assignments", "URLs and last update times") { showGuides() }, Row("Clear EPG", "") { clearEpg() })
@@ -278,6 +281,11 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             "About" -> listOf(Row("OpenStream TV ${com.openstream.tv.BuildConfig.VERSION_NAME}", "A player for playlists supplied by you.") {}, Row("Open-source licences", "AndroidX, Media3, Kotlin, Coil, OkHttp and Retrofit") { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton("OK", null).show() })
             else -> emptyList()
         }
+    }
+
+    private fun render(s: AppSettings) {
+        currentSettings = s
+        val list = rowsFor(current, s).filterNot { it.isHeader }
         val descriptions = mapOf(
             "Channel name cleanup" to "Remove configured prefixes and suffixes from channel names.",
             "Show clock" to "Display the clock on the home screen.",
@@ -302,36 +310,32 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             getString(R.string.setting_reminder_before) to "Choose how early a programme reminder appears.",
             getString(R.string.setting_reminder_popup) to "Choose how long a reminder stays on screen.",
             "Clear EPG" to "Delete stored guide programmes while keeping source assignments.",
-            "Clear logo cache" to "Remove cached logos so they download again."
+            "Clear logo cache" to "Remove cached logos so they download again.",
+            getString(R.string.recordings_title) to "Open the list of scheduled and finished recordings.",
+            getString(R.string.reminders_title) to "Open the list of programme reminders.",
         )
-        val focused = focusIndex ?: rows.indexOfFirst { it.root.hasFocus() }
-        binding.list.removeAllViews()
-        rows.clear()
-        list.forEach { row ->
-            val b = ItemSettingBinding.inflate(layoutInflater, binding.list, false)
-            b.choiceTitle.text = row.title
-            b.choiceDesc.text = row.value
-            val explanatoryValue = row.title in listOf("Manage playlists", "Parental controls", "Guide sources and assignments", "Export backup", "Import backup", "Open-source licences") || row.title.startsWith("OpenStream TV ")
-            val description = row.description.ifEmpty { descriptions[row.title].orEmpty() }.ifEmpty { if (explanatoryValue) row.value else "" }
-            b.description.text = description
-            b.description.visibility = if (description.isEmpty()) View.GONE else View.VISIBLE
-            b.choiceDesc.visibility = if (row.value.isEmpty() || explanatoryValue) View.GONE else View.VISIBLE
-            b.root.setOnClickListener { row.onClick() }
-            binding.list.addView(b.root)
-            rows += b
+        val explanatory = listOf("Manage playlists", "Parental controls", "Guide sources and assignments", "Export backup", "Import backup", "Open-source licences")
+        view.b.title.text = current
+        view.b.subtitle.text = SUMMARIES.getOrNull(SECTIONS.indexOf(current)).orEmpty()
+        val focused = view.b.list.focusedChild?.let { view.b.list.getChildAdapterPosition(it) }
+        rowActions = list.map { it.onClick }
+        adapter.submit(list.mapIndexed { i, row ->
+            val explanatoryValue = row.title in explanatory || row.title.startsWith("OpenStream TV ")
+            SimpleRow(
+                id = i.toLong(),
+                title = row.title,
+                value = if (explanatoryValue) "" else row.value,
+                detail = row.description.ifEmpty { descriptions[row.title].orEmpty() }.ifEmpty { if (explanatoryValue) row.value else "" },
+            )
+        })
+        if (focused != null && focused >= 0) {
+            view.b.list.post { view.b.list.findViewHolderForAdapterPosition(focused.coerceAtMost(list.size - 1))?.itemView?.requestFocus() }
         }
-        // Section headers aren't selectable.
-        list.forEachIndexed { i, row ->
-            if (row.isHeader) {
-                rows[i].root.isFocusable = false
-                rows[i].root.isClickable = false
-                rows[i].root.background = null
-                (rows[i].root.layoutParams as android.widget.LinearLayout.LayoutParams).topMargin = (12 * resources.displayMetrics.density).toInt()
-                rows[i].choiceTitle.setTextColor(getColor(R.color.accent))
-            }
-        }
-        val target = rows.getOrNull(focused)?.takeIf { it.root.isFocusable } ?: rows.firstOrNull { it.root.isFocusable }
-        binding.list.post { target?.root?.requestFocus() }
+    }
+
+    companion object {
+        private val SECTIONS = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
+        private val SUMMARIES = listOf("Channel names and cache maintenance", "Add, edit and refresh your playlists", "Guide sources, matching and refresh options", "Decoders, buffering and playback behaviour", "Clock, guide shading and panel appearance", "Recordings, padding and default duration", "Reminder timing and popup duration", "PIN, blocked channels and unlock duration", "Save or restore your configuration", "Version information and open-source licences")
     }
 
     private fun minutes(m: Int) = resources.getQuantityString(R.plurals.minutes, m, m)
