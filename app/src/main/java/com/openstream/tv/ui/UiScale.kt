@@ -2,7 +2,7 @@ package com.openstream.tv.ui
 
 /** Logical TV canvas sizing; physical output resolution is deliberately irrelevant. */
 data class UiScale(val widthDp: Int, val heightDp: Int) {
-    val scale = (heightDp / 540f).coerceIn(0.85f, 1.35f)
+    val scale = (heightDp / 505f).coerceIn(0.85f, 1.35f)
     fun dp(base: Number): Float = base.toFloat() * scale
     fun sp(base: Number): Float = base.toFloat() * scale
     fun rowHeight() = dp(30)
