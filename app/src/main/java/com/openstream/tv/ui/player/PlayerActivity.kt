@@ -291,6 +291,11 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         binding.errorBox.visibility = View.GONE
         controllerWanted = true
         binding.playerView.useController = !inPip()
+        binding.recordButton.setOnClickListener { instantRecord() }
+        binding.recordButton.isFocusable = !inPip()
+        // Only live channels can be recorded; the button disappears for catch-up and files.
+        binding.recordButton.visibility =
+            if (!catchup && !fileMode) View.VISIBLE else View.GONE
         appContainer.playback.setSessionActivity(intent)
         if (resume) return
         if (!file.exists()) return showError(getString(R.string.recording_file_missing))
@@ -392,6 +397,10 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.isLongPress) {
+            instantRecord()
+            return true
+        }
         if (event.keyCode == KeyEvent.KEYCODE_MENU) {
             if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showOptions()
             return true
