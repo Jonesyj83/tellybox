@@ -695,8 +695,13 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                     val up = event.keyCode == KeyEvent.KEYCODE_DPAD_UP
                     if (binding.menuRail.hasFocus()) {
                         val rail = binding.menuRail
-                        val index = (0 until rail.childCount).firstOrNull { rail.getChildAt(it).hasFocus() } ?: 0
-                        rail.getChildAt(HomeFocus.verticalIndex(index, rail.childCount, up)).requestFocus()
+                        // Only the item rows take focus; the spacer between the group and the
+                        // settings icon must not swallow a Down press.
+                        val items = (0 until rail.childCount).map { rail.getChildAt(it) }
+                            .filter { it is android.view.ViewGroup && it.childCount > 0 }
+                        val index = items.indexOfFirst { it.hasFocus() }.coerceAtLeast(0)
+                        val next = (index + if (up) -1 else 1).coerceIn(0, items.size - 1)
+                        items[next].requestFocus()
                         return true
                     }
                     if (binding.groups.hasFocus()) {
