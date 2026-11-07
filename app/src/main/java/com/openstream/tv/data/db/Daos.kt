@@ -199,6 +199,12 @@ interface EpgDao {
     @Query("SELECT DISTINCT LOWER(tvgId) FROM channels WHERE tvgId IS NOT NULL AND (:playlistId IS NULL OR playlistId = :playlistId)")
     suspend fun knownTvgIds(playlistId: Long?): List<String>
 
+    @Query("SELECT COUNT(*) FROM epg_channels")
+    suspend fun guideChannelCount(): Int
+
+    @Query("SELECT COUNT(*) FROM epg_programs")
+    suspend fun guideProgramCount(): Int
+
     @Query("DELETE FROM epg_programs WHERE sourceId = :sourceId")
     suspend fun deleteProgramsForSource(sourceId: Long)
 

@@ -106,7 +106,6 @@ class EpgRepository(
 
                         override fun onProgramme(programme: XmltvProgramme) {
                             val id = programme.channelId.lowercase(java.util.Locale.ROOT)
-                            if (!EpgRefreshGuard.keepProgramme(prefs.fullScan, selected, id)) return
                             if (programme.stop + offset < cutoff) return
                             stored++
                             programmes += EpgProgramEntity(

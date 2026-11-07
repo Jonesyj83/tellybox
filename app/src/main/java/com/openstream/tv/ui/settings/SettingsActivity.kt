@@ -21,6 +21,7 @@ import kotlin.math.abs
 class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private var matchSummary = "Guide matches 0 of 0 channels"
+    private var guideIdSummary = ""
     private var section: String? = null
     private var sectionFocus = 0
     private var currentSettings: AppSettings? = null
@@ -44,9 +45,15 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         })
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                kotlinx.coroutines.flow.combine(appContainer.database.epg().observeMatchCount(), appContainer.database.epg().observeLiveCount()) { matched, total ->
-                    "Guide matches $matched of $total channels"
-                }.collect { matchSummary = it; currentSettings?.let(::render) }
+                // How many channels even carry a tvg-id: without one, no guide can attach.
+                appContainer.database.epg().let { epg ->
+                    val ids = epg.knownTvgIds(null).size
+                    val guideChannels = epg.guideChannelCount()
+                    val programmes = epg.guideProgramCount()
+                    guideIdSummary = "$ids channel ids here · guide has $guideChannels channels, $programmes programmes"
+                }
+                kotlinx.coroutines.flow.combine(appContainer.database.epg().observeMatchCount(), appContainer.database.epg().observeLiveCount()) { _, _ -> }
+                    .collect { currentSettings?.let(::render) }
             }
         }
         lifecycleScope.launch {
@@ -179,7 +186,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                     s.reminderPopupSeconds, repo::setReminderPopupSeconds)
             },
             header(R.string.settings_guide),
-            Row(matchSummary, "Refresh") { reimportGuides() },
+            Row(guideIdSummary, "Refresh") { reimportGuides() },
             Row(getString(R.string.setting_guide_interval), resources.getQuantityString(R.plurals.hours, s.guideRefreshHours, s.guideRefreshHours)) {
                 pick(R.string.setting_guide_interval, intervals, s.guideRefreshHours, repo::setGuideRefreshHours)
             },
