@@ -12,38 +12,55 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player.Listener
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.openstream.tv.R
 import com.openstream.tv.appContainer
 import com.openstream.tv.data.db.ChannelEntity
 import com.openstream.tv.data.db.ContentKind
 import com.openstream.tv.data.db.RecordingStatus
 import com.openstream.tv.data.settings.ChannelNames
+import com.openstream.tv.databinding.ItemScreenCountBinding
+import com.openstream.tv.databinding.MultiviewContentBinding
 import com.openstream.tv.player.BufferSize
 import com.openstream.tv.player.Player
 import com.openstream.tv.player.PlayerConfig
 import com.openstream.tv.player.PlayerFactory
+import com.openstream.tv.ui.chrome.Category
+import com.openstream.tv.ui.chrome.Section
+import com.openstream.tv.ui.chrome.SectionActivity
+import com.openstream.tv.ui.chrome.SimpleRow
+import com.openstream.tv.ui.chrome.SimpleRowAdapter
+import com.openstream.tv.ui.chrome.TwoColumn
+import com.openstream.tv.ui.player.PlayerActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
- * Several live channels at once. Each tile has its own player; only the focused tile is
- * audible. Players live only while this screen is visible, so tiles never hold provider
- * connections in the background.
+ * Several live channels at once, beside the shared rail. Opening it asks for 2, 3 or 4
+ * screens, then each channel is picked from the usual categories and channel list. Each
+ * tile has its own player; only the focused tile is audible. Players live only while this
+ * screen is visible, so tiles never hold provider connections in the background.
  */
 @OptIn(UnstableApi::class)
-class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
+class MultiviewActivity : SectionActivity() {
+
+    private enum class Mode { COUNT, PICK, TILES }
 
     private inner class Tile(var channelId: Long) {
         val frame = FrameLayout(this@MultiviewActivity)
@@ -57,38 +74,65 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
         var job: Job? = null
     }
 
-    private lateinit var root: FrameLayout
+    override val section = Section.MULTIVIEW
+    private lateinit var content: MultiviewContentBinding
+    private lateinit var grid: MultiviewGrid
+    private lateinit var picker: TwoColumn
     private val tiles = mutableListOf<Tile>()
-    private var enlarged: Int? = null
+    private var mode = Mode.COUNT
+    private var plan: SlotPlan? = null
+    /** The screen being chosen in the picker. */
+    private var targetSlot = 0
+    /** Picked channels by id, for names and the connection check before tiles exist. */
+    private val chosen = HashMap<Long, ChannelEntity>()
+    private var audioTile = 0
+    private var fromPlayer = false
+    private var firstChannel: Long? = null
     private var channelIds = LongArray(0)
     private var choices: List<ChannelEntity>? = null
     private var config = PlayerConfig()
     private var nameTokens = ""
-    private var askForSecond = false
+    private var pickerJob: Job? = null
+    private var pickerRows: List<ChannelEntity> = emptyList()
+    private val pickerAdapter = SimpleRowAdapter { row -> pickerRows.firstOrNull { it.id == row.id }?.let(::onChannelPicked) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        root = FrameLayout(this).apply {
-            setBackgroundColor(Color.BLACK)
-            keepScreenOn = true
+        chrome.root.setBackgroundColor(getColor(R.color.bg))
+        chrome.root.keepScreenOn = true
+        content = MultiviewContentBinding.inflate(layoutInflater, chrome.sectionContent, false)
+        setSectionContent(content.root)
+
+        grid = MultiviewGrid(this).apply {
+            margin = px(10)
+            gap = px(6)
         }
-        setContentView(root)
+        content.tilesHost.addView(grid, FrameLayout.LayoutParams(-1, -1))
+
+        picker = TwoColumn(layoutInflater, content.pickerHost) { c -> showPickerChannels(c.key) }
+        content.pickerHost.addView(picker.b.root)
+        picker.b.list.layoutManager = LinearLayoutManager(this)
+        picker.b.list.adapter = pickerAdapter
+
+        listOf(content.count2 to 2, content.count3 to 3, content.count4 to 4).forEach { (b, n) -> bindCount(b, n) }
+
+        fromPlayer = intent.hasExtra(EXTRA_CHANNEL)
+        firstChannel = intent.getLongExtra(EXTRA_CHANNEL, -1).takeIf { it >= 0 }
         channelIds = intent.getLongArrayExtra(EXTRA_LIST) ?: LongArray(0)
-        val restored = savedInstanceState?.getLongArray(STATE_TILES)
-        val initial = restored ?: longArrayOf(intent.getLongExtra(EXTRA_CHANNEL, -1))
-        initial.filter { it >= 0 }.forEach { addTile(it, start = false) }
-        enlarged = savedInstanceState?.getInt(STATE_ENLARGED, -1)?.takeIf { it in tiles.indices }
-        if (tiles.isEmpty()) return finish()
-        askForSecond = savedInstanceState == null
-        root.addOnLayoutChangeListener { _, l, t, r, b, ol, ot, or, ob ->
-            if (r - l != or - ol || b - t != ob - ot) root.post { layoutTiles() }
+        val restored = savedInstanceState?.getLongArray(STATE_TILES)?.filter { it >= 0 }.orEmpty()
+        if (restored.isNotEmpty()) {
+            restored.forEach { addTile(it) }
+            grid.enlarged = savedInstanceState?.getInt(STATE_ENLARGED, -1)?.takeIf { it in tiles.indices }
+            showMode(Mode.TILES)
+        } else {
+            showCountPicker()
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putLongArray(STATE_TILES, tiles.map { it.channelId }.toLongArray())
-        outState.putInt(STATE_ENLARGED, enlarged ?: -1)
+        outState.putInt(STATE_ENLARGED, grid.enlarged ?: -1)
     }
 
     override fun onStart() {
@@ -104,12 +148,7 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
             buffer = if (settings.buffer.ordinal > BufferSize.MEDIUM.ordinal) BufferSize.MEDIUM else settings.buffer,
         )
         tiles.forEach { startTile(it) }
-        layoutTiles()
-        (tiles.getOrNull(enlarged ?: 0) ?: tiles.first()).frame.requestFocus()
-        if (askForSecond) {
-            askForSecond = false
-            root.post { addScreen() }
-        }
+        if (mode == Mode.TILES) focusTile(audioTile)
     }
 
     override fun onStop() {
@@ -117,9 +156,172 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
         super.onStop()
     }
 
+    override fun onDestroy() {
+        picker.release()
+        super.onDestroy()
+    }
+
+    // --- modes -------------------------------------------------------------------------
+
+    private fun showMode(next: Mode) {
+        mode = next
+        content.countPicker.visibility = if (next == Mode.COUNT) View.VISIBLE else View.GONE
+        content.pickerHost.visibility = if (next == Mode.PICK) View.VISIBLE else View.GONE
+        content.tilesHost.visibility = if (next == Mode.TILES) View.VISIBLE else View.GONE
+        columns = if (next == Mode.PICK) picker else null
+        updateAudio()
+    }
+
+    private fun bindCount(b: ItemScreenCountBinding, count: Int) {
+        b.number.text = count.toString()
+        b.label.text = getString(R.string.multiview_screens, count)
+        b.shape.setText(
+            when (count) {
+                2 -> R.string.multiview_shape_2
+                3 -> R.string.multiview_shape_3
+                else -> R.string.multiview_shape_4
+            },
+        )
+        b.root.setOnClickListener { startSetup(count) }
+    }
+
+    private fun showCountPicker() {
+        plan = null
+        showMode(Mode.COUNT)
+        val first = firstChannel
+        content.countHint.setText(R.string.multiview_how_many)
+        if (first != null) lifecycleScope.launch {
+            appContainer.channels.get(first)?.let { ch ->
+                chosen[ch.id] = ch
+                content.countHint.text = getString(R.string.multiview_how_many_first, displayName(ch))
+            }
+        }
+        content.count2.root.post { content.count2.root.requestFocus() }
+    }
+
+    private fun startSetup(count: Int) {
+        lifecycleScope.launch {
+            if (loadChoices().isEmpty()) {
+                Toast.makeText(this@MultiviewActivity, R.string.multiview_no_channels, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            val p = SlotPlan(count, firstChannel)
+            plan = p
+            pickFor(p.firstEmpty() ?: return@launch finishSetup())
+        }
+    }
+
+    /** Opens the categories + channels picker for [slot]. */
+    private fun pickFor(slot: Int) {
+        val p = plan ?: return
+        targetSlot = slot
+        val wasPicking = mode == Mode.PICK
+        showMode(Mode.PICK)
+        picker.b.title.text = getString(R.string.multiview_pick_title, slot + 1, p.count)
+        picker.b.subtitle.text = (0 until p.count).joinToString("   ") { i ->
+            getString(R.string.multiview_slot, i + 1, p[i]?.let { id -> chosen[id]?.let(::displayName) } ?: getString(R.string.multiview_slot_empty))
+        }
+        if (!wasPicking) {
+            loadPickerCategories()
+        } else {
+            // Same list, new marks for what is now on which screen.
+            renderPickerRows()
+        }
+    }
+
+    private fun loadPickerCategories() {
+        lifecycleScope.launch {
+            val groups = appContainer.channels.observeGroups().first()
+            val cats = listOf(
+                Category(KEY_FAVORITES, getString(R.string.group_favorites)),
+                Category(KEY_ALL, getString(R.string.group_all), groups.sumOf { it.channelCount }),
+            ) + groups.map { Category(it.id.toString(), it.name, it.channelCount) }
+            picker.categories.submit(cats)
+            val key = picker.categories.activeKey ?: KEY_ALL
+            picker.categories.activeKey = key
+            showPickerChannels(key)
+            picker.b.list.post { picker.focusCategories() }
+        }
+    }
+
+    private fun showPickerChannels(key: String) {
+        pickerJob?.cancel()
+        pickerJob = lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val c = appContainer
+                val flow: Flow<List<ChannelEntity>> = when (key) {
+                    KEY_FAVORITES -> c.channels.observeFavorites()
+                    KEY_ALL -> c.channels.observeAll()
+                    else -> c.channels.observeGroup(key.toLong())
+                }
+                flow.collect { list ->
+                    pickerRows = list.filter { it.kind == ContentKind.LIVE }
+                    renderPickerRows()
+                }
+            }
+        }
+    }
+
+    private fun renderPickerRows() {
+        val slots = plan?.channels.orEmpty()
+        pickerAdapter.submit(pickerRows.map { ch ->
+            val on = slots.indexOf(ch.id)
+            SimpleRow(
+                ch.id,
+                displayName(ch),
+                if (on >= 0) getString(R.string.multiview_on_screen, on + 1) else "",
+                highlight = on >= 0,
+            )
+        })
+        picker.b.empty.setText(R.string.empty_group)
+        picker.b.empty.visibility = if (pickerRows.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    private fun onChannelPicked(channel: ChannelEntity) {
+        val p = plan ?: return
+        val slot = targetSlot
+        confirmConnection(channel, slot) {
+            chosen[channel.id] = channel
+            p.fill(slot, channel.id)
+            val next = p.firstEmpty()
+            if (next != null) pickFor(next) else finishSetup()
+        }
+    }
+
+    /** Every screen has a channel: make the tiles match the plan and show them. */
+    private fun finishSetup() {
+        val p = plan ?: return
+        val ids = p.channels.filterNotNull()
+        ids.forEachIndexed { i, id ->
+            val tile = tiles.getOrNull(i)
+            if (tile == null) {
+                addTile(id).also { if (isStarted()) startTile(it) }
+            } else if (tile.channelId != id) {
+                tile.channelId = id
+                if (tile.player != null) loadTile(tile)
+            }
+        }
+        while (tiles.size > ids.size) dropTile(tiles.last())
+        plan = null
+        showMode(Mode.TILES)
+        focusTile(targetSlot.coerceIn(0, tiles.size - 1))
+    }
+
+    /** Back out of the picker without finishing it. */
+    private fun cancelPicking() {
+        if (tiles.isEmpty()) showCountPicker()
+        else {
+            plan = null
+            showMode(Mode.TILES)
+            focusTile(audioTile)
+        }
+    }
+
+    private fun isStarted() = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+
     // --- tiles -------------------------------------------------------------------------
 
-    private fun addTile(channelId: Long, start: Boolean = true): Tile {
+    private fun addTile(channelId: Long): Tile {
         val tile = Tile(channelId)
         tile.video.apply {
             useController = false
@@ -127,32 +329,39 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
         }
-        val inset = dp(3)
+        val inset = dp(2)
         tile.frame.addView(tile.video, FrameLayout.LayoutParams(-1, -1).apply { setMargins(inset, inset, inset, inset) })
         tile.label.apply {
             setTextColor(getColor(R.color.text_primary))
-            textSize = 14f
+            textSize = 12f
             maxLines = 2
-            setPadding(dp(10), dp(6), dp(10), dp(6))
-            setBackgroundColor(0xCC171B22.toInt())
+            setPadding(dp(8), dp(4), dp(8), dp(4))
+            background = GradientDrawable().apply {
+                setColor(0xCC171B22.toInt())
+                cornerRadius = px(4).toFloat()
+            }
         }
         tile.frame.addView(tile.label, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
-            setMargins(dp(12), dp(12), dp(12), dp(12))
+            setMargins(dp(8), dp(8), dp(8), dp(8))
         })
         tile.frame.apply {
+            setBackgroundColor(Color.BLACK)
             isFocusable = true
             isClickable = true
+            isLongClickable = true
             descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
             foreground = focusBorder()
             setOnClickListener { showTileMenu(tile) }
-            setOnFocusChangeListener { _, has -> if (has) updateAudio() }
+            setOnLongClickListener { showTileMenu(tile); true }
+            setOnFocusChangeListener { _, has ->
+                if (has) {
+                    audioTile = tiles.indexOf(tile).coerceAtLeast(0)
+                    updateAudio()
+                }
+            }
         }
         tiles += tile
-        root.addView(tile.frame)
-        if (start) {
-            startTile(tile)
-            layoutTiles()
-        }
+        grid.addView(tile.frame)
         return tile
     }
 
@@ -231,38 +440,28 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
         updateLabel(tile)
     }
 
+    private fun displayName(ch: ChannelEntity) =
+        listOfNotNull(ch.number?.toString(), ChannelNames.display(ch.name, nameTokens)).joinToString("  ")
+
     private fun updateLabel(tile: Tile) {
-        val name = tile.channel?.let { ch ->
-            listOfNotNull(ch.number?.toString(), ChannelNames.display(ch.name, nameTokens)).joinToString("  ")
-        }.orEmpty()
+        val name = tile.channel?.let(::displayName).orEmpty()
         tile.label.text = if (tile.error != null) "$name\n${tile.error}" else name
         tile.label.setTextColor(getColor(if (tile.error != null) R.color.error else R.color.text_primary))
     }
 
-    /** Sound comes from the focused tile only. */
+    /** Sound comes from the focused tile only, and stays on it while the rail has focus. */
     private fun updateAudio() {
-        tiles.forEach { it.player?.exo?.volume = if (it.frame.hasFocus()) 1f else 0f }
+        tiles.forEachIndexed { i, t -> t.player?.exo?.volume = if (mode == Mode.TILES && i == audioTile) 1f else 0f }
     }
 
-    private fun layoutTiles() {
-        val w = root.width
-        val h = root.height
-        if (w == 0 || h == 0 || tiles.isEmpty()) return
-        val boxes = MultiviewLayout.boxes(tiles.size, enlarged)
-        tiles.forEachIndexed { i, tile ->
-            val box = boxes[i]
-            tile.frame.layoutParams = FrameLayout.LayoutParams(
-                ((box.right - box.left) * w).toInt(), ((box.bottom - box.top) * h).toInt(),
-            ).apply {
-                leftMargin = (box.left * w).toInt()
-                topMargin = (box.top * h).toInt()
-            }
-            // Small side tiles get a smaller label so it doesn't cover the picture.
-            tile.label.textSize = if (box.right - box.left < 0.4f) 11f else 14f
-        }
+    private fun focusTile(index: Int) {
+        val tile = tiles.getOrNull(index) ?: tiles.firstOrNull() ?: return
+        audioTile = tiles.indexOf(tile)
+        tile.frame.post { tile.frame.requestFocus() }
+        updateAudio()
     }
 
-    private fun focusedIndex() = tiles.indexOfFirst { it.frame.hasFocus() }.takeIf { it >= 0 } ?: 0
+    private fun focusedIndex() = tiles.indexOfFirst { it.frame.hasFocus() }.takeIf { it >= 0 } ?: audioTile
 
     // --- actions -----------------------------------------------------------------------
 
@@ -270,50 +469,49 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
         val index = tiles.indexOf(tile)
         val items = mutableListOf<Pair<String, () -> Unit>>()
         if (tile.error != null) items += getString(R.string.retry) to { loadTile(tile) }
-        items += getString(R.string.multiview_change_channel) to { pickChannel(tile) }
+        items += getString(R.string.multiview_change_channel) to { changeChannel(index) }
         if (tiles.size > 1) {
-            items += getString(if (enlarged == index) R.string.multiview_reduce else R.string.multiview_enlarge) to {
-                enlarged = if (enlarged == index) null else index
-                layoutTiles()
+            items += getString(if (grid.enlarged == index) R.string.multiview_reduce else R.string.multiview_enlarge) to {
+                grid.enlarged = if (grid.enlarged == index) null else index
             }
         }
         if (tiles.size < MultiviewLayout.MAX_TILES) items += getString(R.string.multiview_add) to { addScreen() }
         if (tiles.size > 1) items += getString(R.string.multiview_remove) to { removeTile(tile) }
-        items += getString(R.string.multiview_full_screen) to { exitTo(tile) }
+        items += getString(R.string.multiview_full_screen) to { fullScreen(tile) }
         AlertDialog.Builder(this)
             .setTitle(tile.channel?.let { ChannelNames.display(it.name, nameTokens) } ?: getString(R.string.multiview))
             .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
             .show()
     }
 
-    private fun addScreen() {
-        if (tiles.size >= MultiviewLayout.MAX_TILES) return
-        chooseChannel(getString(R.string.multiview_add), null) { channel ->
-            confirmConnection(channel, replacing = null) {
-                val tile = addTile(channel.id)
-                tile.frame.requestFocus()
-            }
-        }
+    /** A plan matching the tiles on screen, with [extra] empty screens after them. */
+    private fun planFromTiles(extra: Int = 0): SlotPlan =
+        SlotPlan(tiles.size + extra).also { p -> tiles.forEachIndexed { i, t -> p.fill(i, t.channelId); t.channel?.let { chosen[it.id] = it } } }
+
+    private fun changeChannel(index: Int) {
+        plan = planFromTiles()
+        pickFor(index)
     }
 
-    private fun pickChannel(tile: Tile) {
-        chooseChannel(getString(R.string.multiview_change_channel), tile.channelId) { channel ->
-            confirmConnection(channel, replacing = tile) {
-                tile.channelId = channel.id
-                loadTile(tile)
-            }
-        }
+    private fun addScreen() {
+        if (tiles.size >= MultiviewLayout.MAX_TILES) return
+        plan = planFromTiles(extra = 1)
+        pickFor(tiles.size)
+    }
+
+    private fun dropTile(tile: Tile) {
+        val index = tiles.indexOf(tile)
+        stopTile(tile)
+        grid.removeView(tile.frame)
+        tiles.remove(tile)
+        grid.enlarged = grid.enlarged?.let { e -> if (e == index) null else if (e > index) e - 1 else e }
+        audioTile = audioTile.coerceIn(0, (tiles.size - 1).coerceAtLeast(0))
     }
 
     private fun removeTile(tile: Tile) {
         val index = tiles.indexOf(tile)
-        stopTile(tile)
-        root.removeView(tile.frame)
-        tiles.remove(tile)
-        enlarged = enlarged?.let { e -> if (e == index) null else if (e > index) e - 1 else e }
-        layoutTiles()
-        tiles.getOrNull(index.coerceAtMost(tiles.size - 1))?.frame?.requestFocus()
-        updateAudio()
+        dropTile(tile)
+        focusTile(index.coerceAtMost(tiles.size - 1))
     }
 
     /** Channel up/down on the focused tile, through the same list the player zaps through. */
@@ -330,39 +528,20 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
 
     private suspend fun loadChoices(): List<ChannelEntity> = choices ?: run {
         val c = appContainer
-        c.parental.visible(c.channels.getByIds(channelIds).filter { it.kind == ContentKind.LIVE }, c.database)
-            .also { choices = it }
-    }
-
-    private fun chooseChannel(title: String, selectedId: Long?, chosen: (ChannelEntity) -> Unit) {
-        lifecycleScope.launch {
-            val list = loadChoices()
-            if (list.isEmpty()) return@launch
-            val labels = list.map { ch ->
-                listOfNotNull(ch.number?.toString(), ChannelNames.display(ch.name, nameTokens)).joinToString("  ")
-            }
-            val selected = list.indexOfFirst { it.id == selectedId }
-            AlertDialog.Builder(this@MultiviewActivity).setTitle(title)
-                .setSingleChoiceItems(labels.toTypedArray(), selected) { d, which ->
-                    d.dismiss()
-                    chosen(list[which])
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .create()
-                .apply { setOnShowListener { if (selected > 0) listView?.setSelection(selected) } }
-                .show()
-        }
+        val list = if (channelIds.isNotEmpty()) c.channels.getByIds(channelIds) else c.channels.observeAll().first()
+        c.parental.visible(list.filter { it.kind == ContentKind.LIVE }, c.database).also { choices = it }
     }
 
     /** Warns before opening more streams from one provider than its account allows. */
-    private fun confirmConnection(channel: ChannelEntity, replacing: Tile?, proceed: () -> Unit) {
+    private fun confirmConnection(channel: ChannelEntity, slot: Int, proceed: () -> Unit) {
         lifecycleScope.launch {
             val c = appContainer
             val playlist = c.playlists.get(channel.playlistId)
-            val tilesOnPlaylist = tiles.count { it !== replacing && it.channel?.playlistId == channel.playlistId }
+            val others = plan?.channels.orEmpty().filterIndexed { i, id -> i != slot && id != null }
+            val onPlaylist = others.count { id -> chosen[id]?.playlistId == channel.playlistId }
             val recording = c.database.recordings().withStatus(listOf(RecordingStatus.RECORDING))
                 .count { it.playlistId == channel.playlistId }
-            val limit = ConnectionBudget.exceededLimit(playlist?.maxConnections, tilesOnPlaylist + recording)
+            val limit = ConnectionBudget.exceededLimit(playlist?.maxConnections, onPlaylist + recording)
             if (limit == null) return@launch proceed()
             AlertDialog.Builder(this@MultiviewActivity)
                 .setTitle(R.string.multiview_limit_title)
@@ -373,14 +552,45 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
         }
     }
 
-    /** Back to the single player, continuing with [tile]'s channel. */
-    private fun exitTo(tile: Tile?) {
-        appContainer.playback.handoffChannelId = (tile ?: tiles.getOrNull(focusedIndex()))?.channelId
+    /** One channel full screen: back to the player we came from, or a new one. */
+    private fun fullScreen(tile: Tile) {
+        if (fromPlayer) return exitTo(tile)
+        val ids = tiles.map { it.channelId }.toLongArray()
+        tiles.forEach { stopTile(it) }
+        startActivity(PlayerActivity.intent(this, tile.channelId, ids, ids.indexOf(tile.channelId)))
         finish()
     }
 
+    /** Back to the single player, continuing with [tile]'s channel. */
+    private fun exitTo(tile: Tile?) {
+        appContainer.playback.handoffChannelId = (tile ?: tiles.getOrNull(focusedIndex()))?.channelId ?: firstChannel
+        finish()
+    }
+
+    /** Back steps out one stage: list -> categories -> tiles or screen count -> out. */
+    override fun onSectionBack(): Boolean {
+        if (!rail.hasFocus()) {
+            when (mode) {
+                Mode.PICK -> {
+                    if (picker.rightHasFocus()) return picker.focusCategories()
+                    cancelPicking()
+                    return true
+                }
+                Mode.TILES, Mode.COUNT -> Unit
+            }
+        }
+        if (fromPlayer) exitTo(null) else goLive()
+        return true
+    }
+
+    override fun focusContent(): Boolean = when (mode) {
+        Mode.COUNT -> content.count2.root.requestFocus()
+        Mode.PICK -> picker.focusCategories()
+        Mode.TILES -> { focusTile(audioTile); true }
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
+        if (event.keyCode == KeyEvent.KEYCODE_MENU && mode == Mode.TILES && !rail.hasFocus()) {
             if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) tiles.getOrNull(focusedIndex())?.let { showTileMenu(it) }
             return true
         }
@@ -388,8 +598,7 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        when (keyCode) {
-            KeyEvent.KEYCODE_BACK -> { exitTo(null); return true }
+        if (mode == Mode.TILES) when (keyCode) {
             KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> { zap(-1); return true }
             KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> { zap(1); return true }
         }
@@ -399,22 +608,29 @@ class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
     private fun focusBorder() = StateListDrawable().apply {
         addState(intArrayOf(android.R.attr.state_focused), GradientDrawable().apply {
             setColor(Color.TRANSPARENT)
-            setStroke(dp(4), getColor(R.color.accent))
+            setStroke(px(3), getColor(R.color.accent))
         })
         addState(intArrayOf(), GradientDrawable().apply {
             setColor(Color.TRANSPARENT)
-            setStroke(dp(1), getColor(R.color.surface_raised))
+            setStroke(px(1), getColor(R.color.surface_raised))
         })
     }
 
+    /** For layout params and padding, which screen scaling enlarges on its own. */
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    /** For sizes screen scaling never sees: the grid's spacing and drawn borders. */
+    private fun px(v: Int) = (uiScale.dp(v) * resources.displayMetrics.density).toInt()
 
     companion object {
         private const val EXTRA_CHANNEL = "channel_id"
         private const val EXTRA_LIST = "channel_list"
         private const val STATE_TILES = "tiles"
         private const val STATE_ENLARGED = "enlarged"
+        private const val KEY_FAVORITES = "favorites"
+        private const val KEY_ALL = "all"
 
+        /** From the player: [channelId] fills screen 1, the rest are picked. */
         fun intent(context: Context, channelId: Long, list: LongArray): Intent =
             Intent(context, MultiviewActivity::class.java)
                 .putExtra(EXTRA_CHANNEL, channelId)

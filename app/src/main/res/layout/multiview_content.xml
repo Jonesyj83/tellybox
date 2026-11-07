@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- The tiles: MultiviewGrid is added here in code. -->
+    <FrameLayout
+        android:id="@+id/tilesHost"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:visibility="gone" />
+
+    <!-- Step 1: how many screens. -->
+    <LinearLayout
+        android:id="@+id/countPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            style="@style/Text.Section"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/multiview" />
+
+        <TextView
+            android:id="@+id/countHint"
+            style="@style/Text.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="center"
+            android:maxWidth="460dp"
+            android:text="@string/multiview_how_many"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <include android:id="@+id/count2" layout="@layout/item_screen_count" />
+            <include android:id="@+id/count3" layout="@layout/item_screen_count" />
+            <include android:id="@+id/count4" layout="@layout/item_screen_count" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Step 2: categories and channels, the live TV way. Filled in code. -->
+    <FrameLayout
+        android:id="@+id/pickerHost"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+</FrameLayout>

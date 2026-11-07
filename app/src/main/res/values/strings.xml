@@ -145,6 +145,17 @@
     <string name="pip">Picture-in-picture</string>
     <string name="multiview">Multiview</string>
     <string name="retry">Retry</string>
+    <string name="multiview_how_many">How many screens? You pick the channels next.</string>
+    <string name="multiview_how_many_first">How many screens? Screen 1 shows %1$s; you pick the others next.</string>
+    <string name="multiview_screens">%1$d screens</string>
+    <string name="multiview_shape_2">Side by side</string>
+    <string name="multiview_shape_3">Two above, one below</string>
+    <string name="multiview_shape_4">Two by two</string>
+    <string name="multiview_pick_title">Channel for screen %1$d of %2$d</string>
+    <string name="multiview_slot">Screen %1$d: %2$s</string>
+    <string name="multiview_slot_empty">empty</string>
+    <string name="multiview_on_screen">Screen %1$d</string>
+    <string name="multiview_no_channels">Add an enabled live playlist first.</string>
     <string name="multiview_change_channel">Change channel</string>
     <string name="multiview_enlarge">Enlarge screen</string>
     <string name="multiview_reduce">Reduce screen</string>
