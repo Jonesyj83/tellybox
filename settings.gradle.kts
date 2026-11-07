@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OpenTelly"
+rootProject.name = "Tellybox"
 include(":app")

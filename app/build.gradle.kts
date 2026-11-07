@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.opentelly.tv"
+    namespace = "com.tellybox.tv"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.opentelly.tv"
+        applicationId = "com.tellybox.tv"
         minSdk = 23
         targetSdk = 35
         versionCode = 2
@@ -25,12 +25,12 @@ android {
                 val f = rootProject.file("local.properties")
                 if (f.exists()) f.inputStream().use { load(it) }
             }
-            val path = props.getProperty("opentelly.storeFile")
+            val path = props.getProperty("tellybox.storeFile")
             if (path != null) {
                 storeFile = file(path)
-                storePassword = props.getProperty("opentelly.storePassword")
-                keyAlias = props.getProperty("opentelly.keyAlias")
-                keyPassword = props.getProperty("opentelly.keyPassword")
+                storePassword = props.getProperty("tellybox.storePassword")
+                keyAlias = props.getProperty("tellybox.keyAlias")
+                keyPassword = props.getProperty("tellybox.keyPassword")
             }
         }
     }

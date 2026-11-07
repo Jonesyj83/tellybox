@@ -14,7 +14,7 @@
         android:layout_height="30dp"
         android:layout_marginBottom="18dp"
         android:src="@drawable/ic_brand"
-        android:contentDescription="OpenTelly"
+        android:contentDescription="Tellybox"
         android:importantForAccessibility="no" />
     <TextView android:id="@+id/railLive" style="@style/Rail.Item"
         android:drawableTop="@drawable/ic_menu_live" android:text="Live" android:contentDescription="Live TV" />

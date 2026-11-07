@@ -4,5 +4,5 @@
 -keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
 
 # Retrofit service interfaces
--keep,allowobfuscation interface com.opentelly.tv.data.parser.xtream.XtreamService
+-keep,allowobfuscation interface com.tellybox.tv.data.parser.xtream.XtreamService
 -keepattributes Signature, Exceptions

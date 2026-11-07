@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="4dp">
 
-    <com.opentelly.tv.ui.channels.RatioFrameLayout
+    <com.tellybox.tv.ui.channels.RatioFrameLayout
         android:id="@+id/posterFrame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
             android:layout_height="match_parent"
             android:importantForAccessibility="no"
             android:scaleType="centerCrop" />
-    </com.opentelly.tv.ui.channels.RatioFrameLayout>
+    </com.tellybox.tv.ui.channels.RatioFrameLayout>
 
     <TextView
         android:id="@+id/title"
