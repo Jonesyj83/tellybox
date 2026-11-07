@@ -7,7 +7,7 @@ leaving the box except the requests needed to load your playlist and play your c
 Tellybox does not supply, host or bundle any channels. You bring the playlist, and you are
 responsible for having the right to watch what is on it.
 
-**[Download the latest APK](../../releases/latest)**
+**[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**
 
 ## What you need
 
@@ -18,7 +18,7 @@ responsible for having the right to watch what is on it.
 
 ## Install
 
-1. Grab the APK from the [releases page](../../releases/latest).
+1. Grab the APK from the [releases page](https://github.com/Jonesyj83/tellybox/releases/latest).
 2. Get it onto the TV. Easiest is the Downloader app on the TV: open it, type the download
    link, install. Or from a computer with `adb install -r Tellybox-0.2.0.apk`.
 3. Allow installs from unknown sources when the TV asks. Android TV blocks sideloading by
