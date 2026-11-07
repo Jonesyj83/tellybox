@@ -9,6 +9,8 @@ responsible for having the right to watch what is on it.
 
 **[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**
 
+![Live TV with the preview window and guide](docs/screenshots/home.jpg)
+
 ## What you need
 
 - An Android TV or Google TV device on Android 6.0 or newer
@@ -26,6 +28,8 @@ responsible for having the right to watch what is on it.
 4. Open Tellybox, choose **Add playlist**, and paste your link.
 
 ## Features
+
+![Full screen playback](docs/screenshots/player.jpg)
 
 **Live TV**
 - Channel list with groups down the side, a preview window, and now/next information
@@ -51,6 +55,8 @@ responsible for having the right to watch what is on it.
 **Movies and series**
 - Posters, categories, seasons and episodes from Xtream panels and M3U VOD entries
 - Resume where you left off
+
+![Movies and series](docs/screenshots/movies.jpg)
 
 **Recording**
 - Record what you're watching, or schedule from the guide
@@ -158,6 +164,12 @@ app/src/main/java/com/tellybox/tv/
 Favourites and watch history are keyed on a stable per-channel key (provider stream id or
 URL) rather than the database row id, so they survive a playlist refresh. Guide programmes
 are matched to channels on the `tvg-id` the playlist gives them.
+
+## Settings
+
+Everything lives in one place, and every option does something.
+
+![Settings](docs/screenshots/settings.jpg)
 
 ## Licence
 
