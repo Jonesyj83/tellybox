@@ -86,7 +86,6 @@ class EpgRepository(
                     }
                 }, includeDescriptions = false)
             }
-            val selected = ChannelMatcher.match(playlistChannels, guideNames).mapTo(HashSet()) { it.guideId }
             EpgRefreshGuard.requireReplacement(validation, validation.programmes)
             val stats = db.withTransaction {
                 db.epg().clearMatches(source.id)
@@ -130,7 +129,7 @@ class EpgRepository(
                 }
                 EpgRefreshGuard.requireReplacement(imported, stored)
                 recomputeMatches(db, source)
-                val warning = if (selected.isEmpty()) "Matching found no guide channels; stored all programmes" else null
+                val warning: String? = null
                 db.epg().setSourceRefreshResult(source.id, System.currentTimeMillis(), warning)
                 imported.copy(error = warning)
             }
