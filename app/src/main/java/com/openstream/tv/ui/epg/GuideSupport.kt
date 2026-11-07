@@ -131,6 +131,17 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
             CatchupUrls.available(channel.catchupDays, program.start, program.stop, now) ->
                 actions += activity.getString(R.string.guide_record_archive) to { record(channel, program) }
         }
+        // Escape hatch for streams our player struggles with: live now, or from the archive.
+        val liveNow = program.start <= now && program.stop > now
+        if (liveNow || isReplayable(row, block, now)) {
+            actions += activity.getString(R.string.external_player) to {
+                activity.lifecycleScope.launch {
+                    if (liveNow) com.openstream.tv.ui.player.ExternalPlayer.open(activity, channel, channel.name)
+                    else com.openstream.tv.ui.player.ExternalPlayer.open(activity, channel, program.title, program.start, program.stop)
+                }
+                Unit
+            }
+        }
         if (program.start > now) {
             val reminder = c.reminders.find(channel, program.start)
             actions += if (reminder != null) {

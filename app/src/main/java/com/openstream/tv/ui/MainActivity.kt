@@ -67,7 +67,8 @@ import java.util.Date
  * and Back from full screen lands here with the preview still running.
  */
 @OptIn(UnstableApi::class)
-class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGridView.Callback, Playback.Holder {
+class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGridView.Callback, Playback.Holder,
+    com.openstream.tv.player.SleepSchedule.Listener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var guide: GuideSupport
@@ -226,7 +227,10 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         if (savedInstanceState == null) {
             val container = appContainer
             container.appScope.launch { container.backgroundRefresh.refreshStale() }
+            // Opened from the launcher: carry on with the last channel, in the preview window.
+            if (intent?.action == Intent.ACTION_MAIN) resumeLastChannel()
         }
+        appContainer.sleep.addListener(this)
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -501,6 +505,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                 player.play(url, channel.name, appContainer.channels.userAgentFor(stored), stored.referrer)
                 playback.key = PlayerActivity.channelKey(channelId)
                 playback.liveChannelId = channelId
+                appContainer.lastChannel.save(stored)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -554,6 +559,34 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         val list = if (channelId == preview.previewing && channelId in previewList) previewList
         else gridIds().takeIf { channelId in it } ?: longArrayOf(channelId)
         startActivity(PlayerActivity.fromPreview(PlayerActivity.intent(this, channelId, list, list.indexOf(channelId))))
+    }
+
+    /**
+     * Starts the last played channel in the preview, unless it's gone, hidden, blocked or its
+     * playlist is off, or the user has already picked something by the time it's looked up.
+     */
+    private fun resumeLastChannel() {
+        lifecycleScope.launch {
+            val c = appContainer
+            val decision = com.openstream.tv.data.settings.ResumeLastChannel.check(
+                c.settings.get().resumeLastChannel, c.lastChannel, c.database, c.parental,
+            )
+            val start = decision as? com.openstream.tv.data.settings.ResumeLastChannel.Decision.Start ?: return@launch
+            val busy = preview.previewing != null || preview.pending != null || lockedOut ||
+                !(c.playback.isUnowned || c.playback.isOwner(this@MainActivity))
+            if (busy || !lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return@launch
+            act(preview.pick(start.channelId))
+            if (binding.grid.channels.any { it.id == start.channelId }) binding.grid.focusChannel(start.channelId)
+        }
+    }
+
+    /** The sleep timer stopped playback: the preview goes back to its hint rather than restarting. */
+    override fun onSleep() {
+        stopPreview()
+        // The full-screen player says so itself when it's the one on screen.
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            Toast.makeText(this, R.string.sleep_fired, Toast.LENGTH_LONG).show()
+        }
     }
 
     /** The full-screen player (or picture-in-picture) took over the stream. */
@@ -844,6 +877,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        appContainer.sleep.removeListener(this)
         if (isFinishing) {
             detachPlayer()
             appContainer.playback.release(this)

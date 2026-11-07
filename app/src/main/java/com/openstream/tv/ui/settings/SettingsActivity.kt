@@ -172,6 +172,9 @@ class SettingsActivity : SectionActivity() {
             Row(getString(R.string.setting_multiview_warning), onOff(s.multiviewConnectionWarning)) {
                 pick(R.string.setting_multiview_warning, onOff, s.multiviewConnectionWarning, repo::setMultiviewConnectionWarning)
             },
+            Row(getString(R.string.setting_resume_last_channel), onOff(s.resumeLastChannel)) {
+                pick(R.string.setting_resume_last_channel, onOff, s.resumeLastChannel, repo::setResumeLastChannel)
+            },
             header(R.string.settings_recording),
             Row(getString(R.string.recordings_title), "") { openSection(Section.RECORDINGS) },
             Row(getString(R.string.reminders_title), "") { openSection(Section.REMINDERS) },
@@ -274,9 +277,9 @@ class SettingsActivity : SectionActivity() {
         return when (name) {
             "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { openSection(Section.PLAYLISTS) })
             "Parental" -> all.take(1)
-            "General" -> all.filter { it.title == "Channel name cleanup" || it.title == getString(R.string.setting_multiview_warning) } + maintenance()
+            "General" -> all.filter { it.title in listOf("Channel name cleanup", getString(R.string.setting_resume_last_channel), getString(R.string.setting_multiview_warning)) } + maintenance()
             "EPG" -> all.dropWhile { it.title != getString(R.string.settings_guide) }.filterNot { it.isHeader } + all.filter { it.title == "Full guide scan" } + listOf(Row("Guide sources and assignments", "URLs and last update times") { showGuides() }, Row("Clear EPG", "") { clearEpg() })
-            "Player" -> all.dropWhile { it.title != getString(R.string.settings_player) }.drop(1).takeWhile { !it.isHeader }.filterNot { it.title == getString(R.string.setting_preview_follows_focus) || it.title == getString(R.string.setting_multiview_warning) }
+            "Player" -> all.dropWhile { it.title != getString(R.string.settings_player) }.drop(1).takeWhile { !it.isHeader }.filterNot { it.title in listOf(getString(R.string.setting_preview_follows_focus), getString(R.string.setting_multiview_warning), getString(R.string.setting_resume_last_channel)) }
             "Appearance" -> all.filter { it.title in listOf(getString(R.string.setting_preview_follows_focus), "Show clock", "Dim past programmes", "Panel transparency") }
             "Recording" -> all.filter { it.title in listOf(getString(R.string.recordings_title), getString(R.string.setting_pad_before), getString(R.string.setting_pad_after), getString(R.string.setting_instant_length)) }
             "Reminders" -> all.filter { it.title in listOf(getString(R.string.reminders_title), getString(R.string.setting_reminder_before), getString(R.string.setting_reminder_popup)) }

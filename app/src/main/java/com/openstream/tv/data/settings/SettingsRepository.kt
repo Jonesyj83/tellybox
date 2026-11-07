@@ -47,6 +47,8 @@ data class AppSettings(
     val previewFollowsFocus: Boolean = false,
     /** Multiview: explain on opening that every screen takes one provider connection. */
     val multiviewConnectionWarning: Boolean = true,
+    /** On app start, play the last watched channel in the home preview. */
+    val resumeLastChannel: Boolean = true,
 ) {
     val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling, audioPassthrough = audioPassthrough, preferSoftwareAudioDecoders = softwareAudioDecoders)
 }
@@ -79,6 +81,7 @@ class SettingsRepository(context: Context) {
         val backgroundPlayback = booleanPreferencesKey("background_playback")
         val previewFollowsFocus = booleanPreferencesKey("preview_follows_focus")
         val multiviewConnectionWarning = booleanPreferencesKey("multiview_connection_warning")
+        val resumeLastChannel = booleanPreferencesKey("resume_last_channel")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -106,6 +109,7 @@ class SettingsRepository(context: Context) {
             backgroundPlayback = p[Keys.backgroundPlayback] ?: d.backgroundPlayback,
             previewFollowsFocus = p[Keys.previewFollowsFocus] ?: d.previewFollowsFocus,
             multiviewConnectionWarning = p[Keys.multiviewConnectionWarning] ?: d.multiviewConnectionWarning,
+            resumeLastChannel = p[Keys.resumeLastChannel] ?: d.resumeLastChannel,
         )
     }
 
@@ -133,6 +137,7 @@ class SettingsRepository(context: Context) {
         p[Keys.backgroundPlayback] = s.backgroundPlayback
         p[Keys.previewFollowsFocus] = s.previewFollowsFocus
         p[Keys.multiviewConnectionWarning] = s.multiviewConnectionWarning
+        p[Keys.resumeLastChannel] = s.resumeLastChannel
     }
 
     suspend fun setShowClock(v: Boolean) = store.edit { it[Keys.showClock] = v }
@@ -166,4 +171,5 @@ class SettingsRepository(context: Context) {
     suspend fun setBackgroundPlayback(v: Boolean) = store.edit { it[Keys.backgroundPlayback] = v }
     suspend fun setPreviewFollowsFocus(v: Boolean) = store.edit { it[Keys.previewFollowsFocus] = v }
     suspend fun setMultiviewConnectionWarning(v: Boolean) = store.edit { it[Keys.multiviewConnectionWarning] = v }
+    suspend fun setResumeLastChannel(v: Boolean) = store.edit { it[Keys.resumeLastChannel] = v }
 }
