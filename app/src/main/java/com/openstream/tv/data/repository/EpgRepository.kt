@@ -45,7 +45,6 @@ class EpgRepository(
     }
 
     suspend fun refreshAll(): List<Pair<EpgSourceEntity, Result<XmltvStats>>> {
-        db.epg().deleteProgramsEndingBefore(System.currentTimeMillis() - KEEP_PAST)
         return db.epg().getEnabledSources().map { it to refresh(it) }
     }
 
@@ -57,16 +56,15 @@ class EpgRepository(
     }
 
     /**
-     * Downloads and imports one guide. Only programmes for channels we actually have are
-     * stored, which keeps the database small when a provider ships a guide for thousands
-     * of channels the user's playlist doesn't contain.
+     * Validates a cached download before atomically replacing a source's guide.
+     * Unmatched guides retain all programmes so matching cannot erase the guide.
      */
     private val refreshLocks = KeyedLock<Long>()
 
     suspend fun refresh(source: EpgSourceEntity): Result<XmltvStats> =
         refreshLocks.withLock(source.id) { doRefresh(source) }
 
-    private suspend fun doRefresh(source: EpgSourceEntity): Result<XmltvStats> {
+    private suspend fun doRefresh(source: EpgSourceEntity): Result<XmltvStats> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val playlistChannels = db.epg().matchingChannels(source.playlistId).map {
             ChannelMatcher.Channel(it.id, it.tvgId?.lowercase(java.util.Locale.ROOT), listOfNotNull(it.tvgName, it.name))
         }
@@ -74,61 +72,77 @@ class EpgRepository(
         val prefs = settings.get()
         val offset = TimeUnit.MINUTES.toMillis(prefs.epgOffsetMinutes.toLong())
         val keepDescriptions = prefs.storeDescriptions
-        return try {
-            db.epg().clearMatches(source.id)
-            db.epg().deleteProgramsForSource(source.id)
-            db.epg().deleteChannelsForSource(source.id)
-
-            val stats = openSource(context, http, source.url) { input ->
-                val programmes = ArrayList<EpgProgramEntity>(BATCH)
-                val channels = ArrayList<EpgChannelEntity>(BATCH)
-                val guideNames = ArrayList<ChannelMatcher.Guide>()
-                var wanted: Set<String>? = null
-                val listener = object : XmltvListener {
-                    override fun onChannel(channel: XmltvChannel) {
-                        val id = channel.id.lowercase(java.util.Locale.ROOT)
-                        guideNames += ChannelMatcher.Guide(id, channel.displayNames.ifEmpty { listOf(channel.displayName) })
-                        wanted = null
-                        channels += EpgChannelEntity(source.id, id, channel.displayName, channel.iconUrl, channel.displayNames.joinToString("\n"))
-                        if (channels.size >= BATCH) flushChannels(channels)
-                    }
-
-                    override fun onProgramme(programme: XmltvProgramme) {
-                        val id = programme.channelId.lowercase(java.util.Locale.ROOT)
-                        // XMLTV lists channel definitions before programmes. Only names and matches stay in memory.
-                        val selected = wanted ?: ChannelMatcher.match(playlistChannels, guideNames)
-                            .mapTo(HashSet()) { it.guideId }.also { wanted = it }
-                        if (!prefs.fullScan && id !in selected) return
-                        if (programme.stop + offset < cutoff) return
-                        programmes += EpgProgramEntity(
-                            sourceId = source.id,
-                            channelXmltvId = id,
-                            start = programme.start + offset,
-                            stop = programme.stop + offset,
-                            title = programme.title,
-                            subtitle = programme.subtitle,
-                            description = if (keepDescriptions) programme.description else null,
-                            category = programme.category,
-                            iconUrl = programme.iconUrl,
-                            episode = programme.episode,
-                        )
-                        if (programmes.size >= BATCH) flushProgrammes(programmes)
-                    }
-                }
-                XmltvParser.parse(input, listener, includeDescriptions = keepDescriptions).also {
-                    flushChannels(channels)
-                    flushProgrammes(programmes)
-                }
+        val cache = java.io.File.createTempFile("guide-", ".xmltv", context.cacheDir)
+        return@withContext try {
+            openSource(context, http, source.url) { input ->
+                cache.outputStream().use { input.copyTo(it) }
             }
-            recomputeMatches(db, source)
-            val error = stats.error?.takeIf { stats.programmes == 0 }
-            db.epg().setSourceRefreshResult(source.id, System.currentTimeMillis(), error)
-            if (error != null) Result.failure(IllegalStateException(error)) else Result.success(stats)
+            val guideNames = ArrayList<ChannelMatcher.Guide>()
+            val validation = cache.inputStream().use { input ->
+                XmltvParser.parse(input, object : XmltvListener {
+                    override fun onChannel(channel: XmltvChannel) {
+                        guideNames += ChannelMatcher.Guide(channel.id.lowercase(java.util.Locale.ROOT),
+                            channel.displayNames.ifEmpty { listOf(channel.displayName) })
+                    }
+                }, includeDescriptions = false)
+            }
+            val selected = ChannelMatcher.match(playlistChannels, guideNames).mapTo(HashSet()) { it.guideId }
+            EpgRefreshGuard.requireReplacement(validation, validation.programmes)
+            val stats = db.withTransaction {
+                db.epg().clearMatches(source.id)
+                db.epg().deleteProgramsForSource(source.id)
+                db.epg().deleteChannelsForSource(source.id)
+
+                var stored = 0
+                val imported = cache.inputStream().use { input ->
+                    val programmes = ArrayList<EpgProgramEntity>(BATCH)
+                    val channels = ArrayList<EpgChannelEntity>(BATCH)
+                    val listener = object : XmltvListener {
+                        override fun onChannel(channel: XmltvChannel) {
+                            val id = channel.id.lowercase(java.util.Locale.ROOT)
+                            channels += EpgChannelEntity(source.id, id, channel.displayName, channel.iconUrl, channel.displayNames.joinToString("\n"))
+                            if (channels.size >= BATCH) flushChannels(channels)
+                        }
+
+                        override fun onProgramme(programme: XmltvProgramme) {
+                            val id = programme.channelId.lowercase(java.util.Locale.ROOT)
+                            if (!EpgRefreshGuard.keepProgramme(prefs.fullScan, selected, id)) return
+                            if (programme.stop + offset < cutoff) return
+                            stored++
+                            programmes += EpgProgramEntity(
+                                sourceId = source.id,
+                                channelXmltvId = id,
+                                start = programme.start + offset,
+                                stop = programme.stop + offset,
+                                title = programme.title,
+                                subtitle = programme.subtitle,
+                                description = if (keepDescriptions) programme.description else null,
+                                category = programme.category,
+                                iconUrl = programme.iconUrl,
+                                episode = programme.episode,
+                            )
+                            if (programmes.size >= BATCH) flushProgrammes(programmes)
+                        }
+                    }
+                    XmltvParser.parse(input, listener, includeDescriptions = keepDescriptions).also {
+                        flushChannels(channels)
+                        flushProgrammes(programmes)
+                    }
+                }
+                EpgRefreshGuard.requireReplacement(imported, stored)
+                recomputeMatches(db, source)
+                val warning = if (selected.isEmpty()) "Matching found no guide channels; stored all programmes" else null
+                db.epg().setSourceRefreshResult(source.id, System.currentTimeMillis(), warning)
+                imported.copy(error = warning)
+            }
+            Result.success(stats)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             db.epg().setSourceRefreshResult(source.id, source.lastUpdated, e.message ?: e.javaClass.simpleName)
             Result.failure(e)
+        } finally {
+            cache.delete()
         }
     }
 

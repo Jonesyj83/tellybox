@@ -23,7 +23,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/guideButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_live" android:contentDescription="Live TV" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -33,7 +33,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/vodButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_movies" android:contentDescription="Movies and Series" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -43,7 +43,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/recordingsButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_recordings" android:contentDescription="Recordings" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -53,7 +53,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/remindersButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_reminders" android:contentDescription="Reminders" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -63,7 +63,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/searchButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_search" android:contentDescription="Search" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -73,7 +73,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/multiviewButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_multiview" android:contentDescription="Multiview" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -83,7 +83,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/playlistsButton" android:nextFocusDown="@+id/settingsButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_playlists" android:contentDescription="Playlists" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"
@@ -96,7 +96,7 @@
           android:orientation="vertical" android:gravity="center_horizontal"
           android:paddingTop="3dp" android:paddingBottom="3dp">
         <ImageButton android:id="@+id/settingsButton" android:nextFocusUp="@+id/playlistsButton" android:layout_width="14dp" android:layout_height="14dp"
-            android:padding="1dp" android:background="@drawable/bg_category" android:scaleType="fitCenter"
+            android:padding="1dp" android:background="@drawable/bg_rail_focus" android:scaleType="fitCenter"
             android:src="@drawable/ic_menu_settings" android:contentDescription="Settings" android:focusable="true" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp" android:gravity="center" android:maxLines="1"

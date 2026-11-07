@@ -12,7 +12,7 @@ import com.openstream.tv.appContainer
 import com.openstream.tv.data.settings.AppSettings
 import com.openstream.tv.data.settings.DisplayMode
 import com.openstream.tv.databinding.ActivitySettingsBinding
-import com.openstream.tv.databinding.ItemChoiceBinding
+import com.openstream.tv.databinding.ItemSettingBinding
 import com.openstream.tv.player.BufferSize
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
@@ -27,9 +27,9 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     private val exportFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { it?.let(::exportBackup) }
     private val importFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(::importBackup) }
     private lateinit var binding: ActivitySettingsBinding
-    private val rows = ArrayList<ItemChoiceBinding>()
+    private val rows = ArrayList<ItemSettingBinding>()
 
-    private class Row(val title: String, val value: String, val isHeader: Boolean = false, val onClick: () -> Unit)
+    private class Row(val title: String, val value: String, val isHeader: Boolean = false, val description: String = "", val onClick: () -> Unit)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -224,7 +224,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 AlertDialog.Builder(this@SettingsActivity).setTitle(source.name).setItems(arrayOf("Refresh now", "Remove guide")) { _, action -> lifecycleScope.launch {
                     if (action == 0) {
                         val result = appContainer.epg.refresh(source)
-                        AlertDialog.Builder(this@SettingsActivity).setMessage(result.fold({ "Guide refreshed" }, { "Refresh failed: ${it.message}" })).setPositiveButton("OK", null).show()
+                        AlertDialog.Builder(this@SettingsActivity).setMessage(result.fold({ it.error ?: "Guide refreshed" }, { "Refresh failed: ${it.message}" })).setPositiveButton("OK", null).show()
                     } else appContainer.epg.deleteSource(source.id)
                 } }.setOnCancelListener { showGuides(index) }.show()
             } else chooseGuidePlaylist(playlists)
@@ -256,8 +256,9 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         currentSettings = s
         val all = buildRows(s)
         val sections = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
-        val list = if (section == null) sections.mapIndexed { index, name -> Row(name, "") { sectionFocus = index; section = name; render(s, 1) } }
-        else listOf(Row("‹ Settings", section!!) { showSectionList() }) + when (section) {
+        val summaries = listOf("Channel names and cache maintenance", "Add, edit and refresh your playlists", "Guide sources, matching and refresh options", "Decoders, buffering and playback behaviour", "Clock, guide shading and panel appearance", "Recordings, padding and default duration", "Reminder timing and popup duration", "PIN, blocked channels and unlock duration", "Save or restore your configuration", "Version information and open-source licences")
+        val list = if (section == null) sections.mapIndexed { index, name -> Row(name, "", description = summaries[index]) { sectionFocus = index; section = name; render(s, 2) } }
+        else listOf(Row("‹ Settings", "") { showSectionList() }, Row(section!!, "", isHeader = true) {}) + when (section) {
             "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { startActivity(android.content.Intent(this, com.openstream.tv.ui.playlists.PlaylistsActivity::class.java)) })
             "Parental" -> all.take(1)
             "General" -> all.filter { it.title == "Channel name cleanup" } + maintenance()
@@ -270,14 +271,44 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             "About" -> listOf(Row("OpenStream TV ${com.openstream.tv.BuildConfig.VERSION_NAME}", "A player for playlists supplied by you.") {}, Row("Open-source licences", "AndroidX, Media3, Kotlin, Coil, OkHttp and Retrofit") { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton("OK", null).show() })
             else -> emptyList()
         }
+        val descriptions = mapOf(
+            "Channel name cleanup" to "Remove configured prefixes and suffixes from channel names.",
+            "Show clock" to "Display the clock on the home screen.",
+            "Dim past programmes" to "Shade programmes that have already finished.",
+            "Panel transparency" to "Choose how much video shows through panels.",
+            "Full guide scan" to "Store all guide programmes, including channels outside your playlists.",
+            "Audio decoder" to "Choose the preferred decoder for audio playback.",
+            "Audio passthrough" to "Send supported audio directly to your receiver.",
+            getString(R.string.setting_buffer) to "Increase buffering for streams that pause or stutter.",
+            getString(R.string.setting_decoders) to "Choose the preferred decoder for video playback.",
+            getString(R.string.setting_tunneling) to "Use supported hardware audio and video synchronisation.",
+            getString(R.string.setting_display_mode) to "Choose how video fits the screen.",
+            getString(R.string.setting_background_playback) to "Keep playback running when leaving the player.",
+            getString(R.string.setting_preview_follows_focus) to "Update the preview as you move between channels.",
+            getString(R.string.setting_guide_interval) to "Choose how often guides refresh automatically.",
+            getString(R.string.setting_epg_offset) to "Shift programme times to correct a provider time offset.",
+            getString(R.string.setting_store_descriptions) to "Keep programme descriptions for guide details.",
+            getString(R.string.setting_update_guides) to "Download and refresh every enabled guide source.",
+            getString(R.string.setting_pad_before) to "Start recording before the scheduled programme time.",
+            getString(R.string.setting_pad_after) to "Continue recording after the scheduled programme ends.",
+            getString(R.string.setting_instant_length) to "Set the default duration for an instant recording.",
+            getString(R.string.setting_reminder_before) to "Choose how early a programme reminder appears.",
+            getString(R.string.setting_reminder_popup) to "Choose how long a reminder stays on screen.",
+            "Clear EPG" to "Delete stored guide programmes while keeping source assignments.",
+            "Clear logo cache" to "Remove cached logos so they download again."
+        )
         val focused = focusIndex ?: rows.indexOfFirst { it.root.hasFocus() }
         binding.list.removeAllViews()
         rows.clear()
         list.forEach { row ->
-            val b = ItemChoiceBinding.inflate(layoutInflater, binding.list, false)
+            val b = ItemSettingBinding.inflate(layoutInflater, binding.list, false)
             b.choiceTitle.text = row.title
             b.choiceDesc.text = row.value
-            b.choiceDesc.visibility = if (row.value.isEmpty()) View.GONE else View.VISIBLE
+            val explanatoryValue = row.title in listOf("Manage playlists", "Parental controls", "Guide sources and assignments", "Export backup", "Import backup", "Open-source licences") || row.title.startsWith("OpenStream TV ")
+            val description = row.description.ifEmpty { descriptions[row.title].orEmpty() }.ifEmpty { if (explanatoryValue) row.value else "" }
+            b.description.text = description
+            b.description.visibility = if (description.isEmpty()) View.GONE else View.VISIBLE
+            b.choiceDesc.visibility = if (row.value.isEmpty() || explanatoryValue) View.GONE else View.VISIBLE
             b.root.setOnClickListener { row.onClick() }
             binding.list.addView(b.root)
             rows += b
@@ -288,10 +319,11 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 rows[i].root.isFocusable = false
                 rows[i].root.isClickable = false
                 rows[i].root.background = null
+                (rows[i].root.layoutParams as android.widget.LinearLayout.LayoutParams).topMargin = (12 * resources.displayMetrics.density).toInt()
                 rows[i].choiceTitle.setTextColor(getColor(R.color.accent))
             }
         }
-        val target = rows.getOrNull(focused) ?: rows.firstOrNull { it.root.isFocusable }
+        val target = rows.getOrNull(focused)?.takeIf { it.root.isFocusable } ?: rows.firstOrNull { it.root.isFocusable }
         binding.list.post { target?.root?.requestFocus() }
     }
 
