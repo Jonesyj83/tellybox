@@ -2,7 +2,8 @@
 <resources>
     <!-- Keep content inside the TV title-safe area (roughly 5% of 1920x1080). -->
     <dimen name="overscan_h">0dp</dimen>
-    <dimen name="overscan_v">0dp</dimen>
+    <dimen name="overscan_v">6dp</dimen>
+    <dimen name="overscan_end">10dp</dimen>
     <dimen name="row_height">30dp</dimen>
     <dimen name="corner">6dp</dimen>
 </resources>
