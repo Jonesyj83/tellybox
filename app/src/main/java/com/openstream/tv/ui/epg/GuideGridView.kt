@@ -371,7 +371,10 @@ class GuideGridView @JvmOverloads constructor(
                 val left = channelWidth + (max(block.start, viewStart) - viewStart) / 60_000f * pxPerMinute
                 val right = channelWidth + (min(block.stop, viewEnd) - viewStart) / 60_000f * pxPerMinute - gap
                 if (right <= left) continue
-                rect.set(left, top, right, top + rowHeight - gap)
+                // Clamp to the row band: a placeholder strip can span the whole visible
+                // window, and its rect must never be allowed to grow past its own row.
+                val cellBottom = min(top + rowHeight - gap, headerHeight + rows * rowHeight)
+                rect.set(left, top, right, cellBottom)
                 val focused = row == focusedRow && focusBlock != null && block.start == focusBlock.start && hasFocus()
                 val paint = when {
                     focused -> focusPaint
@@ -379,7 +382,7 @@ class GuideGridView @JvmOverloads constructor(
                     block.start <= now -> nowPaint
                     else -> bgPaint
                 }
-                canvas.drawRoundRect(rect, 4 * dp, 4 * dp, paint)
+                if (block.strip == null) canvas.drawRoundRect(rect, 4 * dp, 4 * dp, paint)
                 if (focused) canvas.drawRoundRect(rect, 4 * dp, 4 * dp, focusStroke)
                 val avail = right - left - 2 * pad
                 if (block.strip != null) {

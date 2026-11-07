@@ -4,6 +4,7 @@
     <color name="surface">#FF171B22</color>
     <color name="surface_raised">#FF222833</color>
     <color name="surface_focus">#FF34404F</color>
+    <color name="rail_bg">#FF1B2029</color>
     <color name="accent">#FF3FA9F5</color>
     <color name="accent_dim">#663FA9F5</color>
     <color name="text_primary">#FFECEFF4</color>
