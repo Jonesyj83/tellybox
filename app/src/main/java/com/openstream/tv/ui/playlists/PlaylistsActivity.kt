@@ -55,7 +55,7 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         }
     }
 
-    private fun showActions(playlist: PlaylistEntity) {
+    private fun showActions(playlist: PlaylistEntity, focusIndex: Int = 0) {
         val actions = listOf(
             getString(R.string.playlist_refresh),
             getString(if (playlist.enabled) R.string.playlist_disable else R.string.playlist_enable),
@@ -74,7 +74,9 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                     4 -> startActivity(Intent(this, GroupManagementActivity::class.java).putExtra("playlist_id", playlist.id))
                 }
             }
-            .show()
+            .create().apply {
+                setOnShowListener { listView.setSelection(focusIndex); listView.requestFocus() }
+            }.show()
     }
 
     private fun editPlaylist(playlist: PlaylistEntity) = lifecycleScope.launch {
@@ -102,7 +104,8 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         val ua = field("User agent (optional)", playlist.userAgent)
         val dialog = AlertDialog.Builder(this@PlaylistsActivity).setTitle("Edit playlist")
             .setView(android.widget.ScrollView(this@PlaylistsActivity).apply { addView(form) })
-            .setPositiveButton("Save and re-fetch", null).setNegativeButton(R.string.cancel, null).create()
+            .setPositiveButton("Save and re-fetch", null).setNegativeButton(R.string.cancel) { _, _ -> showActions(playlist, 3) }.create()
+        dialog.setOnCancelListener { showActions(playlist, 3) }
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 if (name.text.isBlank() || url.text.isBlank()) {

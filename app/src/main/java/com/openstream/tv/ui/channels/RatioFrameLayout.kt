@@ -11,7 +11,7 @@ class RatioFrameLayout @JvmOverloads constructor(
 ) : FrameLayout(context, attrs) {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        val height = width * 9 / 16
+        val height = kotlin.math.round(width * 9 / 16f).toInt()
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),

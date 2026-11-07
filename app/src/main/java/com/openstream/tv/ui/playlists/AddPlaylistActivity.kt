@@ -99,10 +99,16 @@ class AddPlaylistActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     }
 
     private fun showTypeStep() {
+        val previousMode = mode
         mode = null
         binding.formStep.visibility = View.GONE
         binding.typeStep.visibility = View.VISIBLE
-        binding.typeM3uUrl.root.requestFocus()
+        when (previousMode) {
+            Mode.M3U_FILE -> binding.typeM3uFile
+            Mode.XTREAM -> binding.typeXtream
+            Mode.STALKER -> binding.typeStalker
+            else -> binding.typeM3uUrl
+        }.root.requestFocus()
     }
 
     private fun showForm(m: Mode) {

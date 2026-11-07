@@ -57,7 +57,7 @@ class GroupManagementActivity : com.openstream.tv.ui.parental.ProtectedActivity(
                     setBackgroundResource(R.drawable.bg_focusable)
                     isAllCaps = false
                     text = "Back to groups"
-                    setOnClickListener { groupId = null; movingId = null; render() }
+                    setOnClickListener { val id = groupId; groupId = null; movingId = null; render(id) }
                 })
             }
             val ids = channels?.map { it.id } ?: groups.map { it.id }
@@ -118,7 +118,7 @@ class GroupManagementActivity : com.openstream.tv.ui.parental.ProtectedActivity(
     override fun onBackPressed() {
         when {
             movingId != null -> { val id = movingId; movingId = null; render(id) }
-            groupId != null -> { groupId = null; render() }
+            groupId != null -> { val id = groupId; groupId = null; render(id) }
             else -> super.onBackPressed()
         }
     }

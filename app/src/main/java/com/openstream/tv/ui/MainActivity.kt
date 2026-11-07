@@ -113,7 +113,17 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+        }
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(binding.root)
+        androidx.core.view.WindowCompat.getInsetsController(window, binding.root).apply {
+            hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
         lifecycleScope.launch { appContainer.settings.settings.collect { settings ->
             binding.clock.visibility = if (settings.showClock) View.VISIBLE else View.GONE
             binding.grid.dimPast = settings.dimPast
@@ -128,17 +138,10 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         guide = GuideSupport(this, binding.grid)
         with(binding.grid) {
             callback = this@MainActivity
-            setMetrics(rowHeightDp = 44f, channelWidthDp = 200f, pxPerMinuteDp = 6f)
+            setMetrics(rowHeightDp = 34f, channelWidthDp = 190f, pxPerMinuteDp = 5f)
             exitLeftAtNow = true
             onExitLeft = { moveFocus(HomeFocus.leftFrom(HomeArea.GUIDE)); true }
             onExitUp = { moveFocus(HomeFocus.upFromGridTop(previewShowing)) }
-        }
-
-        binding.topBlock.addOnLayoutChangeListener { _, left, _, right, _, _, _, _, _ ->
-            val width = minOf((400 * resources.displayMetrics.density).toInt(), ((right - left) * 0.42f).toInt())
-            if (binding.previewTile.layoutParams.width != width) {
-                binding.previewTile.layoutParams = binding.previewTile.layoutParams.apply { this.width = width }
-            }
         }
 
         // Subtitles are unreadable at this size and cover the channel label.

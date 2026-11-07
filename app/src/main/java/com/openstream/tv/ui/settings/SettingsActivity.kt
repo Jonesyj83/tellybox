@@ -21,6 +21,8 @@ import kotlin.math.abs
 class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private var section: String? = null
+    private var sectionFocus = 0
+    private var currentSettings: AppSettings? = null
     private val exportFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { it?.let(::exportBackup) }
     private val importFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(::importBackup) }
     private lateinit var binding: ActivitySettingsBinding
@@ -31,8 +33,14 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         section = savedInstanceState?.getString("section")
+        sectionFocus = savedInstanceState?.getInt("sectionFocus") ?: 0
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (section != null) showSectionList() else finish()
+            }
+        })
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.settings.settings.collect { render(it) }
@@ -43,6 +51,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("section", section)
+        outState.putInt("sectionFocus", sectionFocus)
     }
 
     private fun header(text: Int) = Row(getString(text), "", isHeader = true) {}
@@ -196,7 +205,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             } }.show()
     }
 
-    private fun showGuides() = lifecycleScope.launch {
+    private fun showGuides(focusIndex: Int = 0): kotlinx.coroutines.Job = lifecycleScope.launch {
         val sources = appContainer.database.epg().observeSources().first().filter { it.enabled }
         val playlists = appContainer.database.playlists().getAll()
         val labels = sources.map { source -> "${source.name}: ${source.url}\n${if (source.lastUpdated == 0L) "Never updated" else java.util.Date(source.lastUpdated).toString()}${source.lastError?.let { " — $it" }.orEmpty()}" } + "Assign guide to playlist"
@@ -208,24 +217,38 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                         val result = appContainer.epg.refresh(source)
                         AlertDialog.Builder(this@SettingsActivity).setMessage(result.fold({ "Guide refreshed" }, { "Refresh failed: ${it.message}" })).setPositiveButton("OK", null).show()
                     } else appContainer.epg.deleteSource(source.id)
-                } }.show()
-            } else AlertDialog.Builder(this@SettingsActivity).setTitle("Choose playlist").setItems(playlists.map { it.name }.toTypedArray()) { _, which ->
+                } }.setOnCancelListener { showGuides(index) }.show()
+            } else chooseGuidePlaylist(playlists)
+        }.setPositiveButton("Close", null).create().apply {
+            setOnShowListener { listView.setSelection(focusIndex.coerceAtMost(listView.count - 1)); listView.requestFocus() }
+        }.show()
+    }
+
+    private fun chooseGuidePlaylist(playlists: List<com.openstream.tv.data.db.PlaylistEntity>, focusIndex: Int = 0) {
+        AlertDialog.Builder(this@SettingsActivity).setTitle("Choose playlist").setItems(playlists.map { it.name }.toTypedArray()) { _, which ->
                 val input = android.widget.EditText(this@SettingsActivity).apply { hint = "https://example.com/guide.xml"; setSingleLine() }
-                AlertDialog.Builder(this@SettingsActivity).setTitle("Guide URL").setView(input).setNegativeButton("Cancel", null).setPositiveButton("Assign") { _, _ -> lifecycleScope.launch {
+                AlertDialog.Builder(this@SettingsActivity).setTitle("Guide URL").setView(input).setNegativeButton("Cancel") { _, _ -> chooseGuidePlaylist(playlists, which) }.setPositiveButton("Assign") { _, _ -> lifecycleScope.launch {
                     if (input.text.isNotBlank()) {
                         appContainer.epg.addSource(input.text.toString(), playlists[which].name, playlists[which].id)
                         android.widget.Toast.makeText(this@SettingsActivity, "Guide assigned", android.widget.Toast.LENGTH_SHORT).show()
                     }
-                } }.show()
+                } }.setOnCancelListener { chooseGuidePlaylist(playlists, which) }.show()
+            }.setOnCancelListener { showGuides(Int.MAX_VALUE) }.create().apply {
+                setOnShowListener { listView.setSelection(focusIndex.coerceAtMost(listView.count - 1)); listView.requestFocus() }
             }.show()
-        }.setPositiveButton("Close", null).show()
     }
 
-    private fun render(s: AppSettings) {
+    private fun showSectionList() {
+        section = null
+        currentSettings?.let { render(it, sectionFocus) }
+    }
+
+    private fun render(s: AppSettings, focusIndex: Int? = null) {
+        currentSettings = s
         val all = buildRows(s)
         val sections = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
-        val list = if (section == null) sections.map { name -> Row(name, "") { section = name; render(s) } }
-        else listOf(Row("‹ Settings", section!!) { section = null; render(s) }) + when (section) {
+        val list = if (section == null) sections.mapIndexed { index, name -> Row(name, "") { sectionFocus = index; section = name; render(s, 1) } }
+        else listOf(Row("‹ Settings", section!!) { showSectionList() }) + when (section) {
             "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { startActivity(android.content.Intent(this, com.openstream.tv.ui.playlists.PlaylistsActivity::class.java)) })
             "Parental" -> all.take(1)
             "General" -> all.filter { it.title == "Channel name cleanup" } + maintenance()
@@ -238,7 +261,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
             "About" -> listOf(Row("OpenStream TV ${com.openstream.tv.BuildConfig.VERSION_NAME}", "A player for playlists supplied by you.") {}, Row("Open-source licences", "AndroidX, Media3, Kotlin, Coil, OkHttp and Retrofit") { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton("OK", null).show() })
             else -> emptyList()
         }
-        val focused = rows.indexOfFirst { it.root.hasFocus() }
+        val focused = focusIndex ?: rows.indexOfFirst { it.root.hasFocus() }
         binding.list.removeAllViews()
         rows.clear()
         list.forEach { row ->
