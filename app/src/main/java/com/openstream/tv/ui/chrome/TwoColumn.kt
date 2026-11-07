@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.openstream.tv.databinding.SectionTwoColumnBinding
@@ -106,17 +107,27 @@ class TwoColumn(
                 else -> false
             }
         }
+        if (b.list.hasFocus()) {
+            // Decided on adapter positions: rows scrolled off screen don't exist as views, so a
+            // focus search would wrongly think the first visible row is the top of the list.
+            val position = b.list.findContainingViewHolder(focused)?.bindingAdapterPosition ?: return false
+            val span = (b.list.layoutManager as? GridLayoutManager)?.spanCount ?: 1
+            when (key) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> if (position % span == 0) { focusCategories(); return true }
+                KeyEvent.KEYCODE_DPAD_UP -> if (position < span) { focusFirstAction(); return true }
+            }
+            return false
+        }
         if (b.rightColumn.hasFocus() && key == KeyEvent.KEYCODE_DPAD_LEFT) {
+            // Header actions: Left past the first one goes back to the categories.
             val next = FocusFinder.getInstance().findNextFocus(b.root as ViewGroup, focused, View.FOCUS_LEFT)
             if (next == null || !isInside(b.rightColumn, next)) {
                 focusCategories()
                 return true
             }
         }
-        if (b.list.hasFocus() && key == KeyEvent.KEYCODE_DPAD_UP) {
-            // Up out of the list goes to the header actions, never into the categories.
-            val next = FocusFinder.getInstance().findNextFocus(b.root as ViewGroup, focused, View.FOCUS_UP)
-            if (next != null && !isInside(b.rightColumn, next)) return focusFirstAction() || true
+        if (b.actions.hasFocus() && key == KeyEvent.KEYCODE_DPAD_DOWN) {
+            if (focusList()) return true
         }
         return false
     }

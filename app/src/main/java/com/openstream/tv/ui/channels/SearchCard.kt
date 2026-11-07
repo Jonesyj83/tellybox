@@ -79,7 +79,9 @@ class SearchCard(
         val metrics = context.resources.displayMetrics
         window?.setLayout((metrics.widthPixels * 0.56f).toInt(), (metrics.heightPixels * 0.78f).toInt())
         window?.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        // A fresh search opens the keyboard; reopening one shows its results first.
+        val keyboard = if (initial.isEmpty()) WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE else WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+        window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or keyboard)
         b.searchInput.requestFocus()
     }
 

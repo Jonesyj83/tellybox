@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Rail icon and label: brighter under focus, accent on the section you are in. -->
+<!-- Rail label: accent on the section you are in. Focus only adds the soft box behind it. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_focused="true" android:color="@color/text_primary" />
     <item android:state_activated="true" android:color="@color/accent" />
     <item android:color="@color/text_secondary" />
 </selector>

@@ -51,7 +51,6 @@ import com.openstream.tv.ui.epg.GuideSupport
 import com.openstream.tv.ui.parental.requestPin
 import com.openstream.tv.ui.player.PlayerActivity
 import com.openstream.tv.ui.playlists.AddPlaylistActivity
-import com.openstream.tv.ui.playlists.PlaylistsActivity
 import com.openstream.tv.ui.settings.SettingsActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
