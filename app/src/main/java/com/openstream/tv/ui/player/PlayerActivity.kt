@@ -48,7 +48,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 @OptIn(UnstableApi::class)
-class PlayerActivity : AppCompatActivity(), com.openstream.tv.player.Playback.Holder {
+class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.player.Playback.Holder {
 
     private lateinit var binding: ActivityPlayerBinding
     private var player: Player? = null

@@ -9,7 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.openstream.tv.appContainer
 import kotlinx.coroutines.launch
 
-class ParentalActivity : AppCompatActivity() {
+class ParentalActivity : com.openstream.tv.ui.ScaledActivity() {
     private lateinit var list: LinearLayout
     private val repo get() = appContainer.parental
     override fun onCreate(state: Bundle?) {

@@ -8,7 +8,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.openstream.tv.appContainer
 import kotlinx.coroutines.launch
 
-open class ProtectedActivity : AppCompatActivity() {
+open class ProtectedActivity : com.openstream.tv.ui.ScaledActivity() {
     private var prompting = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

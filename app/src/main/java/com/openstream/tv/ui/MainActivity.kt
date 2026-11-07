@@ -113,6 +113,11 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        // Leave room for programme details when the logical canvas is narrower than a TV baseline.
+        // These are base dp here; ScaledActivity applies the shared factor before drawing.
+        val mainColumnBase = uiScale.widthDp / uiScale.scale - 48 * 2 - 44 - 220 - 12
+        binding.previewTile.layoutParams.width =
+            (minOf(270f, ((mainColumnBase - 16) / 2).coerceAtLeast(80f)) * resources.displayMetrics.density).toInt()
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             window.attributes = window.attributes.apply {
                 layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
@@ -134,11 +139,27 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         binding.groups.layoutManager = LinearLayoutManager(this)
         binding.groups.adapter = groupAdapter
         binding.groups.itemAnimator = null
+        if (com.openstream.tv.BuildConfig.DEBUG) {
+            var lastGeometry = ""
+            binding.root.viewTreeObserver.addOnGlobalLayoutListener {
+                val density = resources.displayMetrics.density
+                val row = uiScale.categoryRowHeight() * density
+                val geometry = "canvas=${uiScale.widthDp}x${uiScale.heightDp} scale=${uiScale.scale} " +
+                    "categories=${((binding.groups.height - binding.groups.paddingTop - binding.groups.paddingBottom) / row).toInt()} " +
+                    "guide=${binding.grid.visibleRowCapacity} rail=${binding.guideButton.width} " +
+                    "groupsBottom=${binding.groups.bottom} contentHeight=${binding.content.height}"
+                if (geometry != lastGeometry) {
+                    android.util.Log.d("UiScale", geometry)
+                    lastGeometry = geometry
+                }
+            }
+        }
+
 
         guide = GuideSupport(this, binding.grid)
         with(binding.grid) {
             callback = this@MainActivity
-            setMetrics(rowHeightDp = 34f, channelWidthDp = 190f, pxPerMinuteDp = 5f)
+            setMetrics(rowHeightDp = 26f, channelWidthDp = 150f, pxPerMinuteDp = 4.2f)
             exitLeftAtNow = true
             onExitLeft = { moveFocus(HomeFocus.leftFrom(HomeArea.GUIDE)); true }
             onExitUp = { moveFocus(HomeFocus.upFromGridTop(previewShowing)) }

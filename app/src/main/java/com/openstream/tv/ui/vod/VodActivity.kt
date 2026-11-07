@@ -40,7 +40,11 @@ class VodActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         val body = LinearLayout(this)
         categories = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         body.addView(ScrollView(this).apply { addView(categories) }, LinearLayout.LayoutParams(dp(220), -1))
-        grid = RecyclerView(this).apply { layoutManager = GridLayoutManager(this@VodActivity, 4) }
+        grid = RecyclerView(this).apply { layoutManager = GridLayoutManager(this@VodActivity, 4)
+            addOnLayoutChangeListener { _, l, _, r, _, _, _, _, _ ->
+                val poster = uiScale.posterWidth() * resources.displayMetrics.density
+                (layoutManager as GridLayoutManager).spanCount = ((r - l) / poster).toInt().coerceAtLeast(1)
+            } }
         body.addView(grid, LinearLayout.LayoutParams(0, -1, 1f))
         root.addView(body, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
@@ -108,8 +112,8 @@ class VodActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 layoutParams = RecyclerView.LayoutParams(-1, -2)
             }
             val image = ImageView(parent.context).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
-            val label = TextView(parent.context).apply { maxLines = 2; textSize = 18f; minHeight = 56 }
-            box.addView(image, LinearLayout.LayoutParams(-1, (210 * parent.resources.displayMetrics.density).toInt()))
+            val label = TextView(parent.context).apply { maxLines = 2; textSize = 12f; minHeight = (30 * parent.resources.displayMetrics.density).toInt() }
+            box.addView(image, LinearLayout.LayoutParams(-1, (150 * parent.resources.displayMetrics.density).toInt()))
             box.addView(label)
             return Holder(box, image, label)
         }

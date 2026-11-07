@@ -43,7 +43,7 @@ import kotlinx.coroutines.runBlocking
  * connections in the background.
  */
 @OptIn(UnstableApi::class)
-class MultiviewActivity : AppCompatActivity() {
+class MultiviewActivity : com.openstream.tv.ui.ScaledActivity() {
 
     private inner class Tile(var channelId: Long) {
         val frame = FrameLayout(this@MultiviewActivity)

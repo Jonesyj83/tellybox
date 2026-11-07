@@ -46,7 +46,7 @@ class VodDetailActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 requestPin(cancel = { finish() }) { load() }
                 return@launch
             }
-            text(channel.name, 28f)
+            text(channel.name, 16f)
             content.addView(ImageView(this@VodDetailActivity).apply { load(channel.logoUrl); scaleType = ImageView.ScaleType.FIT_START }, LinearLayout.LayoutParams(200, 260))
             if (channel.kind != ContentKind.SERIES) playbackButtons(channel, null)
             try {
@@ -115,6 +115,6 @@ class VodDetailActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
         startActivity(PlayerActivity.intent(this, channel.id, longArrayOf(channel.id), 0)
             .putExtra("episode_id", episode ?: -1L).putExtra("from_beginning", beginning))
     }
-    private fun text(value: String, size: Float = 18f) { content.addView(TextView(this).apply { text = value; textSize = size; setPadding(0, 8, 0, 8) }) }
+    private fun text(value: String, size: Float = 12f) { content.addView(TextView(this).apply { text = value; textSize = size; setPadding(0, 8, 0, 8) }) }
     private fun button(label: String, click: () -> Unit) { content.addView(Button(this).apply { text = label; setOnClickListener { click() } }) }
 }

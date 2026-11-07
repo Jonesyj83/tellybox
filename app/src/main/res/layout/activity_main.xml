@@ -15,23 +15,23 @@
       android:orientation="horizontal">
     <LinearLayout
         android:id="@+id/menuRail"
-        android:layout_width="56dp"
+        android:layout_width="44dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="top|center_horizontal">
-      <ImageButton android:id="@+id/guideButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_live" android:contentDescription="Live TV" android:focusable="true" />
-      <ImageButton android:id="@+id/vodButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_movies" android:contentDescription="Movies &amp; Series" android:focusable="true" />
-      <ImageButton android:id="@+id/recordingsButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_recordings" android:contentDescription="Recordings" android:focusable="true" />
-      <ImageButton android:id="@+id/remindersButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_reminders" android:contentDescription="Reminders" android:focusable="true" />
-      <ImageButton android:id="@+id/searchButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_search" android:contentDescription="Search" android:focusable="true" />
-      <ImageButton android:id="@+id/multiviewButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_multiview" android:contentDescription="Multiview" android:focusable="true" />
-      <ImageButton android:id="@+id/playlistsButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_playlists" android:contentDescription="Playlists" android:focusable="true" />
-      <ImageButton android:id="@+id/settingsButton" android:layout_width="34dp" android:layout_height="34dp" android:layout_marginBottom="4dp" android:padding="4dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_settings" android:contentDescription="Settings" android:focusable="true" />
+      <ImageButton android:id="@+id/guideButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_live" android:contentDescription="Live TV" android:focusable="true" />
+      <ImageButton android:id="@+id/vodButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_movies" android:contentDescription="Movies &amp; Series" android:focusable="true" />
+      <ImageButton android:id="@+id/recordingsButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_recordings" android:contentDescription="Recordings" android:focusable="true" />
+      <ImageButton android:id="@+id/remindersButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_reminders" android:contentDescription="Reminders" android:focusable="true" />
+      <ImageButton android:id="@+id/searchButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_search" android:contentDescription="Search" android:focusable="true" />
+      <ImageButton android:id="@+id/multiviewButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_multiview" android:contentDescription="Multiview" android:focusable="true" />
+      <ImageButton android:id="@+id/playlistsButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_playlists" android:contentDescription="Playlists" android:focusable="true" />
+      <ImageButton android:id="@+id/settingsButton" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginBottom="3dp" android:padding="2dp" android:background="@drawable/bg_category" android:src="@drawable/ic_menu_settings" android:contentDescription="Settings" android:focusable="true" />
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/groups"
-        android:layout_width="260dp"
-        android:layout_height="396dp"
+        android:layout_width="220dp"
+        android:layout_height="match_parent"
         android:layout_marginEnd="12dp"
         android:clipToPadding="false"
         android:descendantFocusability="afterDescendants"
@@ -49,7 +49,7 @@
           android:orientation="horizontal">
         <com.openstream.tv.ui.channels.RatioFrameLayout
             android:id="@+id/previewTile"
-            android:layout_width="360dp"
+            android:layout_width="270dp"
             android:layout_height="wrap_content"
             android:background="@android:color/black"
             android:clickable="true"
@@ -149,7 +149,7 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:textSize="16sp"
+                android:textSize="13sp"
                 android:fontFamily="sans-serif-medium" />
             <TextView
                 android:id="@+id/status"
@@ -174,7 +174,7 @@
               android:ellipsize="end"
               android:fontFamily="sans-serif-medium"
               android:singleLine="true"
-              android:textSize="18sp" />
+              android:textSize="15sp" />
           <TextView
               android:id="@+id/infoTime"
               style="@style/Text.Caption"
@@ -182,7 +182,7 @@
               android:layout_height="wrap_content"
               android:ellipsize="end"
               android:singleLine="true"
-              android:textSize="12sp" />
+              android:textSize="11sp" />
           <ProgressBar
               android:id="@+id/infoProgress"
               style="?android:attr/progressBarStyleHorizontal"
@@ -200,7 +200,7 @@
               android:layout_marginTop="2dp"
               android:ellipsize="end"
               android:maxLines="2"
-              android:textSize="12sp" />
+              android:textSize="11sp" />
           <Button
               android:id="@+id/watchButton"
               style="@style/Button.TV.Small"

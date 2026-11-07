@@ -86,11 +86,13 @@ class GuideGridView @JvmOverloads constructor(
             if (field != value) { field = value; invalidate() }
         }
 
-    private val dp = resources.displayMetrics.density
-    private var rowHeight = 34 * dp
-    private val headerHeight = 26 * dp
-    private var channelWidth = 190 * dp
-    private var pxPerMinute = 5 * dp
+    private val uiScale = (context as? com.openstream.tv.ui.ScaledActivity)?.uiScale
+        ?: resources.configuration.let { com.openstream.tv.ui.UiScale(it.screenWidthDp, it.screenHeightDp) }
+    private val dp = resources.displayMetrics.density * uiScale.scale
+    private var rowHeight = 26 * dp
+    private val headerHeight = 22 * dp
+    private var channelWidth = 150 * dp
+    private var pxPerMinute = 4.2f * dp
 
     /** Tighter layout for when the grid shares the screen with other things. */
     fun setMetrics(rowHeightDp: Float, channelWidthDp: Float, pxPerMinuteDp: Float) {
@@ -102,7 +104,7 @@ class GuideGridView @JvmOverloads constructor(
         invalidate()
     }
     private val gap = 2 * dp
-    private val pad = 7 * dp
+    private val pad = 5 * dp
 
     /** Left edge of the visible time range, always on a half hour. */
     private var viewStart = floorSlot(System.currentTimeMillis())
@@ -126,9 +128,9 @@ class GuideGridView @JvmOverloads constructor(
     }
     private val nowLine = Paint().apply { color = color(R.color.accent); strokeWidth = 2 * dp }
     private val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = color(R.color.text_primary); textSize = 12 * resources.displayMetrics.scaledDensity
+        color = color(R.color.text_primary); textSize = uiScale.sp(10) * resources.displayMetrics.scaledDensity
     }
-    private val channelPaint = TextPaint(titlePaint).apply { textSize = 13 * resources.displayMetrics.scaledDensity }
+    private val channelPaint = TextPaint(titlePaint).apply { textSize = uiScale.sp(11) * resources.displayMetrics.scaledDensity }
     var panelOpacity = 100
         set(value) {
             field = value.coerceIn(0, 100)
@@ -141,7 +143,7 @@ class GuideGridView @JvmOverloads constructor(
 
     private val dimTitlePaint = TextPaint(titlePaint).apply { color = color(R.color.text_secondary) }
     private val captionPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = color(R.color.text_secondary); textSize = 10 * resources.displayMetrics.scaledDensity
+        color = color(R.color.text_secondary); textSize = uiScale.sp(9) * resources.displayMetrics.scaledDensity
     }
     private val numberPaint = TextPaint(captionPaint).apply { typeface = Typeface.DEFAULT_BOLD }
     private val favoritePaint = TextPaint(captionPaint).apply { color = color(R.color.accent) }
@@ -221,7 +223,9 @@ class GuideGridView @JvmOverloads constructor(
         notifyFocus()
     }
 
-    private val visibleRows get() = max(1, ((height - headerHeight) / rowHeight).toInt())
+    val visibleRowCapacity get() = visibleRows
+
+    private val visibleRows get() = max(1, ((height - headerHeight - 8 * dp) / rowHeight).toInt())
     private val visibleMs get() = TimeUnit.MINUTES.toMillis(((width - channelWidth) / pxPerMinute).toLong())
 
     /** Programmes for a row, with placeholders filling any holes. */
@@ -334,7 +338,7 @@ class GuideGridView @JvmOverloads constructor(
         val now = System.currentTimeMillis()
         val viewEnd = viewStart + visibleMs
         val rows = visibleRows
-        val last = min(channels.size - 1, firstRow + rows)
+        val last = min(channels.size - 1, firstRow + rows - 1)
         if (lastReportedRows != firstRow to last) {
             lastReportedRows = firstRow to last
             post { callback?.onVisibleRows(firstRow, last) }
