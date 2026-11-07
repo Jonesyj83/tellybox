@@ -173,6 +173,26 @@ Everything lives in one place, and every option does something.
 
 ![Settings](docs/screenshots/settings.jpg)
 
+## Questions people ask
+
+**How does this compare to TiviMate?**
+It does the same job: playlists, guide, catch-up, recording, multiview, parental controls. The
+differences that matter to most people are that Tellybox is free with no premium tier, no
+activation and no account, and the source is here if you want to change something. TiviMate
+is more polished in places and has a few things this doesn't, like network shares and frame
+rate switching. If you already pay for it and it works, there's no reason to move.
+
+**Does it come with channels?**
+No. Never. You supply the playlist, same as any other player.
+
+**Why does the guide say no data on some channels?**
+Because your provider's guide doesn't cover them. Tellybox imports whatever the XMLTV file
+contains and matches it on the channel id the playlist gives.
+
+**Does it phone home?**
+No analytics, no crash reporting, no update checks. The only network traffic is your playlist,
+the guide, and the streams.
+
 ## Licence
 
 Apache 2.0, see [LICENSE](LICENSE).
