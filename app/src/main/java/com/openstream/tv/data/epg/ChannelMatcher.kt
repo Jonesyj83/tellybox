@@ -9,16 +9,29 @@ object ChannelMatcher {
     data class Match(val channel: Long, val guideId: String, val pass: String)
 
     private val spaces = Regex("\\s+")
-    private val brackets = Regex("\\([^)]*\\)|\\[[^]]*]|\\{[^}]*}")
     private val region = Regex("^(?:au|australia|uk|gb|us|usa|ca|nz|ie|de|fr|it|es|in|za)\\s*[:|\\-]\\s*")
     private val noise = Regex("\\b(?:hd|fhd|uhd|4k|sd|hevc|h265|raw|backup|alt|vip)\\b")
     private val provider = Regex("\\s+(?:by|provider:)\\s+.*$")
     private val punctuation = Regex("[^\\p{L}\\p{N}]+")
+    /** Removes anything inside (), [] or {}, by scanning rather than with a regex. */
+    private fun stripBrackets(text: String): String {
+        val out = StringBuilder(text.length)
+        var depth = 0
+        for (ch in text) {
+            when (ch) {
+                '(', '[', '{' -> depth++
+                ')', ']', '}' -> if (depth > 0) depth--
+                else -> if (depth == 0) out.append(ch)
+            }
+        }
+        return out.toString()
+    }
+
     fun normalize(name: String, stripTags: Boolean = true): String {
         var value = name.trim().lowercase(Locale.ROOT)
         if (stripTags) {
             value = region.replace(value, "")
-            value = brackets.replace(value, " ")
+            value = stripBrackets(value)
             // Explicit provider annotations are safe to discard; arbitrary words are not.
             value = provider.replace(value, "")
             value = noise.replace(value, " ")

@@ -698,10 +698,12 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                         // Only the item rows take focus; the spacer between the group and the
                         // settings icon must not swallow a Down press.
                         val items = (0 until rail.childCount).map { rail.getChildAt(it) }
-                            .filter { it is android.view.ViewGroup && it.childCount > 0 }
-                        val index = items.indexOfFirst { it.hasFocus() }.coerceAtLeast(0)
-                        val next = (index + if (up) -1 else 1).coerceIn(0, items.size - 1)
-                        items[next].requestFocus()
+                            .filter { it.isFocusable }
+                        if (items.isNotEmpty()) {
+                            val index = items.indexOfFirst { it.hasFocus() }.coerceAtLeast(0)
+                            val next = (index + if (up) -1 else 1).coerceIn(0, items.size - 1)
+                            items[next].requestFocus()
+                        }
                         return true
                     }
                     if (binding.groups.hasFocus()) {
