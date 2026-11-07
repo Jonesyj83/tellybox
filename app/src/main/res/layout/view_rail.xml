@@ -7,15 +7,34 @@
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingTop="14dp">
-
-    <ImageView
+    <LinearLayout
         android:id="@+id/brandMark"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="18dp"
-        android:src="@drawable/ic_brand"
-        android:contentDescription="Tellybox"
-        android:importantForAccessibility="no" />
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:importantForAccessibility="no">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lato_light"
+            android:includeFontPadding="false"
+            android:text="@string/brand_first"
+            android:textColor="@color/text_primary"
+            android:textSize="9sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:fontFamily="@font/lato_black"
+            android:includeFontPadding="false"
+            android:text="@string/brand_second"
+            android:textColor="@color/accent"
+            android:textSize="9sp" />
+    </LinearLayout>
     <TextView android:id="@+id/railLive" style="@style/Rail.Item"
         android:drawableTop="@drawable/ic_menu_live" android:text="Live" android:contentDescription="Live TV" />
     <TextView android:id="@+id/railMovies" style="@style/Rail.Item"

@@ -53,7 +53,7 @@ class ReminderReceiver : BroadcastReceiver() {
             context, id.toInt(), popup, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val n = NotificationCompat.Builder(context, Notifications.CHANNEL_REMINDER)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_tellybox)
             .setContentTitle(title)
             .setContentText("Starting soon on $channel")
             .setPriority(NotificationCompat.PRIORITY_HIGH)

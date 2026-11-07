@@ -215,7 +215,7 @@ class RecordingService : Service() {
         val nm = NotificationManagerCompat.from(this)
         if (!nm.areNotificationsEnabled()) return
         val n = NotificationCompat.Builder(this, Notifications.CHANNEL_RECORDING_RESULT)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_tellybox)
             .setContentTitle("Recording failed: ${rec.title}")
             .setContentText(rec.error)
             .setStyle(NotificationCompat.BigTextStyle().bigText(rec.error))
@@ -237,7 +237,7 @@ class RecordingService : Service() {
             else -> "${titles.size} recordings"
         }
         val n: Notification = NotificationCompat.Builder(this, Notifications.CHANNEL_RECORDING)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_tellybox)
             .setContentTitle("Recording")
             .setContentText(text)
             .setOngoing(true)

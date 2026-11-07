@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tellybox</string>
+    <string name="brand_first">Telly</string>
+    <string name="brand_second">Box</string>
 
     <!-- main screen -->
     <string name="group_favorites">Favorites</string>
