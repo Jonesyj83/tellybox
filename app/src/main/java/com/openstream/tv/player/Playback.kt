@@ -3,7 +3,10 @@ package com.openstream.tv.player
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.OptIn
+import androidx.media3.common.Player.Listener
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -14,6 +17,10 @@ import okhttp3.OkHttpClient
  * Owns the single full-screen player so playback outlives the player screen (picture-in-picture,
  * leaving the app with the stream still playing). The screen attaches to it and detaches again;
  * [PlaybackService] keeps the process in the foreground and exposes it as a media session.
+ *
+ * The media session exists only while the player has something loaded and is playing or
+ * paused ([SessionPolicy]); an idle, stopped or failed player publishes nothing, so remotes,
+ * Bluetooth and the notification never see a player that isn't there.
  */
 @OptIn(UnstableApi::class)
 class Playback(private val context: Context, private val http: OkHttpClient) {
@@ -21,7 +28,14 @@ class Playback(private val context: Context, private val http: OkHttpClient) {
         private set
     private var config: PlayerConfig? = null
     private var session: MediaSession? = null
+    private var sessionActivity: PendingIntent? = null
     private var owner: Any? = null
+    private val main = Handler(Looper.getMainLooper())
+    /** Short gaps (a zap, a retry) keep the session; only a player that stays idle loses it. */
+    private val dropIdleSession = Runnable { if (!shouldPublish()) dropSession() }
+    private val stateListener = object : Listener {
+        override fun onEvents(player: androidx.media3.common.Player, events: androidx.media3.common.Player.Events) = syncSession()
+    }
 
     /** What is loaded, so a returning screen can pick it up instead of reconnecting. */
     var key: String? = null
@@ -55,11 +69,40 @@ class Playback(private val context: Context, private val http: OkHttpClient) {
         val created = PlayerFactory.create(context, http, config)
         player = created
         this.config = config
-        session = MediaSession.Builder(context, created.exo).setId("playback").build()
-        // A plain start while the screen is visible; the session moves the service into the
-        // foreground itself once something is actually playing.
-        context.startService(Intent(context, PlaybackService::class.java))
+        created.exo.addListener(stateListener)
         return created
+    }
+
+    private fun shouldPublish(): Boolean {
+        val exo = player?.exo ?: return false
+        return SessionPolicy.publish(exo.playbackState, exo.currentMediaItem != null)
+    }
+
+    private fun syncSession() {
+        val exo = player?.exo ?: return
+        if (shouldPublish()) {
+            main.removeCallbacks(dropIdleSession)
+            if (session == null) {
+                session = MediaSession.Builder(context, exo).setId("playback").build().also { s ->
+                    sessionActivity?.let(s::setSessionActivity)
+                }
+                // Started while a screen is showing the stream; the session moves the service
+                // into the foreground itself once something is actually playing.
+                runCatching { context.startService(Intent(context, PlaybackService::class.java)) }
+            }
+        } else if (session != null) {
+            main.removeCallbacks(dropIdleSession)
+            main.postDelayed(dropIdleSession, IDLE_GRACE_MS)
+        }
+    }
+
+    /** Takes the session (and with it metadata, position and the notification) away. */
+    private fun dropSession() {
+        main.removeCallbacks(dropIdleSession)
+        val s = session ?: return
+        session = null
+        s.release()
+        context.stopService(Intent(context, PlaybackService::class.java))
     }
 
     fun isOwner(owner: Any) = this.owner === owner
@@ -80,24 +123,36 @@ class Playback(private val context: Context, private val http: OkHttpClient) {
             context, 0, Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
+        sessionActivity = pending
         session?.setSessionActivity(pending)
     }
 
     /** Stops and frees the player. With [owner], only if that screen is still the one using it. */
     fun release(owner: Any? = null) {
         if (owner != null && owner !== this.owner) return
-        val s = session
         val p = player
-        session = null
+        dropSession()
         player = null
         config = null
         key = null
         liveChannelId = null
+        sessionActivity = null
         this.owner = null
-        s?.release()
+        p?.exo?.removeListener(stateListener)
         p?.release()
-        if (p != null) context.stopService(Intent(context, PlaybackService::class.java))
     }
+
+    private companion object {
+        const val IDLE_GRACE_MS = 3_000L
+    }
+}
+
+/** When the media session should be visible to the system. */
+object SessionPolicy {
+    /** Only with media loaded and the player buffering, playing or paused; never idle or ended. */
+    fun publish(playbackState: Int, hasMedia: Boolean): Boolean =
+        hasMedia && (playbackState == androidx.media3.common.Player.STATE_BUFFERING ||
+            playbackState == androidx.media3.common.Player.STATE_READY)
 }
 
 @OptIn(UnstableApi::class)
