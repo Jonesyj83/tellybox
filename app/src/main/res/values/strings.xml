@@ -27,7 +27,15 @@
     <string name="vod_empty_all">Nothing here yet. Movies and series come from Xtream playlists, and from M3U lists that include them.</string>
     <string name="empty_group">Nothing here.</string>
     <string name="empty_favorites">Press Menu on a channel, or hold OK on the preview, to add it to Favorites.</string>
-    <string name="search_hint">Channel name</string>
+    <string name="search_hint">Channel, movie or series name</string>
+    <string name="search_card_hint">Results update as you type. OK on a result opens it; Enter lists them all in the guide.</string>
+    <string name="search_no_results">Nothing matches “%1$s”.</string>
+    <string name="search_movie">Movie</string>
+    <string name="search_series">Series</string>
+    <plurals name="search_results">
+        <item quantity="one">%1$d result</item>
+        <item quantity="other">%1$d results</item>
+    </plurals>
     <string name="favorite_added">Added %1$s to Favorites</string>
     <string name="favorite_removed">Removed %1$s from Favorites</string>
     <string name="refreshing_playlist">Updating %1$s…</string>

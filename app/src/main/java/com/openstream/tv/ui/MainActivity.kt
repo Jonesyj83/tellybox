@@ -7,8 +7,6 @@ import android.os.Looper
 import android.text.format.DateFormat
 import android.view.KeyEvent
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
@@ -84,6 +82,8 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     private var focusGridOnUpdate = false
     private var shownSelection: GroupSelection? = null
     private var landed = false
+    /** A search result chosen on the search card, previewed once the guide lists the results. */
+    private var pendingSearchPick: Long? = null
 
     private val preview = PreviewController()
     private var pendingPreview: Runnable? = null
@@ -307,6 +307,17 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         if (rows.isEmpty()) {
             if (binding.grid.hasFocus()) focusActiveGroup()
             return
+        }
+        pendingSearchPick?.takeIf { selection is GroupSelection.Search }?.let { id ->
+            pendingSearchPick = null
+            if (rows.any { it.channel.id == id }) {
+                focusGridOnUpdate = false
+                landed = true
+                binding.grid.focusChannel(id)
+                binding.grid.requestFocus()
+                if (preview.previewing != id) act(preview.pick(id))
+                return
+            }
         }
         // Land on the guide rather than the preview or the buttons, the first time and after a search or group pick.
         if (focusGridOnUpdate || (!landed && !binding.groups.hasFocus())) {
@@ -806,28 +817,25 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     }
 
     private fun showSearch() {
-        val input = EditText(this).apply {
-            hint = getString(R.string.search_hint)
-            setSingleLine()
-            imeOptions = EditorInfo.IME_ACTION_SEARCH
-            setText(viewModel.search.value.orEmpty())
-        }
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.action_search)
-            .setView(input)
-            .setPositiveButton(R.string.action_search) { _, _ -> runSearch(input.text.toString()) }
-            .setNegativeButton(R.string.cancel, null)
-            .create()
-        input.setOnEditorActionListener { _, action, _ ->
-            if (action == EditorInfo.IME_ACTION_SEARCH) {
-                runSearch(input.text.toString())
-                dialog.dismiss()
-                true
-            } else {
-                false
-            }
-        }
-        dialog.show()
+        com.openstream.tv.ui.channels.SearchCard(
+            this,
+            viewModel.search.value.orEmpty(),
+            onPick = { query, channel ->
+                if (channel.kind != ContentKind.LIVE) {
+                    openVod(channel)
+                } else if (shownSelection == GroupSelection.Search(query) && binding.grid.channels.any { it.id == channel.id }) {
+                    // Already listing these results: just go to the one picked.
+                    binding.grid.focusChannel(channel.id)
+                    binding.grid.requestFocus()
+                    if (preview.previewing != channel.id) act(preview.pick(channel.id))
+                } else {
+                    // List the matches in the guide and preview the one picked.
+                    pendingSearchPick = channel.id
+                    runSearch(query)
+                }
+            },
+            onSubmit = { query -> runSearch(query) },
+        ).show()
     }
 
     private fun runSearch(query: String) {
