@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OpenStream"
+rootProject.name = "OpenTelly"
 include(":app")

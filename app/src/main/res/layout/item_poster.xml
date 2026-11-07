@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="4dp">
 
-    <com.openstream.tv.ui.channels.RatioFrameLayout
+    <com.opentelly.tv.ui.channels.RatioFrameLayout
         android:id="@+id/posterFrame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
             android:layout_height="match_parent"
             android:importantForAccessibility="no"
             android:scaleType="centerCrop" />
-    </com.openstream.tv.ui.channels.RatioFrameLayout>
+    </com.opentelly.tv.ui.channels.RatioFrameLayout>
 
     <TextView
         android:id="@+id/title"

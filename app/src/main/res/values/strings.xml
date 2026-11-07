@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OpenStream</string>
+    <string name="app_name">OpenTelly</string>
 
     <!-- main screen -->
     <string name="group_favorites">Favorites</string>
@@ -214,7 +214,7 @@
     <string name="recordings_failed">Failed</string>
     <string name="recordings_empty">No recordings yet. Press Menu on a programme in the TV guide, or press Record while watching.</string>
     <string name="recordings_saved_to">Saved to %1$s</string>
-    <string name="recordings_inexact">Exact alarms aren\'t allowed for OpenStream, so scheduled recordings and reminders may start a few minutes late.</string>
+    <string name="recordings_inexact">Exact alarms aren\'t allowed for OpenTelly, so scheduled recordings and reminders may start a few minutes late.</string>
     <string name="recording_status_scheduled">Scheduled</string>
     <string name="recording_status_recording">● Recording</string>
     <string name="recording_status_completed">Completed</string>
@@ -254,9 +254,9 @@
     </plurals>
     <string name="reminders_empty">No reminders. Press Menu on an upcoming programme in the TV guide and choose Remind me.</string>
     <string name="reminders_notice">A popup appears before each programme starts. OK on a reminder deletes it.</string>
-    <string name="reminders_overlay_notice">While another app is on screen, Android only lets OpenStream pop up if it may display over other apps. Otherwise you get a notification. OK on a reminder deletes it.</string>
+    <string name="reminders_overlay_notice">While another app is on screen, Android only lets OpenTelly pop up if it may display over other apps. Otherwise you get a notification. OK on a reminder deletes it.</string>
     <string name="reminders_allow_popups">Allow popups over other apps</string>
-    <string name="reminders_overlay_unavailable">This device has no setting for that. Reminders still pop up while OpenStream is open.</string>
+    <string name="reminders_overlay_unavailable">This device has no setting for that. Reminders still pop up while OpenTelly is open.</string>
     <string name="reminder_watch">Watch now</string>
     <string name="reminder_dismiss">Dismiss</string>
     <string name="reminder_closes_in">Closes in %1$d s</string>

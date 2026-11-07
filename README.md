@@ -1,11 +1,11 @@
-# OpenStream
+# OpenTelly
 
 A live TV player for Android TV. Bring your own M3U playlist, Xtream Codes login or
-Stalker portal; OpenStream loads the channels, pulls in the XMLTV guide and plays the
+Stalker portal; OpenTelly loads the channels, pulls in the XMLTV guide and plays the
 streams. It's free, with no accounts, ads or tracking, and everything is stored on the
 device.
 
-OpenStream doesn't provide, host or bundle any channels. You supply the playlist, and you
+OpenTelly doesn't provide, host or bundle any channels. You supply the playlist, and you
 are responsible for making sure you are allowed to watch what is on it.
 
 ## Features
@@ -51,10 +51,10 @@ Install on a TV box with `adb install -r app/build/outputs/apk/debug/app-debug.a
 Release builds read the signing key from `local.properties`, which is not committed:
 
 ```
-openstream.storeFile=/path/to/keystore.jks
-openstream.storePassword=...
-openstream.keyAlias=...
-openstream.keyPassword=...
+opentelly.storeFile=/path/to/keystore.jks
+opentelly.storePassword=...
+opentelly.keyAlias=...
+opentelly.keyPassword=...
 ```
 
 Without those entries the release build still runs, just unsigned.
@@ -62,7 +62,7 @@ Without those entries the release build still runs, just unsigned.
 ## Layout
 
 ```
-app/src/main/java/com/openstream/tv/
+app/src/main/java/com/opentelly/tv/
   data/db/           Room entities and DAOs
   data/parser/       M3U, XMLTV, Xtream Codes and Stalker clients (no Android deps,
                      unit-tested on the JVM)

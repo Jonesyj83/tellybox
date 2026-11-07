@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="320dp"
-    android:height="180dp"
-    android:viewportWidth="320"
-    android:viewportHeight="180">
-    <path android:fillColor="#FF171B22" android:pathData="M0,0 L320,0 L320,180 L0,180 Z" />
-    <path android:fillColor="#FF3FA9F5" android:pathData="M0,170 L320,170 L320,180 L0,180 Z" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFECEFF4"
-        android:strokeWidth="5"
-        android:pathData="M42,58 L118,58 Q124,58 124,64 L124,112 Q124,118 118,118 L42,118 Q36,118 36,112 L36,64 Q36,58 42,58 Z" />
-    <path android:fillColor="#FF3FA9F5" android:pathData="M70,73 L94,88 L70,103 Z" />
-    <!-- wordmark bars, a stand-in until there's a real logo -->
-    <path android:fillColor="#FFECEFF4" android:pathData="M144,70 L284,70 L284,84 L144,84 Z" />
-    <path android:fillColor="#FF9AA3B2" android:pathData="M144,94 L240,94 L240,104 L144,104 Z" />
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0E1116" />
+        </shape>
+    </item>
+    <item android:gravity="center" android:width="72dp" android:height="72dp" android:drawable="@drawable/ic_brand" />
+</layer-list>

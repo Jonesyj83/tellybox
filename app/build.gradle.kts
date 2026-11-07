@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.openstream.tv"
+    namespace = "com.opentelly.tv"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.openstream.tv"
+        applicationId = "com.opentelly.tv"
         minSdk = 23
         targetSdk = 35
         versionCode = 2
@@ -25,12 +25,12 @@ android {
                 val f = rootProject.file("local.properties")
                 if (f.exists()) f.inputStream().use { load(it) }
             }
-            val path = props.getProperty("openstream.storeFile")
+            val path = props.getProperty("opentelly.storeFile")
             if (path != null) {
                 storeFile = file(path)
-                storePassword = props.getProperty("openstream.storePassword")
-                keyAlias = props.getProperty("openstream.keyAlias")
-                keyPassword = props.getProperty("openstream.keyPassword")
+                storePassword = props.getProperty("opentelly.storePassword")
+                keyAlias = props.getProperty("opentelly.keyAlias")
+                keyPassword = props.getProperty("opentelly.keyPassword")
             }
         }
     }

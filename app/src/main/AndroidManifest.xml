@@ -24,14 +24,14 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <application
-        android:name=".OpenStreamApp"
+        android:name=".OpenTellyApp"
         android:allowBackup="false"
         android:banner="@drawable/banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.OpenStream">
+        android:theme="@style/Theme.OpenTelly">
 
         <activity
             android:name=".ui.MainActivity"
@@ -80,14 +80,14 @@
             android:launchMode="singleTop"
             android:screenOrientation="landscape"
             android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.OpenStream.Player" />
+            android:theme="@style/Theme.OpenTelly.Player" />
 
         <activity
             android:name=".ui.multiview.MultiviewActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="false"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.OpenStream.Player" />
+            android:theme="@style/Theme.OpenTelly.Player" />
         <activity android:name=".ui.recordings.RecordingsActivity" android:exported="false" android:screenOrientation="landscape" />
         <activity android:name=".ui.reminders.RemindersActivity" android:exported="false" android:screenOrientation="landscape" />
         <activity
@@ -97,7 +97,7 @@
             android:launchMode="singleInstance"
             android:showWhenLocked="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.OpenStream.Popup"
+            android:theme="@style/Theme.OpenTelly.Popup"
             android:turnScreenOn="true" />
 
         <service
