@@ -1,6 +1,6 @@
 # Tellybox
 
-A live TV player for Android TV. Point it at your own playlist and it builds the channel
+A free IPTV player for Android TV. Point it at your own playlist and it builds the channel
 list, pulls the guide in, and plays the streams. No account, no ads, no tracking, nothing
 leaving the box except the requests needed to load your playlist and play your channels.
 
