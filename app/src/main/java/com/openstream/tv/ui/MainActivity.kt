@@ -133,6 +133,9 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             binding.clock.visibility = if (settings.showClock) View.VISIBLE else View.GONE
             binding.grid.dimPast = settings.dimPast
             binding.grid.panelOpacity = settings.panelOpacity
+            // Off by default: the preview only changes when you press OK. On, it follows
+            // whatever row you rest on, for people who prefer browsing that way.
+            preview.followFocus = settings.previewFollowsFocus
         } }
 
 
