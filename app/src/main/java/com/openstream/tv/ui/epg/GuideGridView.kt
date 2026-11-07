@@ -91,7 +91,7 @@ class GuideGridView @JvmOverloads constructor(
     private val dp = resources.displayMetrics.density * uiScale.scale
     private var rowHeight = 26 * dp
     private val headerHeight = 22 * dp
-    private var channelWidth = 150 * dp
+    private var channelWidth = 196 * dp
     private var pxPerMinute = 4.2f * dp
 
     /** Tighter layout for when the grid shares the screen with other things. */

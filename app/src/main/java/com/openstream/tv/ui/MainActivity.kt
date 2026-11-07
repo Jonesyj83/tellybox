@@ -159,7 +159,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         guide = GuideSupport(this, binding.grid)
         with(binding.grid) {
             callback = this@MainActivity
-            setMetrics(rowHeightDp = 26f, channelWidthDp = 150f, pxPerMinuteDp = 4.2f)
+            setMetrics(rowHeightDp = 26f, channelWidthDp = 196f, pxPerMinuteDp = 4.2f)
             exitLeftAtNow = true
             onExitLeft = { moveFocus(HomeFocus.leftFrom(HomeArea.GUIDE)); true }
             onExitUp = { moveFocus(HomeFocus.upFromGridTop(previewShowing)) }
@@ -187,16 +187,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         } }
         val railButtons = listOf(binding.guideButton, binding.vodButton, binding.recordingsButton, binding.remindersButton,
             binding.searchButton, binding.multiviewButton, binding.playlistsButton, binding.settingsButton)
-        railButtons.forEach { button -> button.setOnFocusChangeListener { _, focused ->
-            if (focused) {
-                binding.railLabel.text = button.contentDescription
-                binding.railLabel.visibility = View.VISIBLE
-                binding.railLabel.x = binding.content.x + binding.menuRail.x + binding.menuRail.width
-                binding.railLabel.y = binding.content.y + binding.menuRail.y + button.y + (button.height - binding.railLabel.layoutParams.height) / 2f
-            } else binding.menuRail.post {
-                if (!binding.menuRail.hasFocus()) binding.railLabel.visibility = View.GONE
-            }
-        } }
+        // The rail carries its own labels now, so nothing floats over the categories.
         lifecycleScope.launch { appContainer.playlists.observePlaylists().collect { playlists ->
             binding.playlistsButton.foreground = if (playlists.any { it.lastError != null }) getDrawable(R.drawable.rail_badge) else null
         } }
