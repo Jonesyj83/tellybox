@@ -151,8 +151,7 @@
     <string name="multiview_shape_2">Side by side</string>
     <string name="multiview_shape_3">Two above, one below</string>
     <string name="multiview_shape_4">Two by two</string>
-    <string name="multiview_pick_title">Channel for screen %1$d of %2$d</string>
-    <string name="multiview_slot">Screen %1$d: %2$s</string>
+    <string name="multiview_pick_title">Screen %1$d of %2$d</string>
     <string name="multiview_slot_empty">empty</string>
     <string name="multiview_on_screen">Screen %1$d</string>
     <string name="multiview_no_channels">Add an enabled live playlist first.</string>
@@ -166,10 +165,28 @@
     <string name="multiview_refused">Refused (HTTP %1$d). The provider may not allow another connection.</string>
     <string name="multiview_limit_title">Connection limit</string>
     <plurals name="multiview_limit_message">
-        <item quantity="one">%2$s allows %1$d connection at a time, and it is already in use. Another screen may fail or stop the others.</item>
-        <item quantity="other">%2$s allows %1$d connections at a time, and they are all in use. Another screen may fail or stop the others.</item>
+        <item quantity="one">%2$s allows %1$d connection at a time, and another screen or a recording is already using it. Pick a channel from another playlist, or change the screen that uses %2$s.</item>
+        <item quantity="other">%2$s allows %1$d connections at a time, and other screens or recordings are using all of them. Pick a channel from another playlist, or change a screen that uses %2$s.</item>
     </plurals>
-    <string name="multiview_add_anyway">Add anyway</string>
+    <string name="multiview_connections_title">Connections</string>
+    <string name="multiview_connections_message">Each screen uses one connection from your provider. If your plan allows one, the extra screens will stall.</string>
+    <plurals name="multiview_playlist_allows">
+        <item quantity="one">%2$s allows %1$d connection.</item>
+        <item quantity="other">%2$s allows %1$d connections.</item>
+    </plurals>
+    <plurals name="multiview_capacity">
+        <item quantity="one">Your playlists allow %1$d screen at a time, so multiview can\'t add another.</item>
+        <item quantity="other">Your playlists allow %1$d screens at a time.</item>
+    </plurals>
+    <string name="multiview_no_capacity">Every connection your playlists allow is already in use, for example by a recording.</string>
+    <string name="multiview_got_it">Got it</string>
+    <string name="multiview_dont_show">Don\'t show again</string>
+    <string name="multiview_choose_playlist">Choose a playlist</string>
+    <string name="multiview_chip">%1$d  %2$s</string>
+    <string name="multiview_stalled">No data for %1$ds</string>
+    <string name="multiview_stalled_hint">Provider may limit simultaneous connections</string>
+    <string name="setting_multiview_warning">Multiview connection warning</string>
+    <string name="ok">OK</string>
     <string name="setting_decoders">Video decoder</string>
     <string name="decoder_hardware">Hardware</string>
     <string name="decoder_software">Software when available</string>

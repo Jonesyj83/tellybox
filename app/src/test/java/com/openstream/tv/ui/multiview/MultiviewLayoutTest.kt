@@ -135,11 +135,71 @@ class MultiviewLayoutTest {
         assertEquals(2, plan.firstEmpty())
     }
 
-    @Test fun connectionBudgetWarnsOnlyPastAKnownLimit() {
-        assertNull(ConnectionBudget.exceededLimit(null, 3))
-        assertNull(ConnectionBudget.exceededLimit(2, 1))
-        assertEquals(2, ConnectionBudget.exceededLimit(2, 2))
-        assertEquals(1, ConnectionBudget.exceededLimit(1, 1))
+    @Test fun budgetAllowsUnknownLimitsAndRefusesPastAKnownOne() {
+        // Plain M3U: no limit declared, never refused however many are open.
+        assertEquals(Budget.Unknown, ConnectionBudget.decide(null, 0))
+        assertEquals(Budget.Unknown, ConnectionBudget.decide(null, 3))
+        assertEquals(Budget.Unknown, ConnectionBudget.decide(0, 3))
+        // A plan of one: the first screen fits, a second is refused.
+        assertEquals(Budget.Allowed(1, 0), ConnectionBudget.decide(1, 0))
+        assertEquals(Budget.Full(1), ConnectionBudget.decide(1, 1))
+        // A plan of N: refused only once all N are taken.
+        assertEquals(Budget.Allowed(3, 2), ConnectionBudget.decide(3, 0))
+        assertEquals(Budget.Allowed(3, 0), ConnectionBudget.decide(3, 2))
+        assertEquals(Budget.Full(3), ConnectionBudget.decide(3, 3))
+        assertEquals(Budget.Full(3), ConnectionBudget.decide(3, 5))
+    }
+
+    @Test fun screensAvailableAcrossPlaylists() {
+        assertEquals(0, ConnectionBudget.screensAvailable(emptyList()))
+        assertNull(ConnectionBudget.screensAvailable(listOf(1 to 0, null to 0)))
+        assertEquals(1, ConnectionBudget.screensAvailable(listOf(1 to 0)))
+        assertEquals(0, ConnectionBudget.screensAvailable(listOf(1 to 1)))
+        assertEquals(3, ConnectionBudget.screensAvailable(listOf(2 to 0, 2 to 1)))
+        assertEquals(MultiviewLayout.MAX_TILES, ConnectionBudget.screensAvailable(listOf(10 to 0)))
+        assertEquals(0, ConnectionBudget.screensAvailable(listOf(1 to 3)))
+    }
+
+    @Test fun chipsShowEmptyAndFilledScreensWithTheTargetMarked() {
+        val plan = SlotPlan(3, first = 10L)
+        val chips = plan.chips(target = 1)
+        assertEquals(listOf(true, false, false), chips.map { it.filled })
+        assertEquals(listOf(false, true, false), chips.map { it.target })
+        assertEquals(10L, chips[0].channelId)
+        // Changing a filled screen: it is the target and still shows its current channel.
+        plan.fill(1, 11L)
+        plan.fill(2, 12L)
+        val change = plan.chips(target = 0)
+        assertTrue(change.all { it.filled })
+        assertTrue(change[0].target)
+    }
+
+    @Test fun connectionsOnAPlaylistIgnoreTheScreenBeingChanged() {
+        val playlistOf = mapOf(10L to 1L, 11L to 1L, 20L to 2L)
+        val plan = SlotPlan(4, first = 10L).apply { fill(1, 11L); fill(2, 20L) }
+        assertEquals(2, plan.countOn(1L, except = 3) { playlistOf[it] })
+        assertEquals(1, plan.countOn(1L, except = 0) { playlistOf[it] })
+        assertEquals(1, plan.countOn(2L, except = 3) { playlistOf[it] })
+        assertEquals(0, plan.countOn(2L, except = 2) { playlistOf[it] })
+        // A channel whose playlist isn't known yet isn't counted.
+        assertEquals(0, SlotPlan(2, first = 99L).countOn(1L, except = 1) { playlistOf[it] })
+    }
+
+    @Test fun stallClockReportsOnlyAfterTenSecondsWithoutProgress() {
+        val clock = StallClock()
+        assertNull(clock.sample(0, 0, active = true))
+        assertNull(clock.sample(9_999, 0, active = true))
+        assertEquals(10, clock.sample(10_000, 0, active = true))
+        assertEquals(14, clock.sample(14_500, 0, active = true))
+        // Data again: cleared at once, and the count starts over.
+        assertNull(clock.sample(15_000, 200, active = true))
+        assertNull(clock.sample(24_000, 200, active = true))
+        assertEquals(10, clock.sample(25_000, 200, active = true))
+        // Paused or failed: never reported, and resuming starts a fresh count.
+        assertNull(clock.sample(40_000, 200, active = false))
+        assertNull(clock.sample(41_000, 200, active = true))
+        assertNull(clock.sample(50_000, 200, active = true))
+        assertEquals(10, clock.sample(51_000, 200, active = true))
     }
 
     @Test fun pipAspectFollowsVideoWithinSystemLimits() {

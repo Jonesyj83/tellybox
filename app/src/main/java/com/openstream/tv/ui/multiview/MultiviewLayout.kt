@@ -117,13 +117,83 @@ class SlotPlan(count: Int, first: Long? = null) {
     operator fun get(slot: Int) = slots[slot]
 }
 
-/** Whether opening one more stream from a provider would go past what it allows. */
+/** One screen's place in the picker header: which channel it has, if any, and whether it is being chosen. */
+data class SlotChip(val slot: Int, val channelId: Long?, val target: Boolean) {
+    val filled get() = channelId != null
+}
+
+/** The header chips for every screen, [target] marked. */
+fun SlotPlan.chips(target: Int): List<SlotChip> = (0 until count).map { SlotChip(it, this[it], it == target) }
+
+/** Screens other than [except] showing a channel from [playlistId]; [playlistOf] maps channel to playlist. */
+fun SlotPlan.countOn(playlistId: Long, except: Int, playlistOf: (Long) -> Long?): Int =
+    channels.withIndex().count { (i, id) -> i != except && id != null && playlistOf(id) == playlistId }
+
+/** What one more stream on a playlist means for its provider connections. */
+sealed interface Budget {
+    /** The playlist doesn't say (plain M3U): allowed, and the general warning stands. */
+    data object Unknown : Budget
+
+    /** Within the declared limit; [left] connections remain after this one. */
+    data class Allowed(val limit: Int, val left: Int) : Budget
+
+    /** Every declared connection is in use: refuse rather than let the stream stall. */
+    data class Full(val limit: Int) : Budget
+}
+
 object ConnectionBudget {
     /**
-     * [inUse] counts streams this app already has open on the same playlist (tiles and running
-     * recordings). Returns the provider's limit when one more would exceed it, otherwise null.
-     * Providers that don't publish a limit are not second-guessed.
+     * [inUse] counts streams this app already has open on the same playlist (other screens and
+     * running recordings). Limits of zero or less are treated as unknown.
      */
-    fun exceededLimit(maxConnections: Int?, inUse: Int): Int? =
-        maxConnections?.takeIf { it > 0 && inUse + 1 > it }
+    fun decide(maxConnections: Int?, inUse: Int): Budget {
+        val limit = maxConnections?.takeIf { it > 0 } ?: return Budget.Unknown
+        return if (inUse >= limit) Budget.Full(limit) else Budget.Allowed(limit, limit - inUse - 1)
+    }
+
+    /**
+     * How many screens multiview could show at most across playlists given as (limit, in use).
+     * Null when any playlist has no declared limit, since its channels could fill every screen.
+     */
+    fun screensAvailable(playlists: List<Pair<Int?, Int>>): Int? {
+        if (playlists.isEmpty()) return 0
+        var total = 0
+        for ((max, inUse) in playlists) {
+            val limit = max?.takeIf { it > 0 } ?: return null
+            total += (limit - inUse).coerceAtLeast(0)
+        }
+        return total.coerceAtMost(MultiviewLayout.MAX_TILES)
+    }
+}
+
+/**
+ * Notices a tile that has stopped getting data: while the player is meant to be playing, the
+ * time since its position last moved. Shown once it passes [thresholdMs], cleared as soon as
+ * playback moves again.
+ */
+class StallClock(private val thresholdMs: Long = 10_000) {
+    private var lastPosition: Long? = null
+    private var since = 0L
+
+    /**
+     * [active] is true while the player should be advancing (buffering or playing, not paused,
+     * no error). Returns whole seconds without progress once past the threshold, else null.
+     */
+    fun sample(nowMs: Long, positionMs: Long, active: Boolean): Int? {
+        if (!active) {
+            reset()
+            return null
+        }
+        if (lastPosition != positionMs) {
+            lastPosition = positionMs
+            since = nowMs
+            return null
+        }
+        val stalled = nowMs - since
+        return if (stalled >= thresholdMs) (stalled / 1000).toInt() else null
+    }
+
+    fun reset() {
+        lastPosition = null
+    }
 }

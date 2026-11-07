@@ -45,6 +45,8 @@ data class AppSettings(
     val backgroundPlayback: Boolean = true,
     /** Home screen: preview whichever channel focus rests on, rather than waiting for OK. */
     val previewFollowsFocus: Boolean = false,
+    /** Multiview: explain on opening that every screen takes one provider connection. */
+    val multiviewConnectionWarning: Boolean = true,
 ) {
     val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling, audioPassthrough = audioPassthrough, preferSoftwareAudioDecoders = softwareAudioDecoders)
 }
@@ -76,6 +78,7 @@ class SettingsRepository(context: Context) {
         val reminderPopupSeconds = intPreferencesKey("reminder_popup_seconds")
         val backgroundPlayback = booleanPreferencesKey("background_playback")
         val previewFollowsFocus = booleanPreferencesKey("preview_follows_focus")
+        val multiviewConnectionWarning = booleanPreferencesKey("multiview_connection_warning")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -102,6 +105,7 @@ class SettingsRepository(context: Context) {
             reminderPopupSeconds = p[Keys.reminderPopupSeconds] ?: d.reminderPopupSeconds,
             backgroundPlayback = p[Keys.backgroundPlayback] ?: d.backgroundPlayback,
             previewFollowsFocus = p[Keys.previewFollowsFocus] ?: d.previewFollowsFocus,
+            multiviewConnectionWarning = p[Keys.multiviewConnectionWarning] ?: d.multiviewConnectionWarning,
         )
     }
 
@@ -128,6 +132,7 @@ class SettingsRepository(context: Context) {
         p[Keys.reminderPopupSeconds] = s.reminderPopupSeconds
         p[Keys.backgroundPlayback] = s.backgroundPlayback
         p[Keys.previewFollowsFocus] = s.previewFollowsFocus
+        p[Keys.multiviewConnectionWarning] = s.multiviewConnectionWarning
     }
 
     suspend fun setShowClock(v: Boolean) = store.edit { it[Keys.showClock] = v }
@@ -160,4 +165,5 @@ class SettingsRepository(context: Context) {
     suspend fun setReminderPopupSeconds(v: Int) = store.edit { it[Keys.reminderPopupSeconds] = v }
     suspend fun setBackgroundPlayback(v: Boolean) = store.edit { it[Keys.backgroundPlayback] = v }
     suspend fun setPreviewFollowsFocus(v: Boolean) = store.edit { it[Keys.previewFollowsFocus] = v }
+    suspend fun setMultiviewConnectionWarning(v: Boolean) = store.edit { it[Keys.multiviewConnectionWarning] = v }
 }

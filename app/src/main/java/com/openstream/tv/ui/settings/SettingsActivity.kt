@@ -169,6 +169,9 @@ class SettingsActivity : SectionActivity() {
             Row(getString(R.string.setting_preview_follows_focus), onOff(s.previewFollowsFocus)) {
                 pick(R.string.setting_preview_follows_focus, onOff, s.previewFollowsFocus, repo::setPreviewFollowsFocus)
             },
+            Row(getString(R.string.setting_multiview_warning), onOff(s.multiviewConnectionWarning)) {
+                pick(R.string.setting_multiview_warning, onOff, s.multiviewConnectionWarning, repo::setMultiviewConnectionWarning)
+            },
             header(R.string.settings_recording),
             Row(getString(R.string.recordings_title), "") { openSection(Section.RECORDINGS) },
             Row(getString(R.string.reminders_title), "") { openSection(Section.REMINDERS) },
@@ -271,9 +274,9 @@ class SettingsActivity : SectionActivity() {
         return when (name) {
             "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { openSection(Section.PLAYLISTS) })
             "Parental" -> all.take(1)
-            "General" -> all.filter { it.title == "Channel name cleanup" } + maintenance()
+            "General" -> all.filter { it.title == "Channel name cleanup" || it.title == getString(R.string.setting_multiview_warning) } + maintenance()
             "EPG" -> all.dropWhile { it.title != getString(R.string.settings_guide) }.filterNot { it.isHeader } + all.filter { it.title == "Full guide scan" } + listOf(Row("Guide sources and assignments", "URLs and last update times") { showGuides() }, Row("Clear EPG", "") { clearEpg() })
-            "Player" -> all.dropWhile { it.title != getString(R.string.settings_player) }.drop(1).takeWhile { !it.isHeader }.filterNot { it.title == getString(R.string.setting_preview_follows_focus) }
+            "Player" -> all.dropWhile { it.title != getString(R.string.settings_player) }.drop(1).takeWhile { !it.isHeader }.filterNot { it.title == getString(R.string.setting_preview_follows_focus) || it.title == getString(R.string.setting_multiview_warning) }
             "Appearance" -> all.filter { it.title in listOf(getString(R.string.setting_preview_follows_focus), "Show clock", "Dim past programmes", "Panel transparency") }
             "Recording" -> all.filter { it.title in listOf(getString(R.string.recordings_title), getString(R.string.setting_pad_before), getString(R.string.setting_pad_after), getString(R.string.setting_instant_length)) }
             "Reminders" -> all.filter { it.title in listOf(getString(R.string.reminders_title), getString(R.string.setting_reminder_before), getString(R.string.setting_reminder_popup)) }
@@ -300,6 +303,7 @@ class SettingsActivity : SectionActivity() {
             getString(R.string.setting_display_mode) to "Choose how video fits the screen.",
             getString(R.string.setting_background_playback) to "Keep playback running when leaving the player.",
             getString(R.string.setting_preview_follows_focus) to "Update the preview as you move between channels.",
+            getString(R.string.setting_multiview_warning) to "Remind on opening multiview that each screen uses one provider connection.",
             getString(R.string.setting_guide_interval) to "Choose how often guides refresh automatically.",
             getString(R.string.setting_epg_offset) to "Shift programme times to correct a provider time offset.",
             getString(R.string.setting_store_descriptions) to "Keep programme descriptions for guide details.",
@@ -335,7 +339,7 @@ class SettingsActivity : SectionActivity() {
 
     companion object {
         private val SECTIONS = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
-        private val SUMMARIES = listOf("Channel names and cache maintenance", "Add, edit and refresh your playlists", "Guide sources, matching and refresh options", "Decoders, buffering and playback behaviour", "Clock, guide shading and panel appearance", "Recordings, padding and default duration", "Reminder timing and popup duration", "PIN, blocked channels and unlock duration", "Save or restore your configuration", "Version information and open-source licences")
+        private val SUMMARIES = listOf("Channel names, multiview warning and cache maintenance", "Add, edit and refresh your playlists", "Guide sources, matching and refresh options", "Decoders, buffering and playback behaviour", "Clock, guide shading and panel appearance", "Recordings, padding and default duration", "Reminder timing and popup duration", "PIN, blocked channels and unlock duration", "Save or restore your configuration", "Version information and open-source licences")
     }
 
     private fun minutes(m: Int) = resources.getQuantityString(R.plurals.minutes, m, m)

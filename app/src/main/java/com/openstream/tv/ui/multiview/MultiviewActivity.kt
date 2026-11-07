@@ -6,11 +6,16 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.TextUtils
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.OptIn
@@ -29,6 +34,8 @@ import com.openstream.tv.R
 import com.openstream.tv.appContainer
 import com.openstream.tv.data.db.ChannelEntity
 import com.openstream.tv.data.db.ContentKind
+import com.openstream.tv.data.db.GroupWithCount
+import com.openstream.tv.data.db.PlaylistEntity
 import com.openstream.tv.data.db.RecordingStatus
 import com.openstream.tv.data.settings.ChannelNames
 import com.openstream.tv.databinding.ItemScreenCountBinding
@@ -52,10 +59,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
- * Several live channels at once, beside the shared rail. Opening it asks for 2, 3 or 4
- * screens, then each channel is picked from the usual categories and channel list. Each
- * tile has its own player; only the focused tile is audible. Players live only while this
- * screen is visible, so tiles never hold provider connections in the background.
+ * Several live channels at once, beside the shared rail. Opening it explains that every screen
+ * takes a provider connection, asks for 2, 3 or 4 screens, then each channel is picked the
+ * usual way: playlist (when there is more than one), category, channel. Each tile has its own
+ * player; only the focused tile is audible. Players live only while this screen is visible,
+ * so tiles never hold provider connections in the background. A playlist's declared
+ * connection limit is enforced; a tile that stops getting data says so.
  */
 @OptIn(UnstableApi::class)
 class MultiviewActivity : SectionActivity() {
@@ -66,6 +75,8 @@ class MultiviewActivity : SectionActivity() {
         val frame = FrameLayout(this@MultiviewActivity)
         val video = PlayerView(this@MultiviewActivity)
         val label = TextView(this@MultiviewActivity)
+        val status = TextView(this@MultiviewActivity)
+        val stall = StallClock()
         var player: Player? = null
         var channel: ChannelEntity? = null
         var url: String? = null
@@ -94,7 +105,23 @@ class MultiviewActivity : SectionActivity() {
     private var nameTokens = ""
     private var pickerJob: Job? = null
     private var pickerRows: List<ChannelEntity> = emptyList()
-    private val pickerAdapter = SimpleRowAdapter { row -> pickerRows.firstOrNull { it.id == row.id }?.let(::onChannelPicked) }
+    private val pickerAdapter = SimpleRowAdapter { row -> onPickerRow(row) }
+    /** Playlists with live channels; with more than one, the picker starts on them. */
+    private var pickerPlaylists: List<PlaylistEntity> = emptyList()
+    private var pickerGroups: List<GroupWithCount> = emptyList()
+    /** The playlist whose categories the picker shows; null while choosing the playlist. */
+    private var pickerPlaylist: Long? = null
+    /** Category rows on the right while choosing a playlist. */
+    private var playlistLevelRows: List<Category> = emptyList()
+    /** Most screens the playlists' declared limits allow; null when any limit is unknown. */
+    private var capacity: Int? = null
+    private val ticker = Handler(Looper.getMainLooper())
+    private val checkStalls = object : Runnable {
+        override fun run() {
+            tiles.forEach(::sampleStall)
+            ticker.postDelayed(this, STALL_TICK_MS)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,6 +153,7 @@ class MultiviewActivity : SectionActivity() {
             showMode(Mode.TILES)
         } else {
             showCountPicker()
+            introduce()
         }
     }
 
@@ -149,15 +177,19 @@ class MultiviewActivity : SectionActivity() {
         )
         tiles.forEach { startTile(it) }
         if (mode == Mode.TILES) focusTile(audioTile)
+        ticker.removeCallbacks(checkStalls)
+        ticker.postDelayed(checkStalls, STALL_TICK_MS)
     }
 
     override fun onStop() {
+        ticker.removeCallbacks(checkStalls)
         tiles.forEach { stopTile(it) }
         super.onStop()
     }
 
     override fun onDestroy() {
         picker.release()
+        ticker.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -182,7 +214,66 @@ class MultiviewActivity : SectionActivity() {
                 else -> R.string.multiview_shape_4
             },
         )
-        b.root.setOnClickListener { startSetup(count) }
+        b.root.setOnClickListener {
+            val most = capacity
+            if (most != null && count > most) explainCapacity(most) else startSetup(count)
+        }
+    }
+
+    /** Playlists with live channels, each with how many of its connections recordings hold. */
+    private suspend fun livePlaylists(): List<Pair<PlaylistEntity, Int>> {
+        val c = appContainer
+        val ids = c.channels.observeGroups().first().map { it.playlistId }.toSet()
+        val recording = c.database.recordings().withStatus(listOf(RecordingStatus.RECORDING))
+        return c.playlists.getPlaylists().filter { it.id in ids }
+            .map { p -> p to recording.count { it.playlistId == p.id } }
+    }
+
+    private suspend fun refreshCapacity(): List<Pair<PlaylistEntity, Int>> {
+        val lists = livePlaylists()
+        capacity = ConnectionBudget.screensAvailable(lists.map { (p, rec) -> p.maxConnections to rec })
+        listOf(content.count2 to 2, content.count3 to 3, content.count4 to 4).forEach { (b, n) ->
+            b.root.alpha = if (capacity.let { it != null && n > it }) 0.45f else 1f
+        }
+        return lists
+    }
+
+    /**
+     * The one-off explanation on opening: every screen is a provider connection. Also says
+     * what any declared limits allow. Skipped once the user has asked not to see it again.
+     */
+    private fun introduce() {
+        lifecycleScope.launch {
+            val lists = refreshCapacity()
+            if (!appContainer.settings.get().multiviewConnectionWarning) return@launch
+            val lines = mutableListOf(getString(R.string.multiview_connections_message))
+            lists.mapNotNull { (p, _) -> p.maxConnections?.takeIf { it > 0 }?.let { p to it } }.forEach { (p, max) ->
+                lines += resources.getQuantityString(R.plurals.multiview_playlist_allows, max, max, p.name)
+            }
+            capacity?.takeIf { it < MultiviewLayout.MAX_TILES }?.let { lines += capacityText(it) }
+            if (isFinishing) return@launch
+            AlertDialog.Builder(this@MultiviewActivity)
+                .setTitle(R.string.multiview_connections_title)
+                .setMessage(lines.joinToString("\n\n"))
+                .setPositiveButton(R.string.multiview_got_it, null)
+                .setNegativeButton(R.string.multiview_dont_show) { _, _ ->
+                    lifecycleScope.launch { appContainer.settings.setMultiviewConnectionWarning(false) }
+                }
+                .show()
+        }
+    }
+
+    private fun capacityText(most: Int) =
+        if (most == 0) getString(R.string.multiview_no_capacity)
+        else resources.getQuantityString(R.plurals.multiview_capacity, most, most)
+
+    /** Refuses a screen count the declared limits can't serve, rather than letting tiles stall. */
+    private fun explainCapacity(most: Int) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.multiview_limit_title)
+            .setMessage(capacityText(most))
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     private fun showCountPicker() {
@@ -201,6 +292,8 @@ class MultiviewActivity : SectionActivity() {
 
     private fun startSetup(count: Int) {
         lifecycleScope.launch {
+            refreshCapacity()
+            capacity?.let { most -> if (count > most) return@launch explainCapacity(most) }
             if (loadChoices().isEmpty()) {
                 Toast.makeText(this@MultiviewActivity, R.string.multiview_no_channels, Toast.LENGTH_LONG).show()
                 return@launch
@@ -211,41 +304,114 @@ class MultiviewActivity : SectionActivity() {
         }
     }
 
-    /** Opens the categories + channels picker for [slot]. */
+    /** Opens the picker for [slot]: playlist (if several), then categories, then channels. */
     private fun pickFor(slot: Int) {
         val p = plan ?: return
         targetSlot = slot
         val wasPicking = mode == Mode.PICK
         showMode(Mode.PICK)
         picker.b.title.text = getString(R.string.multiview_pick_title, slot + 1, p.count)
-        picker.b.subtitle.text = (0 until p.count).joinToString("   ") { i ->
-            getString(R.string.multiview_slot, i + 1, p[i]?.let { id -> chosen[id]?.let(::displayName) } ?: getString(R.string.multiview_slot_empty))
-        }
+        renderChips()
         if (!wasPicking) {
-            loadPickerCategories()
+            loadPicker()
         } else {
             // Same list, new marks for what is now on which screen.
             renderPickerRows()
         }
     }
 
-    private fun loadPickerCategories() {
-        lifecycleScope.launch {
-            val groups = appContainer.channels.observeGroups().first()
-            val cats = listOf(
-                Category(KEY_FAVORITES, getString(R.string.group_favorites)),
-                Category(KEY_ALL, getString(R.string.group_all), groups.sumOf { it.channelCount }),
-            ) + groups.map { Category(it.id.toString(), it.name, it.channelCount) }
-            picker.categories.submit(cats)
-            val key = picker.categories.activeKey ?: KEY_ALL
-            picker.categories.activeKey = key
-            showPickerChannels(key)
-            picker.b.list.post { picker.focusCategories() }
+    /** One chip per screen in the header: its channel or "empty", the one being chosen lit. */
+    private fun renderChips() {
+        val p = plan ?: return
+        val actions = picker.b.actions
+        val chips = p.chips(targetSlot)
+        val hadFocus = actions.hasFocus()
+        actions.removeAllViews()
+        chips.forEach { chip ->
+            val name = chip.channelId?.let { id -> chosen[id]?.let(::displayName) } ?: getString(R.string.multiview_slot_empty)
+            val button = Button(this, null, 0, R.style.Button_TV_Small).apply {
+                text = getString(R.string.multiview_chip, chip.slot + 1, name)
+                isActivated = chip.target
+                alpha = if (chip.filled || chip.target) 1f else 0.7f
+                isSingleLine = true
+                ellipsize = TextUtils.TruncateAt.END
+                maxWidth = dp(150)
+                setOnClickListener { if (targetSlot != chip.slot) pickFor(chip.slot) }
+            }
+            actions.addView(button, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }
+        if (hadFocus) actions.getChildAt(targetSlot)?.requestFocus()
+    }
+
+    private fun loadPicker() {
+        lifecycleScope.launch {
+            val c = appContainer
+            pickerGroups = c.channels.observeGroups().first()
+            val ids = pickerGroups.map { it.playlistId }.toSet()
+            pickerPlaylists = c.playlists.getPlaylists().filter { it.id in ids }
+            // Start where the screen being changed already is, or straight in when there is one playlist.
+            val current = plan?.get(targetSlot)?.let { chosen[it]?.playlistId }
+            val only = pickerPlaylists.singleOrNull()?.id
+            when {
+                only != null -> showCategories(only)
+                pickerPlaylists.size > 1 && current != null && current in ids -> showCategories(current)
+                else -> showPlaylists()
+            }
+        }
+    }
+
+    private val multiplePlaylists get() = pickerPlaylists.size > 1
+
+    /** Step 1 with several playlists: the playlists on the left, their categories on the right. */
+    private fun showPlaylists(focusOn: Long? = null) {
+        pickerJob?.cancel()
+        pickerPlaylist = null
+        picker.b.subtitle.setText(R.string.multiview_choose_playlist)
+        picker.categories.submit(pickerPlaylists.map { p ->
+            Category(KEY_PLAYLIST + p.id, p.name, pickerGroups.filter { it.playlistId == p.id }.sumOf { it.channelCount })
+        })
+        val key = KEY_PLAYLIST + (focusOn ?: pickerPlaylists.firstOrNull()?.id ?: return)
+        picker.categories.activeKey = key
+        showPickerChannels(key)
+        picker.b.list.post { picker.focusCategories() }
+    }
+
+    /** Favourites, all channels and groups of [playlistId], the standard category rows. */
+    private fun categoriesOf(playlistId: Long): List<Category> {
+        val groups = pickerGroups.filter { it.playlistId == playlistId }
+        return listOf(
+            Category(KEY_FAVORITES, getString(R.string.group_favorites)),
+            Category(KEY_ALL, getString(R.string.group_all), groups.sumOf { it.channelCount }),
+        ) + groups.map { Category(it.id.toString(), it.name, it.channelCount) }
+    }
+
+    /** Step 2: one playlist's categories on the left, channels on the right. */
+    private fun showCategories(playlistId: Long, key: String? = null, focusList: Boolean = false) {
+        pickerPlaylist = playlistId
+        picker.b.subtitle.text = if (multiplePlaylists) pickerPlaylists.firstOrNull { it.id == playlistId }?.name.orEmpty() else ""
+        val cats = categoriesOf(playlistId)
+        picker.categories.submit(cats)
+        val active = key?.takeIf { k -> cats.any { it.key == k } } ?: KEY_ALL
+        picker.categories.activeKey = active
+        showPickerChannels(active)
+        picker.b.list.post { if (focusList) picker.focusList() else picker.focusCategories() }
     }
 
     private fun showPickerChannels(key: String) {
         pickerJob?.cancel()
+        if (key.startsWith(KEY_PLAYLIST)) {
+            // Choosing a playlist: its categories as rows, OK on one opens it.
+            val id = key.removePrefix(KEY_PLAYLIST).toLong()
+            playlistLevelRows = categoriesOf(id)
+            pickerRows = emptyList()
+            pickerAdapter.submit(playlistLevelRows.mapIndexed { i, cat ->
+                SimpleRow(i.toLong(), cat.name, cat.count?.toString().orEmpty())
+            })
+            picker.b.empty.visibility = View.GONE
+            return
+        }
+        playlistLevelRows = emptyList()
+        val playlist = pickerPlaylist
         pickerJob = lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val c = appContainer
@@ -255,14 +421,25 @@ class MultiviewActivity : SectionActivity() {
                     else -> c.channels.observeGroup(key.toLong())
                 }
                 flow.collect { list ->
-                    pickerRows = list.filter { it.kind == ContentKind.LIVE }
+                    pickerRows = list.filter { it.kind == ContentKind.LIVE && (playlist == null || it.playlistId == playlist) }
                     renderPickerRows()
                 }
             }
         }
     }
 
+    private fun onPickerRow(row: SimpleRow) {
+        if (pickerPlaylist == null) {
+            val playlistKey = picker.categories.activeKey ?: return
+            val cat = playlistLevelRows.getOrNull(row.id.toInt()) ?: return
+            showCategories(playlistKey.removePrefix(KEY_PLAYLIST).toLong(), cat.key, focusList = true)
+            return
+        }
+        pickerRows.firstOrNull { it.id == row.id }?.let(::onChannelPicked)
+    }
+
     private fun renderPickerRows() {
+        if (pickerPlaylist == null) return
         val slots = plan?.channels.orEmpty()
         pickerAdapter.submit(pickerRows.map { ch ->
             val on = slots.indexOf(ch.id)
@@ -283,6 +460,7 @@ class MultiviewActivity : SectionActivity() {
         confirmConnection(channel, slot) {
             chosen[channel.id] = channel
             p.fill(slot, channel.id)
+            renderChips()
             val next = p.firstEmpty()
             if (next != null) pickFor(next) else finishSetup()
         }
@@ -344,6 +522,20 @@ class MultiviewActivity : SectionActivity() {
         tile.frame.addView(tile.label, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
             setMargins(dp(8), dp(8), dp(8), dp(8))
         })
+        tile.status.apply {
+            setTextColor(getColor(R.color.text_primary))
+            textSize = 11f
+            maxLines = 2
+            visibility = View.GONE
+            setPadding(dp(8), dp(4), dp(8), dp(4))
+            background = GradientDrawable().apply {
+                setColor(0xCC171B22.toInt())
+                cornerRadius = px(4).toFloat()
+            }
+        }
+        tile.frame.addView(tile.status, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.START).apply {
+            setMargins(dp(8), dp(8), dp(8), dp(8))
+        })
         tile.frame.apply {
             setBackgroundColor(Color.BLACK)
             isFocusable = true
@@ -385,7 +577,24 @@ class MultiviewActivity : SectionActivity() {
         updateAudio()
     }
 
+    /** Says when a tile has had no data for a while, and clears as soon as it plays again. */
+    private fun sampleStall(tile: Tile) {
+        val exo = tile.player?.exo
+        val active = exo != null && tile.error == null && exo.playWhenReady && exo.playerError == null &&
+            exo.currentMediaItem != null &&
+            exo.playbackState.let { it == androidx.media3.common.Player.STATE_BUFFERING || it == androidx.media3.common.Player.STATE_READY }
+        val seconds = tile.stall.sample(System.currentTimeMillis(), exo?.currentPosition ?: 0L, active)
+        if (seconds == null) {
+            tile.status.visibility = View.GONE
+        } else {
+            tile.status.text = getString(R.string.multiview_stalled, seconds) + "\n" + getString(R.string.multiview_stalled_hint)
+            tile.status.visibility = View.VISIBLE
+        }
+    }
+
     private fun stopTile(tile: Tile) {
+        tile.stall.reset()
+        tile.status.visibility = View.GONE
         tile.job?.cancel()
         tile.video.player = null
         tile.player?.release()
@@ -393,6 +602,8 @@ class MultiviewActivity : SectionActivity() {
     }
 
     private fun loadTile(tile: Tile) {
+        tile.stall.reset()
+        tile.status.visibility = View.GONE
         tile.job?.cancel()
         tile.player?.exo?.stop()
         tile.error = null
@@ -495,8 +706,12 @@ class MultiviewActivity : SectionActivity() {
 
     private fun addScreen() {
         if (tiles.size >= MultiviewLayout.MAX_TILES) return
-        plan = planFromTiles(extra = 1)
-        pickFor(tiles.size)
+        lifecycleScope.launch {
+            refreshCapacity()
+            capacity?.let { most -> if (tiles.size >= most) return@launch explainCapacity(most) }
+            plan = planFromTiles(extra = 1)
+            pickFor(tiles.size)
+        }
     }
 
     private fun dropTile(tile: Tile) {
@@ -532,23 +747,26 @@ class MultiviewActivity : SectionActivity() {
         c.parental.visible(list.filter { it.kind == ContentKind.LIVE }, c.database).also { choices = it }
     }
 
-    /** Warns before opening more streams from one provider than its account allows. */
+    /**
+     * Refuses a channel whose playlist has no connection left (other screens and running
+     * recordings count). Playlists that don't declare a limit are allowed; the opening
+     * warning already covers them.
+     */
     private fun confirmConnection(channel: ChannelEntity, slot: Int, proceed: () -> Unit) {
         lifecycleScope.launch {
             val c = appContainer
             val playlist = c.playlists.get(channel.playlistId)
-            val others = plan?.channels.orEmpty().filterIndexed { i, id -> i != slot && id != null }
-            val onPlaylist = others.count { id -> chosen[id]?.playlistId == channel.playlistId }
+            val onPlaylist = plan?.countOn(channel.playlistId, except = slot) { id -> chosen[id]?.playlistId } ?: 0
             val recording = c.database.recordings().withStatus(listOf(RecordingStatus.RECORDING))
                 .count { it.playlistId == channel.playlistId }
-            val limit = ConnectionBudget.exceededLimit(playlist?.maxConnections, onPlaylist + recording)
-            if (limit == null) return@launch proceed()
-            AlertDialog.Builder(this@MultiviewActivity)
-                .setTitle(R.string.multiview_limit_title)
-                .setMessage(resources.getQuantityString(R.plurals.multiview_limit_message, limit, limit, playlist?.name.orEmpty()))
-                .setPositiveButton(R.string.multiview_add_anyway) { _, _ -> proceed() }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
+            when (val budget = ConnectionBudget.decide(playlist?.maxConnections, onPlaylist + recording)) {
+                is Budget.Full -> AlertDialog.Builder(this@MultiviewActivity)
+                    .setTitle(R.string.multiview_limit_title)
+                    .setMessage(resources.getQuantityString(R.plurals.multiview_limit_message, budget.limit, budget.limit, playlist?.name.orEmpty()))
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+                Budget.Unknown, is Budget.Allowed -> proceed()
+            }
         }
     }
 
@@ -573,6 +791,11 @@ class MultiviewActivity : SectionActivity() {
             when (mode) {
                 Mode.PICK -> {
                     if (picker.rightHasFocus()) return picker.focusCategories()
+                    val playlist = pickerPlaylist
+                    if (playlist != null && multiplePlaylists) {
+                        showPlaylists(focusOn = playlist)
+                        return true
+                    }
                     cancelPicking()
                     return true
                 }
@@ -629,6 +852,8 @@ class MultiviewActivity : SectionActivity() {
         private const val STATE_ENLARGED = "enlarged"
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_ALL = "all"
+        private const val KEY_PLAYLIST = "playlist:"
+        private const val STALL_TICK_MS = 1_000L
 
         /** From the player: [channelId] fills screen 1, the rest are picked. */
         fun intent(context: Context, channelId: Long, list: LongArray): Intent =
