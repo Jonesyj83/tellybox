@@ -138,6 +138,27 @@ interface ChannelDao {
 
 @Dao
 interface EpgDao {
+    @Query("SELECT * FROM channels WHERE kind = 'LIVE' AND (:playlistId IS NULL OR playlistId = :playlistId) ORDER BY playlistId, sortOrder, id")
+    suspend fun matchingChannels(playlistId: Long?): List<ChannelEntity>
+
+    @Query("SELECT * FROM epg_channels WHERE sourceId = :sourceId")
+    suspend fun guideChannels(sourceId: Long): List<EpgChannelEntity>
+
+    @Query("DELETE FROM epg_matches WHERE sourceId = :sourceId")
+    suspend fun clearMatches(sourceId: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMatches(matches: List<EpgMatchEntity>)
+
+    @Query("SELECT m.* FROM epg_matches m JOIN epg_sources s ON s.id = m.sourceId WHERE s.enabled = 1 AND m.channelId IN (:ids) ORDER BY s.priority, s.id")
+    suspend fun matches(ids: List<Long>): List<EpgMatchEntity>
+
+    @Query("SELECT COUNT(DISTINCT m.channelId) FROM epg_matches m JOIN epg_sources s ON s.id = m.sourceId AND s.enabled = 1 JOIN channels c ON c.id = m.channelId JOIN playlists p ON p.id = c.playlistId AND p.enabled = 1")
+    fun observeMatchCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM channels c JOIN playlists p ON p.id = c.playlistId AND p.enabled = 1 WHERE c.kind = 'LIVE'")
+    fun observeLiveCount(): Flow<Int>
+
     @Query("SELECT * FROM epg_sources ORDER BY priority, id")
     fun observeSources(): Flow<List<EpgSourceEntity>>
 
@@ -223,6 +244,9 @@ interface EpgDao {
         """,
     )
     suspend fun programsForIds(xmltvIds: List<String>, from: Long, to: Long): List<EpgProgramEntity>
+
+    @Query("SELECT * FROM epg_programs WHERE sourceId = :sourceId AND channelXmltvId IN (:ids) AND stop > :from AND start < :to ORDER BY start")
+    suspend fun mappedPrograms(sourceId: Long, ids: List<String>, from: Long, to: Long): List<EpgProgramEntity>
 
     @Query("SELECT COUNT(*) FROM epg_programs WHERE sourceId = :sourceId")
     suspend fun programCount(sourceId: Long): Int

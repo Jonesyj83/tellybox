@@ -145,6 +145,7 @@ data class EpgChannelEntity(
     val xmltvId: String,
     val displayName: String,
     val iconUrl: String? = null,
+    @ColumnInfo(defaultValue = "''") val aliases: String = "",
 )
 
 @Entity(
@@ -159,6 +160,7 @@ data class EpgChannelEntity(
     ],
     indices = [
         Index(value = ["channelXmltvId", "start"]),
+        Index(value = ["sourceId", "channelXmltvId", "start"]),
         Index("sourceId"),
         Index("stop"),
     ],
@@ -275,3 +277,9 @@ data class ReminderEntity(
     val remindAt: Long,
     val createdAt: Long = System.currentTimeMillis(),
 )
+
+@Entity(tableName = "epg_matches", primaryKeys = ["channelId", "sourceId"],
+    foreignKeys = [ForeignKey(entity = ChannelEntity::class, parentColumns = ["id"], childColumns = ["channelId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = EpgSourceEntity::class, parentColumns = ["id"], childColumns = ["sourceId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("sourceId")])
+data class EpgMatchEntity(val channelId: Long, val sourceId: Long, val xmltvId: String, val pass: String)

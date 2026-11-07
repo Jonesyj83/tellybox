@@ -281,7 +281,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
                 showError(e.message)
             }
 
-            val now = container.epg.currentProgram(channel.tvgId)
+            val now = container.epg.currentProgram(channel.id.toString())
             if (current?.id == channel.id) showBanner(channel, if (catchup) intent.getStringExtra(EXTRA_ARCHIVE_TITLE) else now?.title)
         }
     }
@@ -313,7 +313,7 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
                 return@launch
             }
             val now = System.currentTimeMillis()
-            val program = c.epg.currentProgram(channel.tvgId, now)
+            val program = c.epg.currentProgram(channel.id.toString(), now)
             val default = c.settings.get().instantRecordMinutes
             val options = mutableListOf<Pair<String, Long>>()
             if (program != null && program.stop > now) {

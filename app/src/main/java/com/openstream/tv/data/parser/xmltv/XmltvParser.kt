@@ -13,6 +13,7 @@ data class XmltvChannel(
     val id: String,
     val displayName: String,
     val iconUrl: String?,
+    val displayNames: List<String> = listOf(displayName),
 )
 
 data class XmltvProgramme(
@@ -107,6 +108,7 @@ object XmltvParser {
         private var inChannel = false
         private var chId: String? = null
         private var chName: String? = null
+        private val chNames = ArrayList<String>()
         private var chIcon: String? = null
 
         // <programme>
@@ -129,6 +131,7 @@ object XmltvParser {
                     inChannel = true
                     chId = attrs.getValue("id")?.trim()
                     chName = null
+                    chNames.clear()
                     chIcon = null
                 }
                 "programme" -> {
@@ -170,7 +173,7 @@ object XmltvParser {
         override fun endElement(uri: String?, localName: String?, qName: String) {
             when (qName) {
                 // Keep the first of any repeated element (usually the primary language).
-                "display-name" -> takeText()?.let { if (inChannel && chName == null) chName = it }
+                "display-name" -> takeText()?.let { if (inChannel) { chNames += it; if (chName == null) chName = it } }
                 "title" -> takeText()?.let { if (pTitle == null) pTitle = it }
                 "sub-title" -> takeText()?.let { if (pSubtitle == null) pSubtitle = it }
                 "desc" -> if (includeDescriptions) takeText()?.let { if (pDesc == null) pDesc = it }
@@ -188,7 +191,7 @@ object XmltvParser {
                         skipped++
                     } else {
                         channelCount++
-                        listener.onChannel(XmltvChannel(id, chName ?: id, chIcon))
+                        listener.onChannel(XmltvChannel(id, chName ?: id, chIcon, chNames.toList()))
                     }
                 }
                 "programme" -> {

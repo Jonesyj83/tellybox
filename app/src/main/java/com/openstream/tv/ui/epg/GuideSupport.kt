@@ -26,10 +26,19 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
     /** Rows of the grid, in order, with display names already applied. */
     var channels: List<ChannelEntity> = emptyList()
 
-    /** Loaded programmes per lower-cased tvg-id; an empty list means "looked, nothing there". */
+    /** Loaded programmes per playlist channel id; an empty list means "looked, nothing there". */
     private val programs = HashMap<String, List<EpgProgramEntity>>()
     private val loading = HashSet<String>()
     private var generation = 0
+    private val matched = HashSet<String>()
+
+    init {
+        grid.emptyRowText = ::emptyRowText
+    }
+
+    private fun emptyRowText(channel: GuideChannel): String = activity.getString(
+        if (channel.tvgId in matched) R.string.guide_no_programmes else R.string.guide_no_data,
+    )
 
     fun channelFor(row: Int): ChannelEntity? = channels.getOrNull(row)
 
@@ -43,7 +52,7 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
         // Fetch a screen's worth either side so paging feels instant.
         val span = last - first + 1
         val wanted = channels.subList((first - span).coerceIn(0, channels.size), (last + span + 1).coerceIn(0, channels.size))
-            .mapNotNull { it.tvgId?.lowercase() }
+            .map { it.id.toString() }
             .filter { it !in programs && it !in loading }
             .distinct()
         if (wanted.isEmpty()) return
@@ -52,6 +61,7 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
         activity.lifecycleScope.launch {
             val found = activity.appContainer.epg.programsFor(wanted, grid.minTime, grid.maxTime)
             if (gen != generation) return@launch
+            matched += found.keys
             wanted.forEach { programs[it] = found[it].orEmpty() }
             loading -= wanted.toSet()
             grid.refresh()
@@ -63,6 +73,7 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
         generation++
         programs.clear()
         loading.clear()
+        matched.clear()
         grid.reload()
     }
 
@@ -72,7 +83,7 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
     fun describe(channel: GuideChannel, block: GuideBlock): Info {
         val p = block.program
         if (block.strip != null) {
-            val text = if (block.strip == GuideBlock.Strip.NO_DATA) activity.getString(R.string.guide_no_data) else ""
+            val text = if (block.strip == GuideBlock.Strip.NO_DATA) emptyRowText(channel) else ""
             return Info(channel.name, text, "", text)
         }
         val fmt = DateFormat.getTimeFormat(activity)
@@ -174,6 +185,6 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
 
     companion object {
         fun guideChannel(c: ChannelEntity, favorite: Boolean = false) =
-            GuideChannel(c.id, c.number, c.name, c.tvgId?.lowercase(), c.catchupDays, favorite)
+            GuideChannel(c.id, c.number, c.name, c.id.toString(), c.catchupDays, favorite)
     }
 }

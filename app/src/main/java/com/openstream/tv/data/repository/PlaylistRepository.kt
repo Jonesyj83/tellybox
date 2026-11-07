@@ -96,6 +96,8 @@ class PlaylistRepository(
                 PlaylistType.STALKER -> refreshStalker(playlist)
             }
             summary.epgUrls.forEach { addEpgSource(playlistId, it) }
+            db.epg().getEnabledSources().filter { it.playlistId == null || it.playlistId == playlistId }
+                .forEach { EpgRepository.recomputeMatches(db, it) }
             db.playlists().setRefreshResult(playlistId, System.currentTimeMillis(), null)
             Result.success(summary)
         } catch (e: CancellationException) {

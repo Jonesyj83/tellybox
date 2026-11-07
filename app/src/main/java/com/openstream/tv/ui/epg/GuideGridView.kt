@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
 
-/** One row of the guide. [tvgId] is lower-cased, null when the channel has no guide id. */
+/** One row of the guide. [tvgId] carries the persisted playlist channel lookup key. */
 data class GuideChannel(
     val id: Long,
     val number: Int?,
@@ -61,6 +61,7 @@ class GuideGridView @JvmOverloads constructor(
     }
 
     var callback: Callback? = null
+    var emptyRowText: ((GuideChannel) -> String)? = null
 
     var channels: List<GuideChannel> = emptyList()
         private set
@@ -387,7 +388,7 @@ class GuideGridView @JvmOverloads constructor(
                 val avail = right - left - 2 * pad
                 if (block.strip != null) {
                     if (block.strip == GuideBlock.Strip.NO_DATA && avail > 12 * dp) {
-                        canvas.drawText(ellipsize(context.getString(R.string.guide_no_data), dimTitlePaint, avail),
+                        canvas.drawText(ellipsize(emptyRowText?.invoke(ch) ?: context.getString(R.string.guide_no_data), dimTitlePaint, avail),
                             left + pad, textY, dimTitlePaint)
                     }
                     continue
@@ -417,7 +418,11 @@ class GuideGridView @JvmOverloads constructor(
         canvas.drawText(dayFormat.format(Date(focusTime)), pad, y, captionPaint)
         while (t < viewEnd) {
             val x = channelWidth + (t - viewStart) / 60_000f * pxPerMinute
-            canvas.drawText(timeFormat.format(Date(t)), x + 4 * dp, y, captionPaint)
+            val label = timeFormat.format(Date(t))
+            // Don't let a label hang off the right edge where it gets cut in half.
+            if (x + 4 * dp + captionPaint.measureText(label) <= width) {
+                canvas.drawText(label, x + 4 * dp, y, captionPaint)
+            }
             t += SLOT
         }
     }

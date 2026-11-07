@@ -236,4 +236,5 @@
     <string name="favorite_remove">Remove from favorites</string>
     <string name="open_full_guide">Open full guide</string>
     <string name="guide_watch_archive">Watch from catch-up</string>
+    <string name="guide_no_programmes">No programmes in this time range</string>
 </resources>

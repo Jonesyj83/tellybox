@@ -20,6 +20,7 @@ import kotlin.math.abs
 
 class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
+    private var matchSummary = "Guide matches 0 of 0 channels"
     private var section: String? = null
     private var sectionFocus = 0
     private var currentSettings: AppSettings? = null
@@ -41,6 +42,13 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                 if (section != null) showSectionList() else finish()
             }
         })
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                kotlinx.coroutines.flow.combine(appContainer.database.epg().observeMatchCount(), appContainer.database.epg().observeLiveCount()) { matched, total ->
+                    "Guide matches $matched of $total channels"
+                }.collect { matchSummary = it; currentSettings?.let(::render) }
+            }
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.settings.settings.collect { render(it) }
@@ -171,6 +179,7 @@ class SettingsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                     s.reminderPopupSeconds, repo::setReminderPopupSeconds)
             },
             header(R.string.settings_guide),
+            Row(matchSummary, "Refresh") { reimportGuides() },
             Row(getString(R.string.setting_guide_interval), resources.getQuantityString(R.plurals.hours, s.guideRefreshHours, s.guideRefreshHours)) {
                 pick(R.string.setting_guide_interval, intervals, s.guideRefreshHours, repo::setGuideRefreshHours)
             },

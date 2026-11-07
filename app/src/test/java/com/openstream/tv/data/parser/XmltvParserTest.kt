@@ -14,6 +14,12 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
 
 class XmltvParserTest {
+    @Test fun retainsEveryDisplayNameForMatching() {
+        val (channels, _) = XmltvParser.parseAll("""<tv><channel id="bbc"><display-name>BBC 1</display-name><display-name>BBC One</display-name></channel></tv>""")
+        assertEquals("BBC 1", channels.single().displayName)
+        assertEquals(listOf("BBC 1", "BBC One"), channels.single().displayNames)
+    }
+
 
     private val sample = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -50,7 +56,7 @@ class XmltvParserTest {
         val (channels, programmes) = XmltvParser.parseAll(sample)
 
         assertEquals(2, channels.size)
-        assertEquals(XmltvChannel("bbc1.uk", "BBC One", "http://img/bbc1.png"), channels[0])
+        assertEquals(XmltvChannel("bbc1.uk", "BBC One", "http://img/bbc1.png", listOf("BBC One", "BBC Un")), channels[0])
         assertEquals("ITV", channels[1].displayName)
         assertNull(channels[1].iconUrl)
 

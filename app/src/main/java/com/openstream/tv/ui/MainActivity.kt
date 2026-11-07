@@ -335,7 +335,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         binding.infoChannel.text = channel.name
         val now = System.currentTimeMillis()
         lifecycleScope.launch {
-            val programs = channel.tvgId?.let { id ->
+            val programs = channel.id.toString().let { id ->
                 appContainer.epg.programsFor(listOf(id), now, now + 1)[id.lowercase()]
             }.orEmpty()
             if (previewChannel?.id != channel.id) return@launch

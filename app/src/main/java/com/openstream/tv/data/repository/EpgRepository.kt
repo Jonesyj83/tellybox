@@ -1,6 +1,9 @@
 package com.openstream.tv.data.repository
 
 import android.content.Context
+import androidx.room.withTransaction
+import com.openstream.tv.data.db.EpgMatchEntity
+import com.openstream.tv.data.epg.ChannelMatcher
 import com.openstream.tv.data.db.EpgChannelEntity
 import com.openstream.tv.data.db.EpgProgramEntity
 import com.openstream.tv.data.db.EpgSourceEntity
@@ -36,6 +39,7 @@ class EpgRepository(
 
     suspend fun deleteSource(id: Long) {
         db.epg().setSourceEnabled(id, false)
+        db.epg().clearMatches(id)
         db.epg().deleteProgramsForSource(id)
         db.epg().deleteChannelsForSource(id)
     }
@@ -63,30 +67,39 @@ class EpgRepository(
         refreshLocks.withLock(source.id) { doRefresh(source) }
 
     private suspend fun doRefresh(source: EpgSourceEntity): Result<XmltvStats> {
-        val wanted = db.epg().knownTvgIds(source.playlistId).toHashSet()
+        val playlistChannels = db.epg().matchingChannels(source.playlistId).map {
+            ChannelMatcher.Channel(it.id, it.tvgId?.lowercase(java.util.Locale.ROOT), listOfNotNull(it.tvgName, it.name))
+        }
         val cutoff = System.currentTimeMillis() - KEEP_PAST
         val prefs = settings.get()
         val offset = TimeUnit.MINUTES.toMillis(prefs.epgOffsetMinutes.toLong())
         val keepDescriptions = prefs.storeDescriptions
         return try {
+            db.epg().clearMatches(source.id)
             db.epg().deleteProgramsForSource(source.id)
             db.epg().deleteChannelsForSource(source.id)
 
             val stats = openSource(context, http, source.url) { input ->
                 val programmes = ArrayList<EpgProgramEntity>(BATCH)
                 val channels = ArrayList<EpgChannelEntity>(BATCH)
+                val guideNames = ArrayList<ChannelMatcher.Guide>()
+                var wanted: Set<String>? = null
                 val listener = object : XmltvListener {
                     override fun onChannel(channel: XmltvChannel) {
-                        val id = channel.id.lowercase()
-                        if (!prefs.fullScan && wanted.isNotEmpty() && id !in wanted) return
-                        channels += EpgChannelEntity(source.id, id, channel.displayName, channel.iconUrl)
+                        val id = channel.id.lowercase(java.util.Locale.ROOT)
+                        guideNames += ChannelMatcher.Guide(id, channel.displayNames.ifEmpty { listOf(channel.displayName) })
+                        wanted = null
+                        channels += EpgChannelEntity(source.id, id, channel.displayName, channel.iconUrl, channel.displayNames.joinToString("\n"))
                         if (channels.size >= BATCH) flushChannels(channels)
                     }
 
                     override fun onProgramme(programme: XmltvProgramme) {
-                        val id = programme.channelId.lowercase()
+                        val id = programme.channelId.lowercase(java.util.Locale.ROOT)
+                        // XMLTV lists channel definitions before programmes. Only names and matches stay in memory.
+                        val selected = wanted ?: ChannelMatcher.match(playlistChannels, guideNames)
+                            .mapTo(HashSet()) { it.guideId }.also { wanted = it }
+                        if (!prefs.fullScan && id !in selected) return
                         if (programme.stop + offset < cutoff) return
-                        if (!prefs.fullScan && wanted.isNotEmpty() && id !in wanted) return
                         programmes += EpgProgramEntity(
                             sourceId = source.id,
                             channelXmltvId = id,
@@ -102,11 +115,12 @@ class EpgRepository(
                         if (programmes.size >= BATCH) flushProgrammes(programmes)
                     }
                 }
-                XmltvParser.parse(input, listener).also {
+                XmltvParser.parse(input, listener, includeDescriptions = keepDescriptions).also {
                     flushChannels(channels)
                     flushProgrammes(programmes)
                 }
             }
+            recomputeMatches(db, source)
             val error = stats.error?.takeIf { stats.programmes == 0 }
             db.epg().setSourceRefreshResult(source.id, System.currentTimeMillis(), error)
             if (error != null) Result.failure(IllegalStateException(error)) else Result.success(stats)
@@ -130,40 +144,45 @@ class EpgRepository(
         list.clear()
     }
 
-    suspend fun currentProgram(tvgId: String?, now: Long = System.currentTimeMillis()): EpgProgramEntity? =
-        tvgId?.let { db.epg().current(it.lowercase(), now) }
+    suspend fun currentProgram(channelId: String?, now: Long = System.currentTimeMillis()): EpgProgramEntity? =
+        channelId?.let { programsFor(listOf(it), now, now + 1)[it]?.firstOrNull() }
 
-    /** Now-playing lookup for a whole list of channels, keyed by lower-cased tvg-id. */
-    suspend fun currentPrograms(tvgIds: Collection<String>, now: Long = System.currentTimeMillis()): Map<String, EpgProgramEntity> {
-        val ids = tvgIds.map { it.lowercase() }.distinct()
-        if (ids.isEmpty()) return emptyMap()
-        val out = HashMap<String, EpgProgramEntity>()
-        ids.chunked(900).forEach { chunk ->
-            db.epg().currentFor(chunk, now).forEach { out.putIfAbsent(it.channelXmltvId, it) }
-        }
-        return out
-    }
+    suspend fun currentPrograms(channelIds: Collection<String>, now: Long = System.currentTimeMillis()): Map<String, EpgProgramEntity> =
+        programsFor(channelIds, now, now + 1).mapNotNull { (id, programs) -> programs.firstOrNull()?.let { id to it } }.toMap()
 
-    /**
-     * Programmes for several channels at once, keyed by lower-cased tvg-id. When more than
-     * one guide covers a channel, the first source to list it wins so rows don't overlap.
-     */
-    suspend fun programsFor(tvgIds: Collection<String>, from: Long, to: Long): Map<String, List<EpgProgramEntity>> {
-        val ids = tvgIds.map { it.lowercase() }.distinct()
+    /** Persisted channel mappings include the source, so identical ids in different guides cannot collide. */
+    suspend fun programsFor(channelIds: Collection<String>, from: Long, to: Long): Map<String, List<EpgProgramEntity>> {
         val out = HashMap<String, List<EpgProgramEntity>>()
-        ids.chunked(900).forEach { chunk ->
-            db.epg().programsForIds(chunk, from, to).groupBy { it.channelXmltvId }.forEach { (id, list) ->
-                val source = list.minOf { it.sourceId }
-                out[id] = list.filter { it.sourceId == source }
+        channelIds.mapNotNull { it.toLongOrNull() }.distinct().chunked(900).forEach { ids ->
+            val matches = db.epg().matches(ids).distinctBy { it.channelId }
+            matches.groupBy { it.sourceId }.forEach { (source, mappings) ->
+                val programs = db.epg().mappedPrograms(source, mappings.map { it.xmltvId }.distinct(), from, to).groupBy { it.channelXmltvId }
+                mappings.forEach { out[it.channelId.toString()] = programs[it.xmltvId].orEmpty() }
             }
         }
         return out
     }
 
-    suspend fun programs(tvgId: String, from: Long, to: Long): List<EpgProgramEntity> =
-        db.epg().programsFor(tvgId.lowercase(), from, to)
+    suspend fun programs(channelId: String, from: Long, to: Long): List<EpgProgramEntity> =
+        programsFor(listOf(channelId), from, to)[channelId].orEmpty()
 
     companion object {
+        suspend fun recomputeMatches(db: OpenStreamDatabase, source: EpgSourceEntity) {
+            val channels = db.epg().matchingChannels(source.playlistId)
+            val guides = db.epg().guideChannels(source.id).map {
+                ChannelMatcher.Guide(it.xmltvId, (it.aliases.split('\n') + it.displayName).filter(String::isNotBlank))
+            }
+            val matches = ChannelMatcher.match(channels.map {
+                ChannelMatcher.Channel(it.id, it.tvgId?.lowercase(java.util.Locale.ROOT), listOfNotNull(it.tvgName, it.name))
+            }, guides)
+            db.withTransaction {
+                db.epg().clearMatches(source.id)
+                matches.chunked(BATCH).forEach { chunk ->
+                    db.epg().insertMatches(chunk.map { EpgMatchEntity(it.channel, source.id, it.guideId, it.pass) })
+                }
+            }
+        }
+
         private const val BATCH = 1000
         /** How far back to keep programmes, enough to cover typical catch-up windows. */
         private val KEEP_PAST = TimeUnit.DAYS.toMillis(7)
