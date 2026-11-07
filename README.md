@@ -9,6 +9,8 @@ responsible for having the right to watch what is on it.
 
 **[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**
 
+[![Buy me a coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/jonesy)
+
 ![Live TV with the preview window and guide](docs/screenshots/home.jpg)
 
 ## What you need
@@ -176,3 +178,6 @@ Everything lives in one place, and every option does something.
 Apache 2.0, see [LICENSE](LICENSE).
 
 Tellybox is not affiliated with any playlist provider, IPTV service or TV manufacturer.
+
+If it's useful to you, [buy me a coffee](https://buymeacoffee.com/jonesy). No obligation, and
+nothing in the app is locked behind it.
