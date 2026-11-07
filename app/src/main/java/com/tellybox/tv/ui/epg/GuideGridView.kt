@@ -127,7 +127,7 @@ class GuideGridView @JvmOverloads constructor(
     private val focusStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = color(R.color.accent); style = Paint.Style.STROKE; strokeWidth = 3 * dp
     }
-    private val nowLine = Paint().apply { color = color(R.color.accent); strokeWidth = 2 * dp }
+    private val nowLine = Paint().apply { color = color(R.color.accent); strokeWidth = 1.5f * dp; alpha = 110 }
     private val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         color = color(R.color.text_primary); textSize = uiScale.sp(10) * resources.displayMetrics.scaledDensity
     }
@@ -405,9 +405,11 @@ class GuideGridView @JvmOverloads constructor(
             }
         }
 
-        if (now in viewStart..viewEnd) {
+        if (now in viewStart..viewEnd && channels.isNotEmpty()) {
             val x = channelWidth + (now - viewStart) / 60_000f * pxPerMinute
-            canvas.drawLine(x, headerHeight - 6 * dp, x, height.toFloat(), nowLine)
+            // Stop at the last row instead of drawing on into empty space below the list.
+            val bottom = minOf(height.toFloat(), headerHeight + visibleRows * rowHeight)
+            canvas.drawLine(x, headerHeight - 6 * dp, x, bottom, nowLine)
         }
     }
 
