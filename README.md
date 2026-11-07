@@ -9,7 +9,7 @@ responsible for having the right to watch what is on it.
 
 **[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**
 
-[![Buy me a beer](https://img.shields.io/badge/buy%20me%20a%20beer-%F0%9F%8D%BA-FFC107?style=for-the-badge&labelColor=1b1b1b)](https://buymeacoffee.com/jonesy)
+<a href="https://buymeacoffee.com/jonesy"><img src="docs/support.svg" alt="Buy me a beer" height="46"></a>
 
 ![Live TV with the preview window and guide](docs/screenshots/home.jpg)
 
