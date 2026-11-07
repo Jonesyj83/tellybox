@@ -8,3 +8,7 @@ local.properties
 /app/build/
 /build/
 .kotlin/
+
+*.jks
+*.keystore
+*.properties
