@@ -42,6 +42,9 @@ import com.openstream.tv.ui.channels.MainViewModel
 import com.openstream.tv.ui.channels.PreviewController
 import com.openstream.tv.ui.channels.PreviewController.Action
 import com.openstream.tv.ui.channels.homeBack
+import com.openstream.tv.ui.chrome.Section
+import com.openstream.tv.ui.chrome.SectionActivity
+import com.openstream.tv.ui.chrome.SectionRail
 import com.openstream.tv.ui.epg.GuideActivity
 import com.openstream.tv.ui.epg.GuideBlock
 import com.openstream.tv.ui.epg.GuideChannel
@@ -71,6 +74,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var guide: GuideSupport
+    private lateinit var rail: SectionRail
     private val viewModel: MainViewModel by viewModels {
         viewModelFactory { initializer { MainViewModel(appContainer) } }
     }
@@ -149,7 +153,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                 val row = uiScale.categoryRowHeight() * density
                 val geometry = "canvas=${uiScale.widthDp}x${uiScale.heightDp} scale=${uiScale.scale} " +
                     "categories=${((binding.groups.height - binding.groups.paddingTop - binding.groups.paddingBottom) / row).toInt()} " +
-                    "guide=${binding.grid.visibleRowCapacity} rail=${binding.guideButton.width} " +
+                    "guide=${binding.grid.visibleRowCapacity} rail=${binding.menuRail.railLive.width} " +
                     "groupsBottom=${binding.groups.bottom} contentHeight=${binding.content.height}"
                 if (geometry != lastGeometry) {
                     android.util.Log.d("UiScale", geometry)
@@ -180,32 +184,23 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             true
         }
 
-        binding.remindersButton.setOnClickListener { startActivity(Intent(this, com.openstream.tv.ui.reminders.RemindersActivity::class.java)) }
-        binding.multiviewButton.setOnClickListener { lifecycleScope.launch {
-            val channels = appContainer.channels.observeAll().first()
-            if (channels.isEmpty()) Toast.makeText(this@MainActivity, "Add an enabled live playlist first", Toast.LENGTH_LONG).show()
-            else AlertDialog.Builder(this@MainActivity).setTitle("Choose first multiview channel").setItems(channels.map { it.name }.toTypedArray()) { _, index ->
-                startActivity(com.openstream.tv.ui.multiview.MultiviewActivity.intent(this@MainActivity, channels[index].id, channels.map { it.id }.toLongArray()))
-            }.show()
-        } }
-        val railButtons = listOf(binding.guideButton, binding.vodButton, binding.recordingsButton, binding.remindersButton,
-            binding.searchButton, binding.multiviewButton, binding.playlistsButton, binding.settingsButton)
-        // The rail carries its own labels now, so nothing floats over the categories.
+        rail = SectionRail(binding.menuRail, Section.LIVE) { section ->
+            when (section) {
+                Section.LIVE -> moveFocus(FocusTarget.GRID)
+                Section.SEARCH -> showSearch()
+                else -> {
+                    startActivity(SectionActivity.intentFor(this, section))
+                    overridePendingTransition(0, 0)
+                }
+            }
+        }
         lifecycleScope.launch { appContainer.playlists.observePlaylists().collect { playlists ->
-            binding.playlistsButton.foreground = if (playlists.any { it.lastError != null }) getDrawable(R.drawable.rail_badge) else null
+            binding.menuRail.railPlaylists.foreground = if (playlists.any { it.lastError != null }) getDrawable(R.drawable.rail_badge) else null
         } }
         lifecycleScope.launch { appContainer.database.recordings().observeAll().collect { recordings ->
-            binding.recordingsButton.foreground = if (recordings.any { it.status == com.openstream.tv.data.db.RecordingStatus.RECORDING }) getDrawable(R.drawable.rail_badge) else null
+            binding.menuRail.railRecordings.foreground = if (recordings.any { it.status == com.openstream.tv.data.db.RecordingStatus.RECORDING }) getDrawable(R.drawable.rail_badge) else null
         } }
-        binding.playlistsButton.setOnClickListener { startActivity(Intent(this, PlaylistsActivity::class.java)) }
         binding.emptyAddButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
-        binding.searchButton.setOnClickListener { showSearch() }
-        binding.vodButton.setOnClickListener { startActivity(Intent(this, com.openstream.tv.ui.vod.VodActivity::class.java)) }
-        binding.guideButton.setOnClickListener { moveFocus(FocusTarget.GRID) }
-        binding.recordingsButton.setOnClickListener {
-            startActivity(Intent(this, com.openstream.tv.ui.recordings.RecordingsActivity::class.java))
-        }
-        binding.settingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         binding.emptySettingsButton.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -558,7 +553,20 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.getBooleanExtra("focus_rail", false)) binding.guideButton.requestFocus()
+        handleRailIntent(intent)
+    }
+
+    /** Coming back from a section (or the full guide): rail on the section we were in, or search. */
+    private fun handleRailIntent(intent: Intent) {
+        val from = intent.getStringExtra(EXTRA_RAIL_SECTION)?.let { name -> Section.entries.firstOrNull { it.name == name } }
+        when {
+            intent.getBooleanExtra(EXTRA_OPEN_SEARCH, false) -> { rail.focus(Section.SEARCH); showSearch() }
+            from != null -> rail.focus(from)
+            intent.getBooleanExtra("focus_rail", false) -> rail.focus(Section.LIVE)
+        }
+        intent.removeExtra(EXTRA_RAIL_SECTION)
+        intent.removeExtra(EXTRA_OPEN_SEARCH)
+        intent.removeExtra("focus_rail")
     }
 
     override fun onStart() {
@@ -634,7 +642,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
         binding.groups.hasFocus() -> HomeArea.GROUPS
         binding.grid.hasFocus() -> HomeArea.GUIDE
         binding.previewTile.hasFocus() -> HomeArea.PREVIEW
-        binding.menuRail.hasFocus() -> HomeArea.RAIL
+        binding.menuRail.root.hasFocus() -> HomeArea.RAIL
         else -> HomeArea.HEADER
     }
 
@@ -653,7 +661,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             FocusTarget.GROUPS -> focusActiveGroup()
             FocusTarget.PREVIEW -> binding.previewTile.requestFocus()
             FocusTarget.WATCH -> binding.watchButton.requestFocus()
-            FocusTarget.HEADER, FocusTarget.RAIL -> binding.guideButton.requestFocus()
+            FocusTarget.HEADER, FocusTarget.RAIL -> rail.focus(Section.LIVE)
         }
         if (!moved && target == FocusTarget.GRID) focusActiveGroup()
     }
@@ -678,8 +686,8 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
             when (event.keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> if (down) {
                     if (binding.emptyState.visibility == View.VISIBLE) {
-                        if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) binding.guideButton.requestFocus()
-                        else if (binding.menuRail.hasFocus()) binding.emptyAddButton.requestFocus()
+                        if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) rail.focus(Section.LIVE)
+                        else if (rail.hasFocus()) binding.emptyAddButton.requestFocus()
                         return true
                     }
                     val area = focusArea()
@@ -693,17 +701,8 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
                 }
                 KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> if (down) {
                     val up = event.keyCode == KeyEvent.KEYCODE_DPAD_UP
-                    if (binding.menuRail.hasFocus()) {
-                        val rail = binding.menuRail
-                        // Only the item rows take focus; the spacer between the group and the
-                        // settings icon must not swallow a Down press.
-                        val items = (0 until rail.childCount).map { rail.getChildAt(it) }
-                            .filter { it.isFocusable }
-                        if (items.isNotEmpty()) {
-                            val index = items.indexOfFirst { it.hasFocus() }.coerceAtLeast(0)
-                            val next = (index + if (up) -1 else 1).coerceIn(0, items.size - 1)
-                            items[next].requestFocus()
-                        }
+                    if (rail.hasFocus()) {
+                        rail.moveVertical(up)
                         return true
                     }
                     if (binding.groups.hasFocus()) {
@@ -848,5 +847,7 @@ class MainActivity : com.openstream.tv.ui.parental.ProtectedActivity(), GuideGri
     companion object {
         private const val STATE_PREVIEW = "preview_channel"
         private const val STATE_PREVIEW_LIST = "preview_list"
+        const val EXTRA_RAIL_SECTION = "rail_section"
+        const val EXTRA_OPEN_SEARCH = "open_search"
     }
 }

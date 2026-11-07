@@ -12,6 +12,20 @@
         <item name="android:windowAnimationStyle">@null</item>
         <!-- Every focusable view draws its own focus state; skip the system grey wash. -->
         <item name="android:defaultFocusHighlightEnabled" tools:targetApi="o">false</item>
+        <item name="alertDialogTheme">@style/Theme.OpenStream.Dialog</item>
+    </style>
+
+    <!-- Menus, pickers and confirmations: the same card as every other panel. -->
+    <style name="Theme.OpenStream.Dialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorControlActivated">@color/accent</item>
+        <item name="colorControlHighlight">@color/surface_focus</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorAlertDialogListItem">@color/text_primary</item>
+        <item name="android:windowMinWidthMajor">40%</item>
+        <item name="android:windowMinWidthMinor">40%</item>
     </style>
 
     <style name="Theme.OpenStream.Player">
@@ -26,6 +40,31 @@
         <item name="colorAccent">@color/accent</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:defaultFocusHighlightEnabled" tools:targetApi="o">false</item>
+    </style>
+
+    <style name="Rail.Item" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:drawablePadding">2dp</item>
+        <item name="android:drawableTint">@color/rail_item</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:background">@drawable/bg_rail_focus</item>
+        <item name="android:textSize">7sp</item>
+        <item name="android:textColor">@color/rail_item</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <!-- Section header above the right-hand column. -->
+    <style name="Text.Section" parent="">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
     </style>
 
     <style name="Text.Title" parent="">

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one left rail every section screen shares. Bound by SectionRail. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/rail_width"
+    android:layout_height="match_parent"
+    android:background="@color/rail_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="40dp">
+    <TextView android:id="@+id/railLive" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_live" android:text="Live" android:contentDescription="Live TV" />
+    <TextView android:id="@+id/railMovies" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_movies" android:text="Movies" android:contentDescription="Movies and Series" />
+    <TextView android:id="@+id/railRecordings" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_recordings" android:text="Rec" android:contentDescription="Recordings" />
+    <TextView android:id="@+id/railReminders" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_reminders" android:text="Remind" android:contentDescription="Reminders" />
+    <TextView android:id="@+id/railSearch" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_search" android:text="Search" android:contentDescription="Search" />
+    <TextView android:id="@+id/railMultiview" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_multiview" android:text="Multi" android:contentDescription="Multiview" />
+    <TextView android:id="@+id/railPlaylists" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_playlists" android:text="Lists" android:contentDescription="Playlists" />
+
+    <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView android:id="@+id/railSettings" style="@style/Rail.Item"
+        android:drawableTop="@drawable/ic_menu_settings" android:text="Setup" android:contentDescription="Settings" />
+</LinearLayout>

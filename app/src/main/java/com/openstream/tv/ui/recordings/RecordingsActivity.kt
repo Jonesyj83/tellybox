@@ -1,12 +1,9 @@
 package com.openstream.tv.ui.recordings
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.text.format.Formatter
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
@@ -18,48 +15,43 @@ import com.openstream.tv.appContainer
 import com.openstream.tv.data.db.RecordingEntity
 import com.openstream.tv.data.db.RecordingSource
 import com.openstream.tv.data.db.RecordingStatus
-import com.openstream.tv.databinding.ActivitySimpleListBinding
 import com.openstream.tv.schedule.Alarms
-import com.openstream.tv.ui.parental.ProtectedActivity
+import com.openstream.tv.ui.chrome.Category
+import com.openstream.tv.ui.chrome.Section
+import com.openstream.tv.ui.chrome.SectionActivity
+import com.openstream.tv.ui.chrome.SimpleRow
+import com.openstream.tv.ui.chrome.SimpleRowAdapter
+import com.openstream.tv.ui.chrome.TwoColumn
 import com.openstream.tv.ui.parental.requestPin
 import com.openstream.tv.ui.player.PlayerActivity
-import com.openstream.tv.ui.reminders.RemindersActivity
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Date
 
-class RecordingsActivity : ProtectedActivity() {
+class RecordingsActivity : SectionActivity() {
 
     private enum class Filter { ALL, SCHEDULED, COMPLETED, FAILED }
 
-    private lateinit var binding: ActivitySimpleListBinding
+    override val section = Section.RECORDINGS
+    private lateinit var view: TwoColumn
     private val adapter = SimpleRowAdapter { row -> recordings.firstOrNull { it.id == row.id }?.let(::showActions) }
     private var recordings: List<RecordingEntity> = emptyList()
     private var filter = Filter.ALL
-    private val filterButtons = HashMap<Filter, Button>()
+    private var landed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySimpleListBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.title.setText(R.string.recordings_title)
-        binding.list.layoutManager = LinearLayoutManager(this)
-        binding.list.adapter = adapter
-        binding.list.itemAnimator = null
-
-        val labels = mapOf(
-            Filter.ALL to R.string.recordings_all,
-            Filter.SCHEDULED to R.string.recordings_scheduled,
-            Filter.COMPLETED to R.string.recordings_completed,
-            Filter.FAILED to R.string.recordings_failed,
-        )
-        Filter.entries.forEach { f ->
-            filterButtons[f] = addAction(getString(labels.getValue(f))) {
-                filter = f
-                render()
-            }
+        filter = savedInstanceState?.getString(STATE_FILTER)?.let { name -> Filter.entries.firstOrNull { it.name == name } } ?: Filter.ALL
+        view = TwoColumn(layoutInflater, chrome.sectionContent) { c ->
+            filter = Filter.valueOf(c.key)
+            render()
         }
-        addAction(getString(R.string.reminders_title)) { startActivity(Intent(this, RemindersActivity::class.java)) }
+        columns = view
+        setSectionContent(view.b.root)
+        view.b.title.setText(R.string.recordings_title)
+        view.b.list.layoutManager = LinearLayoutManager(this)
+        view.b.list.adapter = adapter
+        view.categories.activeKey = filter.name
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -71,24 +63,24 @@ class RecordingsActivity : ProtectedActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_FILTER, filter.name)
+    }
+
+    override fun onDestroy() {
+        view.release()
+        super.onDestroy()
+    }
+
     override fun onResume() {
         super.onResume()
-        val notes = mutableListOf(getString(R.string.recordings_saved_to, appContainer.recordings.directory().path))
-        if (!Alarms.exactAllowed(this)) notes += getString(R.string.recordings_inexact)
-        binding.notice.text = notes.joinToString("\n")
-        binding.notice.visibility = View.VISIBLE
+        view.b.subtitle.text = getString(R.string.recordings_saved_to, appContainer.recordings.directory().path)
+        view.b.notice.setText(R.string.recordings_inexact)
+        view.b.notice.visibility = if (Alarms.exactAllowed(this)) View.GONE else View.VISIBLE
     }
 
-    private fun addAction(label: String, onClick: () -> Unit): Button {
-        val button = Button(this, null, 0, R.style.Button_TV).apply {
-            text = label
-            setOnClickListener { onClick() }
-        }
-        binding.actions.addView(button, LinearLayout.LayoutParams(-2, -2).apply { marginStart = 12 })
-        return button
-    }
-
-    private fun matches(r: RecordingEntity) = when (filter) {
+    private fun matches(r: RecordingEntity, f: Filter) = when (f) {
         Filter.ALL -> true
         Filter.SCHEDULED -> r.status == RecordingStatus.SCHEDULED || r.status == RecordingStatus.RECORDING
         Filter.COMPLETED -> r.status == RecordingStatus.COMPLETED
@@ -96,19 +88,29 @@ class RecordingsActivity : ProtectedActivity() {
     }
 
     private fun render() {
-        filterButtons.forEach { (f, b) -> b.isActivated = f == filter }
-        val focusedId = binding.list.focusedChild?.let { binding.list.getChildItemId(it) }
-        val rows = recordings.filter(::matches).map { r ->
-            SimpleRow(r.id, "${statusLabel(r)}  ·  ${r.title}", detail(r))
+        val labels = mapOf(
+            Filter.ALL to R.string.recordings_all,
+            Filter.SCHEDULED to R.string.recordings_scheduled,
+            Filter.COMPLETED to R.string.recordings_completed,
+            Filter.FAILED to R.string.recordings_failed,
+        )
+        view.categories.submit(Filter.entries.map { f ->
+            Category(f.name, getString(labels.getValue(f)), recordings.count { matches(it, f) })
+        })
+        val focusedId = view.b.list.focusedChild?.let { view.b.list.getChildItemId(it) }
+        val rows = recordings.filter { matches(it, filter) }.map { r ->
+            SimpleRow(r.id, r.title, statusLabel(r), detail(r), highlight = r.status == RecordingStatus.RECORDING)
         }
         adapter.submit(rows)
-        binding.empty.setText(R.string.recordings_empty)
-        binding.empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        view.b.empty.setText(R.string.recordings_empty)
+        view.b.empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
         if (focusedId != null) {
             val pos = rows.indexOfFirst { it.id == focusedId }
-            if (pos >= 0) binding.list.post { binding.list.findViewHolderForAdapterPosition(pos)?.itemView?.requestFocus() }
-        } else if (!binding.actions.hasFocus() && rows.isNotEmpty()) {
-            binding.list.post { binding.list.getChildAt(0)?.requestFocus() }
+            if (pos >= 0) view.b.list.post { view.b.list.findViewHolderForAdapterPosition(pos)?.itemView?.requestFocus() }
+            else view.focusList()
+        } else if (!landed) {
+            landed = true
+            view.b.list.post { if (rows.isEmpty() || !view.focusList()) view.focusCategories() }
         }
     }
 
@@ -169,6 +171,10 @@ class RecordingsActivity : ProtectedActivity() {
             .setPositiveButton(R.string.delete) { _, _ -> delete() }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    companion object {
+        private const val STATE_FILTER = "filter"
     }
 
     private fun play(r: RecordingEntity) {

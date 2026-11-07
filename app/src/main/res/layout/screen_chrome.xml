@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rail on the left, the section's own content to its right. Used by SectionActivity. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/overscan_h"
+    android:paddingEnd="@dimen/overscan_end">
+
+    <include
+        android:id="@+id/rail"
+        layout="@layout/view_rail" />
+
+    <FrameLayout
+        android:id="@+id/sectionContent"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+</LinearLayout>

@@ -18,35 +18,46 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.openstream.tv.R
 import com.openstream.tv.appContainer
 import com.openstream.tv.data.db.ReminderEntity
-import com.openstream.tv.databinding.ActivitySimpleListBinding
-import com.openstream.tv.ui.parental.ProtectedActivity
-import com.openstream.tv.ui.recordings.SimpleRow
-import com.openstream.tv.ui.recordings.SimpleRowAdapter
+import com.openstream.tv.ui.chrome.Category
+import com.openstream.tv.ui.chrome.Section
+import com.openstream.tv.ui.chrome.SectionActivity
+import com.openstream.tv.ui.chrome.SimpleRow
+import com.openstream.tv.ui.chrome.SimpleRowAdapter
+import com.openstream.tv.ui.chrome.TwoColumn
 import kotlinx.coroutines.launch
 import java.util.Date
 
-class RemindersActivity : ProtectedActivity() {
+class RemindersActivity : SectionActivity() {
 
-    private lateinit var binding: ActivitySimpleListBinding
+    private enum class Filter { ALL, TODAY, LATER }
+
+    override val section = Section.REMINDERS
+    private lateinit var view: TwoColumn
     private var reminders: List<ReminderEntity> = emptyList()
     private val adapter = SimpleRowAdapter { row -> reminders.firstOrNull { it.id == row.id }?.let(::confirmDelete) }
     private var overlayButton: Button? = null
+    private var filter = Filter.ALL
+    private var landed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySimpleListBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.title.setText(R.string.reminders_title)
-        binding.list.layoutManager = LinearLayoutManager(this)
-        binding.list.adapter = adapter
-        binding.list.itemAnimator = null
+        view = TwoColumn(layoutInflater, chrome.sectionContent) { c ->
+            filter = Filter.valueOf(c.key)
+            render()
+        }
+        columns = view
+        setSectionContent(view.b.root)
+        view.b.title.setText(R.string.reminders_title)
+        view.b.list.layoutManager = LinearLayoutManager(this)
+        view.b.list.adapter = adapter
+        view.categories.activeKey = filter.name
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            overlayButton = Button(this, null, 0, R.style.Button_TV).apply {
+            overlayButton = Button(this, null, 0, R.style.Button_TV_Small).apply {
                 setText(R.string.reminders_allow_popups)
                 setOnClickListener { openOverlaySettings() }
             }
-            binding.actions.addView(overlayButton, LinearLayout.LayoutParams(-2, -2))
+            view.b.actions.addView(overlayButton, LinearLayout.LayoutParams(-2, -2))
         }
 
         lifecycleScope.launch {
@@ -59,12 +70,17 @@ class RemindersActivity : ProtectedActivity() {
         }
     }
 
+    override fun onDestroy() {
+        view.release()
+        super.onDestroy()
+    }
+
     override fun onResume() {
         super.onResume()
         val blocked = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !Settings.canDrawOverlays(this)
         overlayButton?.visibility = if (blocked) View.VISIBLE else View.GONE
-        binding.notice.setText(if (blocked) R.string.reminders_overlay_notice else R.string.reminders_notice)
-        binding.notice.visibility = View.VISIBLE
+        view.b.notice.setText(if (blocked) R.string.reminders_overlay_notice else R.string.reminders_notice)
+        view.b.notice.visibility = View.VISIBLE
     }
 
     private fun openOverlaySettings() {
@@ -77,21 +93,42 @@ class RemindersActivity : ProtectedActivity() {
         }
     }
 
+    private fun endOfToday(): Long = java.util.Calendar.getInstance().apply {
+        set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+        add(java.util.Calendar.DAY_OF_MONTH, 1)
+    }.timeInMillis
+
+    private fun matches(r: ReminderEntity, f: Filter, midnight: Long) = when (f) {
+        Filter.ALL -> true
+        Filter.TODAY -> r.programStart < midnight
+        Filter.LATER -> r.programStart >= midnight
+    }
+
     private fun render() {
+        val midnight = endOfToday()
+        val names = mapOf(Filter.ALL to R.string.reminders_all, Filter.TODAY to R.string.reminders_today, Filter.LATER to R.string.reminders_later)
+        view.categories.submit(Filter.entries.map { f ->
+            Category(f.name, getString(names.getValue(f)), reminders.count { matches(it, f, midnight) })
+        })
         val day = DateFormat.getMediumDateFormat(this)
         val time = DateFormat.getTimeFormat(this)
-        val rows = reminders.map { r ->
+        val rows = reminders.filter { matches(it, filter, midnight) }.map { r ->
             SimpleRow(
                 r.id, r.title,
-                "${r.channelName}  ·  ${day.format(Date(r.programStart))} ${time.format(Date(r.programStart))}  ·  " +
-                    getString(R.string.reminder_alert_at, time.format(Date(r.remindAt))),
+                "${day.format(Date(r.programStart))} ${time.format(Date(r.programStart))}",
+                "${r.channelName}  ·  " + getString(R.string.reminder_alert_at, time.format(Date(r.remindAt))),
             )
         }
         adapter.submit(rows)
-        binding.empty.setText(R.string.reminders_empty)
-        binding.empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
-        if (rows.isNotEmpty() && !binding.list.hasFocus() && !binding.actions.hasFocus()) {
-            binding.list.post { binding.list.getChildAt(0)?.requestFocus() }
+        view.b.subtitle.text = resources.getQuantityString(R.plurals.reminders_count, reminders.size, reminders.size)
+        view.b.empty.setText(R.string.reminders_empty)
+        view.b.empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        if (!landed) {
+            landed = true
+            view.b.list.post { if (rows.isEmpty() || !view.focusList()) view.focusCategories() }
+        } else if (view.b.list.hasFocus() && view.b.list.focusedChild == null) {
+            view.focusList()
         }
     }
 

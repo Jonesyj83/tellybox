@@ -15,6 +15,15 @@
     <string name="playlists_empty">No playlists. Choose Add playlist to set one up.</string>
     <string name="groups_empty">This playlist has no groups yet. Refresh it from the playlists screen first.</string>
     <string name="group_channels_empty">No channels in this group.</string>
+    <string name="vod_movies">Movies</string>
+    <string name="vod_series">Series</string>
+    <string name="vod_all_movies">All movies</string>
+    <string name="vod_all_series">All series</string>
+    <string name="vod_empty_group">No titles in this category.</string>
+    <plurals name="vod_titles">
+        <item quantity="one">%1$d title</item>
+        <item quantity="other">%1$d titles</item>
+    </plurals>
     <string name="vod_empty_all">Nothing here yet. Movies and series come from Xtream playlists, and from M3U lists that include them.</string>
     <string name="empty_group">Nothing here.</string>
     <string name="empty_favorites">Press Menu on a channel, or hold OK on the preview, to add it to Favorites.</string>
@@ -26,6 +35,9 @@
 
     <!-- playlists -->
     <string name="playlists_title">Playlists</string>
+    <string name="playlists_all">All playlists</string>
+    <string name="playlists_enabled">Enabled</string>
+    <string name="playlists_disabled">Disabled</string>
     <string name="playlist_never_updated">Not loaded yet</string>
     <string name="playlist_updated">Updated %1$s</string>
     <string name="playlist_failed">Last update failed: %1$s</string>
@@ -196,6 +208,13 @@
 
     <!-- reminders -->
     <string name="reminders_title">Reminders</string>
+    <string name="reminders_all">All reminders</string>
+    <string name="reminders_today">Today</string>
+    <string name="reminders_later">Later</string>
+    <plurals name="reminders_count">
+        <item quantity="one">%1$d reminder set</item>
+        <item quantity="other">%1$d reminders set</item>
+    </plurals>
     <string name="reminders_empty">No reminders. Press Menu on an upcoming programme in the TV guide and choose Remind me.</string>
     <string name="reminders_notice">A popup appears before each programme starts. OK on a reminder deletes it.</string>
     <string name="reminders_overlay_notice">While another app is on screen, Android only lets OpenStream pop up if it may display over other apps. Otherwise you get a notification. OK on a reminder deletes it.</string>

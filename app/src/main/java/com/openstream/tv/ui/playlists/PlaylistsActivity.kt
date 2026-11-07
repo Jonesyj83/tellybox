@@ -3,56 +3,134 @@ package com.openstream.tv.ui.playlists
 import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateUtils
-import android.view.LayoutInflater
-import android.view.ViewGroup
+import android.view.View
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import com.openstream.tv.R
 import com.openstream.tv.appContainer
 import com.openstream.tv.data.db.PlaylistEntity
 import com.openstream.tv.data.db.PlaylistType
-import com.openstream.tv.databinding.ActivityPlaylistsBinding
-import com.openstream.tv.databinding.ItemPlaylistBinding
+import com.openstream.tv.ui.chrome.Category
+import com.openstream.tv.ui.chrome.Section
+import com.openstream.tv.ui.chrome.SectionActivity
+import com.openstream.tv.ui.chrome.SimpleRow
+import com.openstream.tv.ui.chrome.SimpleRowAdapter
+import com.openstream.tv.ui.chrome.TwoColumn
 import kotlinx.coroutines.launch
 
-class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
+class PlaylistsActivity : SectionActivity() {
 
-    private lateinit var binding: ActivityPlaylistsBinding
-    private val adapter = PlaylistAdapter { showActions(it) }
+    private enum class Filter { ALL, ENABLED, DISABLED }
+
+    override val section = Section.PLAYLISTS
+    private lateinit var view: TwoColumn
+    private lateinit var refreshAllButton: Button
+    private lateinit var addButton: Button
+    private val adapter = SimpleRowAdapter { row -> playlists.firstOrNull { it.id == row.id }?.let { showActions(it) } }
+    private var playlists: List<PlaylistEntity> = emptyList()
+    private var details: Map<Long, String> = emptyMap()
+    private var filter = Filter.ALL
+    private var landed = false
+
+    /** Progress and results of refreshes; shown under the header. */
+    private var status: CharSequence
+        get() = view.b.notice.text
+        set(value) {
+            view.b.notice.text = value
+            view.b.notice.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityPlaylistsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        binding.list.layoutManager = LinearLayoutManager(this)
-        binding.list.adapter = adapter
-        binding.addButton.setOnClickListener { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
-        binding.refreshAllButton.setOnClickListener { refreshAll() }
+        view = TwoColumn(layoutInflater, chrome.sectionContent) { c ->
+            filter = Filter.valueOf(c.key)
+            render()
+        }
+        columns = view
+        setSectionContent(view.b.root)
+        view.b.title.setText(R.string.playlists_title)
+        view.b.list.layoutManager = LinearLayoutManager(this)
+        view.b.list.adapter = adapter
+        view.categories.activeKey = filter.name
+        refreshAllButton = action(getString(R.string.refresh_all)) { refreshAll() }
+        addButton = action(getString(R.string.action_add_playlist)) { startActivity(Intent(this, AddPlaylistActivity::class.java)) }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.playlists.observePlaylists().collect { list ->
-                    adapter.submitList(list)
-                    adapter.details = list.associate { playlist ->
-                        val db = appContainer.database
+                    val db = appContainer.database
+                    details = list.associate { playlist ->
                         playlist.id to "${db.channels().countForPlaylist(playlist.id)} channels · ${db.groups().getForPlaylist(playlist.id).size} groups · ${if (db.epg().getSourcesForPlaylist(playlist.id).any { it.enabled }) "Guide attached" else "No guide"}"
                     }
-                    adapter.notifyDataSetChanged()
-                    binding.empty.visibility = if (list.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-                    binding.refreshAllButton.isEnabled = list.isNotEmpty()
-                    if (list.isEmpty()) binding.addButton.requestFocus()
+                    playlists = list
+                    refreshAllButton.isEnabled = list.isNotEmpty()
+                    render()
+                    if (list.isEmpty()) addButton.requestFocus()
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        view.release()
+        super.onDestroy()
+    }
+
+    private fun action(label: String, onClick: () -> Unit): Button {
+        val button = Button(this, null, 0, R.style.Button_TV_Small).apply {
+            text = label
+            setOnClickListener { onClick() }
+        }
+        view.b.actions.addView(button, LinearLayout.LayoutParams(-2, -2).apply { marginStart = (8 * resources.displayMetrics.density).toInt() })
+        return button
+    }
+
+    private fun matches(p: PlaylistEntity, f: Filter) = when (f) {
+        Filter.ALL -> true
+        Filter.ENABLED -> p.enabled
+        Filter.DISABLED -> !p.enabled
+    }
+
+    private fun render() {
+        val names = mapOf(Filter.ALL to R.string.playlists_all, Filter.ENABLED to R.string.playlists_enabled, Filter.DISABLED to R.string.playlists_disabled)
+        view.categories.submit(Filter.entries.map { f -> Category(f.name, getString(names.getValue(f)), playlists.count { matches(it, f) }) })
+        val focusedId = view.b.list.focusedChild?.let { view.b.list.getChildItemId(it) }
+        val rows = playlists.filter { matches(it, filter) }.map { p ->
+            SimpleRow(p.id, p.name, typeLabel(p.type), listOf(stateLine(p), details[p.id].orEmpty()).filter { it.isNotEmpty() }.joinToString("\n"), dimmed = !p.enabled)
+        }
+        adapter.submit(rows)
+        view.b.empty.setText(R.string.playlists_empty)
+        view.b.empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        if (focusedId != null) {
+            val pos = rows.indexOfFirst { it.id == focusedId }
+            if (pos >= 0) view.b.list.post { view.b.list.findViewHolderForAdapterPosition(pos)?.itemView?.requestFocus() }
+        } else if (!landed && rows.isNotEmpty()) {
+            landed = true
+            view.b.list.post { view.focusList() }
+        }
+    }
+
+    private fun typeLabel(t: PlaylistType) = when (t) {
+        PlaylistType.M3U -> "M3U"
+        PlaylistType.XTREAM -> "Xtream Codes"
+        PlaylistType.STALKER -> "Stalker"
+    }
+
+    private fun stateLine(p: PlaylistEntity): String = when {
+        !p.enabled -> getString(R.string.playlist_disabled)
+        p.lastError != null -> getString(R.string.playlist_failed, p.lastError)
+        p.lastUpdated == 0L -> getString(R.string.playlist_never_updated)
+        System.currentTimeMillis() - p.lastUpdated < 60_000 -> getString(R.string.playlist_updated_now)
+        else -> getString(
+            R.string.playlist_updated,
+            DateUtils.getRelativeTimeSpanString(p.lastUpdated, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS),
+        )
     }
 
     private fun showActions(playlist: PlaylistEntity, focusIndex: Int = 0) {
@@ -122,7 +200,7 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                     macAddress = mac?.text?.toString()?.trim() ?: playlist.macAddress,
                     userAgent = ua.text.toString().trim().ifEmpty { null })
                 dialog.dismiss()
-                binding.status.text = "Updating ${edited.name}…"
+                status = "Updating ${edited.name}…"
                 val container = appContainer
                 container.appScope.launch {
                     val result = container.playlists.edit(edited)
@@ -132,7 +210,7 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
                     result.onSuccess { container.epg.refreshForPlaylist(edited.id) }
                     runOnUiThread {
                         if (!isDestroyed) {
-                            binding.status.text = result.fold({ "Playlist updated" }, { "Saved; re-fetch failed: ${it.message}" })
+                            status = result.fold({ "Playlist updated" }, { "Saved; re-fetch failed: ${it.message}" })
                         }
                     }
                 }
@@ -153,83 +231,42 @@ class PlaylistsActivity : com.openstream.tv.ui.parental.ProtectedActivity() {
 
     private fun refresh(playlist: PlaylistEntity) {
         val container = appContainer
-        binding.status.text = getString(R.string.playlist_refreshing, playlist.name)
+        status = getString(R.string.playlist_refreshing, playlist.name)
         // Run in the app scope so leaving the screen doesn't abandon a half-done import.
         container.appScope.launch {
             val result = container.playlists.refresh(playlist.id)
             result.onSuccess { container.epg.refreshForPlaylist(playlist.id) }
             runOnUiThread {
                 if (isDestroyed) return@runOnUiThread
-                binding.status.text = ""
+                status = ""
                 val msg = result.fold(
                     onSuccess = {
                         getString(R.string.playlist_refresh_done, playlist.name, it.describe(this@PlaylistsActivity))
                     },
                     onFailure = { getString(R.string.playlist_refresh_failed, playlist.name, it.message ?: "") },
                 )
-                binding.status.text = msg
+                status = msg
             }
         }
     }
 
     private fun refreshAll() {
-        val playlists = adapter.currentList.toList()
-        binding.refreshAllButton.isEnabled = false
+        val playlists = playlists.toList()
+        refreshAllButton.isEnabled = false
         val container = appContainer
         container.appScope.launch {
             val results = mutableListOf<String>()
             playlists.forEachIndexed { index, playlist ->
-                runOnUiThread { if (!isDestroyed) binding.status.text = "Refreshing ${index + 1}/${playlists.size}: ${playlist.name}…" }
+                runOnUiThread { if (!isDestroyed) status = "Refreshing ${index + 1}/${playlists.size}: ${playlist.name}…" }
                 val result = container.playlists.refresh(playlist.id)
                 result.onSuccess { container.epg.refreshForPlaylist(playlist.id) }
                 results += result.fold({ "${playlist.name}: success" }, { "${playlist.name}: failed — ${it.message}" })
             }
             runOnUiThread { if (!isDestroyed) {
-                binding.status.text = results.joinToString("\n")
-                binding.refreshAllButton.isEnabled = true
+                status = results.joinToString("\n")
+                refreshAllButton.isEnabled = true
             } }
         }
     }
 }
 
-private class PlaylistAdapter(
-    private val onClick: (PlaylistEntity) -> Unit,
-) : ListAdapter<PlaylistEntity, PlaylistAdapter.Holder>(Diff) {
-
-    var details: Map<Long, String> = emptyMap()
-
-    class Holder(val b: ItemPlaylistBinding) : RecyclerView.ViewHolder(b.root)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        Holder(ItemPlaylistBinding.inflate(LayoutInflater.from(parent.context), parent, false))
-
-    override fun onBindViewHolder(holder: Holder, position: Int) {
-        val p = getItem(position)
-        val ctx = holder.b.root.context
-        holder.b.name.text = p.name
-        holder.b.type.text = when (p.type) {
-            PlaylistType.M3U -> "M3U"
-            PlaylistType.XTREAM -> "Xtream Codes"
-            PlaylistType.STALKER -> "Stalker"
-        }
-        holder.b.detail.text = when {
-            !p.enabled -> ctx.getString(R.string.playlist_disabled)
-            p.lastError != null -> ctx.getString(R.string.playlist_failed, p.lastError)
-            p.lastUpdated == 0L -> ctx.getString(R.string.playlist_never_updated)
-            System.currentTimeMillis() - p.lastUpdated < 60_000 -> ctx.getString(R.string.playlist_updated_now)
-            else -> ctx.getString(
-                R.string.playlist_updated,
-                DateUtils.getRelativeTimeSpanString(p.lastUpdated, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS),
-            )
-        }
-        holder.b.detail.append("\n" + details[p.id].orEmpty())
-        holder.b.detail.append("\nLast refreshed: " + if (p.lastUpdated == 0L) "Never" else java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastUpdated)))
-        holder.b.root.alpha = if (p.enabled) 1f else 0.55f
-        holder.b.root.setOnClickListener { onClick(p) }
-    }
-
-    private object Diff : DiffUtil.ItemCallback<PlaylistEntity>() {
-        override fun areItemsTheSame(a: PlaylistEntity, b: PlaylistEntity) = a.id == b.id
-        override fun areContentsTheSame(a: PlaylistEntity, b: PlaylistEntity) = a == b
-    }
-}
