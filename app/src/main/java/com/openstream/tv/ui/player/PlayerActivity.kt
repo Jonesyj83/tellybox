@@ -69,7 +69,12 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
     private var archivePosition = 0L
 
     private val handler = Handler(Looper.getMainLooper())
-    private val hideBanner = Runnable { binding.banner.visibility = View.GONE }
+    /** The banner and its buttons are one overlay: they appear and disappear together. */
+    private val hideBanner = Runnable {
+        binding.banner.visibility = View.GONE
+        binding.recordButton.visibility = View.GONE
+        binding.sleepButton.visibility = View.GONE
+    }
 
     private var nameTokens = ""
     private fun displayName(channel: com.openstream.tv.data.db.ChannelEntity) =
@@ -460,6 +465,10 @@ class PlayerActivity : com.openstream.tv.ui.ScaledActivity(), com.openstream.tv.
         binding.bannerLogo.setImageDrawable(null)
         if (!channel.logoUrl.isNullOrBlank()) binding.bannerLogo.load(channel.logoUrl)
         binding.banner.visibility = View.VISIBLE
+        binding.sleepButton.visibility = View.VISIBLE
+        if (!catchup && !fileMode && current?.kind == ContentKind.LIVE) {
+            binding.recordButton.visibility = View.VISIBLE
+        }
         handler.removeCallbacks(hideBanner)
         handler.postDelayed(hideBanner, BANNER_MS)
     }
