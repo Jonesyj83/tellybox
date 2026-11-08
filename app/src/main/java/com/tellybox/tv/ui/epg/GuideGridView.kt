@@ -10,6 +10,7 @@ import android.text.TextUtils
 import android.text.format.DateFormat
 import android.util.AttributeSet
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.tellybox.tv.R
@@ -239,6 +240,68 @@ class GuideGridView @JvmOverloads constructor(
         blocksFor(row, time - TimeUnit.HOURS.toMillis(12), time + SLOT).firstOrNull { time >= it.start && time < it.stop }
 
     val focusedBlock: GuideBlock? get() = blockAt(focusedRow, focusTime)
+
+// Touch, for phones, tablets and anything with a pointer. The grid is drawn by hand, so
+    // dragging has to move it by hand too: a finger drag pans time, a vertical drag scrolls
+    // channels, and a tap picks the programme under it.
+    private var touchDownX = 0f
+    private var touchDownY = 0f
+    private var touchStartRow = 0
+    private var touchStartTime = 0L
+    private var dragging = false
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!isEnabled) return false
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                touchDownX = event.x
+                touchDownY = event.y
+                touchStartRow = firstRow
+                touchStartTime = viewStart
+                dragging = false
+                parent?.requestDisallowInterceptTouchEvent(true)
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.x - touchDownX
+                val dy = event.y - touchDownY
+                if (!dragging && kotlin.math.hypot(dx, dy) > 12 * dp) dragging = true
+                if (dragging) {
+                    val rows = (-dy / rowHeight).toInt()
+                    val maxFirst = max(0, channels.size - visibleRows)
+                    firstRow = (touchStartRow + rows).coerceIn(0, maxFirst)
+                    val minuteMs = 60_000f
+                    val shiftMs = (-dx / pxPerMinute * minuteMs).toLong()
+                    viewStart = (floorSlot(touchStartTime + shiftMs)).coerceIn(minTime, maxTime)
+                    lastReportedRows = -1 to -1
+                    invalidate()
+                }
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                if (!dragging) {
+                    val row = firstRow + ((event.y - headerHeight) / rowHeight).toInt()
+                    if (event.y >= headerHeight && row in channels.indices) {
+                        focusedRow = row
+                        focusTime = viewStart +
+                            ((event.x - channelWidth) / pxPerMinute * 60_000f).toLong()
+                        blockAt(row, focusTime)?.let { callback?.onSelect(row, it) }
+                        notifyFocus()
+                        invalidate()
+                    }
+                }
+                parent?.requestDisallowInterceptTouchEvent(false)
+                dragging = false
+                return true
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                parent?.requestDisallowInterceptTouchEvent(false)
+                dragging = false
+                return true
+            }
+        }
+        return super.onTouchEvent(event)
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (channels.isEmpty()) return super.onKeyDown(keyCode, event)
