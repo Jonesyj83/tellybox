@@ -21,6 +21,7 @@ import com.tellybox.tv.appContainer
 import com.tellybox.tv.data.db.PlaylistEntity
 import com.tellybox.tv.data.db.PlaylistType
 import com.tellybox.tv.data.parser.stalker.StalkerClient
+import com.tellybox.tv.data.parser.stalker.StalkerIdentity
 import com.tellybox.tv.databinding.ActivityAddPlaylistBinding
 import com.tellybox.tv.databinding.ItemChoiceBinding
 import kotlinx.coroutines.async
@@ -33,6 +34,7 @@ class AddPlaylistActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
     private lateinit var binding: ActivityAddPlaylistBinding
     private var mode: Mode? = null
     private var pickedUri: Uri? = null
+    private var stbType: String? = null
 
     private val openDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@registerForActivityResult
@@ -75,6 +77,19 @@ class AddPlaylistActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
         bindChoice(binding.typeXtream, R.string.type_xtream, R.string.type_xtream_desc, Mode.XTREAM)
         bindChoice(binding.typeStalker, R.string.type_stalker, R.string.type_stalker_desc, Mode.STALKER)
 
+        binding.stbTypeButton.setOnClickListener { pickStbType() }
+        binding.macInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(e: android.text.Editable?) {
+                val mac = e?.toString()?.trim().orEmpty()
+                if (!StalkerClient.isValidMac(mac)) return
+                val identity = StalkerIdentity(StalkerClient.normalizeMac(mac))
+                binding.serialInput.hint = identity.serial
+                binding.deviceIdInput.hint = identity.deviceId
+                binding.deviceId2Input.hint = identity.deviceId2
+            }
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
+        })
         binding.pickFileButton.setOnClickListener { pickFile() }
         binding.saveButton.setOnClickListener { save() }
         binding.backButton.setOnClickListener { showTypeStep() }
@@ -143,8 +158,47 @@ class AddPlaylistActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
             Mode.XTREAM -> getString(R.string.field_server_hint)
             Mode.STALKER -> getString(R.string.field_portal_hint)
         }
+        if (m == Mode.STALKER) updateStbLabel()
         if (m == Mode.M3U_FILE) binding.urlLabel.setText(R.string.field_file_path)
         if (m == Mode.M3U_FILE) binding.pickFileButton.requestFocus() else binding.urlInput.requestFocus()
+    }
+
+
+    private fun updateStbLabel() {
+        binding.stbTypeButton.text = stbType ?: getString(R.string.stb_type_default)
+    }
+
+    /** Portals are provisioned against a particular box, so let the user pick which one to be. */
+    private fun pickStbType() {
+        val options = StalkerIdentity.STB_TYPES + getString(R.string.stb_type_custom)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.stb_custom_title)
+            .setItems(options.toTypedArray()) { _, which ->
+                if (which < StalkerIdentity.STB_TYPES.size) {
+                    val picked = StalkerIdentity.STB_TYPES[which]
+                    stbType = picked.takeIf { it != StalkerIdentity.DEFAULT_STB_TYPE }
+                    updateStbLabel()
+                    binding.stbTypeButton.requestFocus()
+                } else askCustomStbType()
+            }
+            .show()
+    }
+
+    private fun askCustomStbType() {
+        val input = android.widget.EditText(this).apply {
+            hint = getString(R.string.stb_custom_hint)
+            setText(stbType.orEmpty())
+            setTextColor(getColor(R.color.text_primary))
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.stb_custom_title)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                stbType = input.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+                updateStbLabel()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun pickFile() {
@@ -225,6 +279,10 @@ class AddPlaylistActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
                     type = PlaylistType.STALKER,
                     url = url,
                     macAddress = StalkerClient.normalizeMac(mac),
+                    stalkerStbType = stbType,
+                    stalkerSerial = text(binding.serialInput).ifEmpty { null },
+                    stalkerDeviceId = text(binding.deviceIdInput).ifEmpty { null },
+                    stalkerDeviceId2 = text(binding.deviceId2Input).ifEmpty { null },
                 )
             }
         }

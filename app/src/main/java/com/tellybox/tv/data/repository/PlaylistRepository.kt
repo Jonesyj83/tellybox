@@ -344,7 +344,16 @@ class StalkerClientCache(private val http: OkHttpClient) {
     @Synchronized
     fun get(playlist: PlaylistEntity): StalkerClient =
         clients.getOrPut(playlist.id) {
-            StalkerClient(playlist.url, playlist.macAddress.orEmpty(), http, playlist.userAgent)
+            StalkerClient(
+                portalUrl = playlist.url,
+                macAddress = playlist.macAddress.orEmpty(),
+                http = http,
+                userAgent = playlist.userAgent,
+                stbType = playlist.stalkerStbType,
+                serial = playlist.stalkerSerial,
+                deviceId = playlist.stalkerDeviceId,
+                deviceId2 = playlist.stalkerDeviceId2,
+            )
         }
 
     @Synchronized

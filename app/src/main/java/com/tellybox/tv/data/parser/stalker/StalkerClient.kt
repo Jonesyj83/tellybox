@@ -20,6 +20,7 @@ import okhttp3.Request
 import java.io.IOException
 import java.net.URLEncoder
 import java.security.MessageDigest
+import java.util.TimeZone
 
 data class StalkerGenre(val id: String, val title: String)
 
@@ -47,8 +48,19 @@ class StalkerClient(
     macAddress: String,
     private val http: OkHttpClient,
     private val userAgent: String? = null,
+    stbType: String? = null,
+    serial: String? = null,
+    deviceId: String? = null,
+    deviceId2: String? = null,
 ) {
     val mac: String = normalizeMac(macAddress)
+    private val identity = StalkerIdentity(
+        mac = mac,
+        stbType = stbType?.takeIf { it.isNotBlank() } ?: StalkerIdentity.DEFAULT_STB_TYPE,
+        serialOverride = serial,
+        deviceIdOverride = deviceId,
+        deviceId2Override = deviceId2,
+    )
     private val candidates: List<HttpUrl> = endpointCandidates(portalUrl)
     private val referer = portalUrl.trim()
     private val lock = Mutex()
@@ -128,9 +140,9 @@ class StalkerClient(
 
         val req = Request.Builder().url(url)
             .header("User-Agent", userAgent ?: USER_AGENT)
-            .header("X-User-Agent", "Model: MAG250; Link: WiFi")
+            .header("X-User-Agent", "Model: ${identity.model}; Link: WiFi")
             .header("Referer", referer)
-            .header("Cookie", "mac=${URLEncoder.encode(mac, "UTF-8")}; stb_lang=en; timezone=UTC")
+            .header("Cookie", "mac=${URLEncoder.encode(mac, "UTF-8")}; stb_lang=en; timezone=${TimeZone.getDefault().id}; sn=${identity.serial}")
             .apply { token?.let { header("Authorization", "Bearer $it") } }
             .build()
 
@@ -146,25 +158,22 @@ class StalkerClient(
         }
     }
 
-    private fun profileParams(): Map<String, String> {
-        val sn = md5(mac).take(13).uppercase()
-        val deviceId = md5("$mac-device").uppercase()
-        return mapOf(
-            "hd" to "1",
-            "ver" to "ImageDescription: 0.2.18-r23-250; ImageDate: Thu Sep 13 11:31:16 EEST 2018; PORTAL version: 5.6.2; API Version: JS API version: 343",
-            "num_banks" to "2",
-            "sn" to sn,
-            "stb_type" to "MAG250",
-            "image_version" to "218",
-            "video_out" to "hdmi",
-            "device_id" to deviceId,
-            "device_id2" to deviceId,
-            "signature" to "",
-            "auth_second_step" to "1",
-            "hw_version" to "1.7-BD-00",
-            "not_valid_token" to "0",
-        )
-    }
+    private fun profileParams(): Map<String, String> = mapOf(
+        "hd" to "1",
+        "ver" to "ImageDescription: 0.2.18-r23-250; ImageDate: Thu Sep 13 11:31:16 EEST 2018; PORTAL version: 5.6.2; API Version: JS API version: 343",
+        "num_banks" to "2",
+        "sn" to identity.serial,
+        "stb_type" to identity.model,
+        "image_version" to "218",
+        "video_out" to "hdmi",
+        "device_id" to identity.deviceId,
+        "device_id2" to identity.deviceId2,
+        "signature" to identity.signature,
+        "auth_second_step" to "1",
+        "hw_version" to "1.7-BD-00",
+        "hw_version_2" to identity.hwVersion2,
+        "not_valid_token" to "0",
+    )
 
     companion object {
         private const val USER_AGENT =

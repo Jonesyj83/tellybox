@@ -30,6 +30,11 @@ data class PlaylistEntity(
     val createdAt: Long = System.currentTimeMillis(),
     /** Simultaneous streams the provider allows, when it says (Xtream accounts do). */
     val maxConnections: Int? = null,
+    /** Stalker only: which box to pretend to be, and identity fields some portals pin per box. */
+    val stalkerStbType: String? = null,
+    val stalkerSerial: String? = null,
+    val stalkerDeviceId: String? = null,
+    val stalkerDeviceId2: String? = null,
 )
 
 @Entity(

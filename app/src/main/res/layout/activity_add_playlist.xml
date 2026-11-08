@@ -162,6 +162,47 @@
                         android:layout_marginBottom="12dp"
                         android:hint="@string/field_mac_hint"
                         android:inputType="textCapCharacters" />
+
+                    <TextView style="@style/Text.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/field_stb_type" />
+                    <TextView
+                        android:id="@+id/stbTypeButton"
+                        style="@style/Input.TV"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:text="@string/stb_type_default" />
+
+                    <TextView style="@style/Text.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/field_serial" />
+                    <EditText
+                        android:id="@+id/serialInput"
+                        style="@style/Input.TV"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:hint="@string/field_serial_hint"
+                        android:inputType="textCapCharacters" />
+
+                    <TextView style="@style/Text.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/field_device_id" />
+                    <EditText
+                        android:id="@+id/deviceIdInput"
+                        style="@style/Input.TV"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:hint="@string/field_device_id_hint"
+                        android:inputType="textCapCharacters" />
+
+                    <TextView style="@style/Text.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/field_device_id2" />
+                    <EditText
+                        android:id="@+id/deviceId2Input"
+                        style="@style/Input.TV"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:hint="@string/field_device_id2_hint"
+                        android:inputType="textCapCharacters" />
                 </LinearLayout>
 
                 <LinearLayout

@@ -92,6 +92,17 @@
     <string name="field_password">Password</string>
     <string name="field_portal">Portal URL</string>
     <string name="field_portal_hint">http://example.com/c/</string>
+    <string name="field_stb_type">Box type</string>
+    <string name="stb_type_default">MAG250 (default)</string>
+    <string name="stb_type_custom">Custom…</string>
+    <string name="field_serial">Serial number</string>
+    <string name="field_serial_hint">Leave blank to derive from the MAC</string>
+    <string name="field_device_id">Device ID 1</string>
+    <string name="field_device_id_hint">Leave blank to derive from the MAC</string>
+    <string name="field_device_id2">Device ID 2</string>
+    <string name="field_device_id2_hint">Leave blank to use device ID 1</string>
+    <string name="stb_custom_title">Box type</string>
+    <string name="stb_custom_hint">e.g. MAG254</string>
     <string name="field_mac">MAC address</string>
     <string name="field_mac_hint">00:1A:79:00:00:00</string>
     <string name="field_epg">TV guide URL (optional)</string>
