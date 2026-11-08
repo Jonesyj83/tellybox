@@ -173,8 +173,16 @@ class TimeshiftSessionTest {
         waitFor("bytes") { s.buffer.head > 0 }
         provider.refuse = true
         first.drop()
+        // The writer notices the dropped connection on its own thread, so give it a moment
+        // rather than assuming it has already happened by the time we read.
         val reader = s.buffer.Cursor(s.buffer.head)
-        val error = runCatching { s.buffer.read(reader, ByteArray(10), 0, 10) }.exceptionOrNull()
+        var error: Throwable? = null
+        val deadline = System.currentTimeMillis() + 5_000
+        while (System.currentTimeMillis() < deadline) {
+            error = runCatching { s.buffer.read(reader, ByteArray(10), 0, 10) }.exceptionOrNull()
+            if (error is IOException) break
+            Thread.sleep(25)
+        }
         assertTrue("got $error", error is IOException)
         reader.close()
         // Timeshift itself is still fine: the buffer is kept and going live starts a new connection.

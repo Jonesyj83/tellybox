@@ -30,6 +30,10 @@ import com.tellybox.tv.databinding.ActivityMainBinding
 import com.tellybox.tv.player.Playback
 import com.tellybox.tv.player.PlaybackErrors
 import com.tellybox.tv.player.Player
+import com.tellybox.tv.player.timeshift.TimeshiftMode
+import com.tellybox.tv.player.timeshift.TimeshiftSessions
+import com.tellybox.tv.player.timeshift.TimeshiftUnavailable
+import com.tellybox.tv.player.timeshift.TimeshiftUnsupportedException
 import com.tellybox.tv.ui.channels.FocusTarget
 import com.tellybox.tv.ui.channels.GroupAdapter
 import com.tellybox.tv.ui.channels.GroupSelection
@@ -428,8 +432,20 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
         override fun onPlayerError(error: PlaybackException) {
             val url = previewUrl
             val ch = previewChannel
+            val session = previewPlayer?.timeshift
+            if (session != null && url != null && ch != null) {
+                val unsupported = session.unavailable == TimeshiftUnavailable.UnsupportedStream ||
+                    generateSequence<Throwable>(error) { it.cause }.any { it is TimeshiftUnsupportedException }
+                if (unsupported) {
+                    // Not something the buffer can hold; play it the ordinary way, as the player does.
+                    lifecycleScope.launch {
+                        previewPlayer?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer)
+                    }
+                    return
+                }
+            }
             // Extensionless URLs are often HLS underneath; give that one more go, like the player does.
-            if (!triedHls && url != null && ch != null && Player.guessMimeType(url) == null) {
+            if (!triedHls && url != null && ch != null && Player.guessMimeType(url) == null && session?.isTs != true) {
                 triedHls = true
                 lifecycleScope.launch {
                     previewPlayer?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer, forceHls = true)
@@ -502,7 +518,7 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
             try {
                 val url = appContainer.channels.resolveStreamUrl(stored)
                 previewUrl = url
-                player.play(url, channel.name, appContainer.channels.userAgentFor(stored), stored.referrer)
+                playPreview(player, channel, stored, url)
                 playback.key = PlayerActivity.channelKey(channelId)
                 playback.liveChannelId = channelId
                 appContainer.lastChannel.save(stored)
@@ -516,6 +532,27 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
                 showPreviewError(e.message ?: getString(R.string.error_network))
             }
         }
+    }
+
+    /**
+     * Plays [url] in the preview. With timeshift on and a live channel it plays through a
+     * buffer, opened the same way the player screen opens one, so going full screen just
+     * carries on with it. Otherwise straight from the provider, as always.
+     */
+    private suspend fun playPreview(player: Player, channel: ChannelEntity, stored: ChannelEntity, url: String) {
+        val c = appContainer
+        val userAgent = c.channels.userAgentFor(stored)
+        if (c.settings.get().timeshift != TimeshiftMode.OFF && stored.kind == ContentKind.LIVE) {
+            // The previous channel's buffer and connection go first; many providers allow only one.
+            player.endTimeshift()
+            player.exo.stop()
+            val result = c.timeshift.open(player, stored, url, userAgent) { previewPlayer === player }
+            if (result is TimeshiftSessions.Result.Opened) {
+                player.playTimeshift(result.session, channel.name)
+                return
+            }
+        }
+        player.play(url, channel.name, userAgent, stored.referrer)
     }
 
     private fun showPreviewLabel(channel: ChannelEntity) {

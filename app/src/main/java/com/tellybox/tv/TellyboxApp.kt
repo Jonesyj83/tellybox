@@ -78,6 +78,7 @@ class AppContainer(app: Application) {
     val playback = com.tellybox.tv.player.Playback(app, http)
     val sleep = com.tellybox.tv.player.SleepSchedule(playback)
     val lastChannel = com.tellybox.tv.data.settings.LastChannelStore(app)
+    val timeshift = com.tellybox.tv.player.timeshift.TimeshiftSessions(app, settings, channels)
 }
 
 val android.content.Context.appContainer: AppContainer

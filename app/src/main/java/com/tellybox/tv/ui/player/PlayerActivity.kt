@@ -43,14 +43,11 @@ import com.tellybox.tv.databinding.ActivityPlayerBinding
 import com.tellybox.tv.player.Player
 import com.tellybox.tv.player.timeshift.TimeshiftMode
 import com.tellybox.tv.player.timeshift.TimeshiftSession
-import com.tellybox.tv.player.timeshift.TimeshiftStorage
+import com.tellybox.tv.player.timeshift.TimeshiftSessions
 import com.tellybox.tv.player.timeshift.TimeshiftUnavailable
 import com.tellybox.tv.player.timeshift.TimeshiftUnsupportedException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -80,7 +77,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var archivePosition = 0L
 
     private var timeshiftMode = TimeshiftMode.OFF
-    private var timeshiftBufferMb = TimeshiftStorage.DEFAULT_SIZE_MB
     /** Why the channel on screen isn't timeshifted although timeshift is on. */
     private var timeshiftNote: TimeshiftUnavailable? = null
     /** The picture has been paused or rewound since it was last at the live edge. */
@@ -278,7 +274,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         nameTokens = settings.channelNameTokens
         backgroundPlayback = settings.backgroundPlayback
         timeshiftMode = settings.timeshift
-        timeshiftBufferMb = settings.timeshiftBufferMb
         applyDisplayMode(settings.displayMode)
         val playback = appContainer.playback
         val p = playback.acquire(settings.playerConfig, this)
@@ -308,7 +303,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         // Before the home screen starts again, so it can pick the player straight back up.
         if (isFinishing && returnToPreview && player != null) {
             recordWatch()
-            leaveTimeshift()
+            // The preview buffers too, so a healthy buffer at the live edge goes back with the
+            // player and nothing reconnects. Behind live, the preview picks up live again.
+            val session = player?.timeshift
+            if (session != null && session.unavailable == null && !behindLive && pendingSeekMs == null &&
+                player?.exo?.playWhenReady == true) {
+                session.onUnavailable = null
+            } else {
+                leaveTimeshift()
+            }
             appContainer.playback.handBack(this)
         }
         super.onPause()
@@ -440,12 +443,18 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             )
 
             if (resume) {
-                val session = player?.timeshift
+                // Picked up from the home preview, picture-in-picture or the background. A buffer
+                // the player already holds is this channel's (the playback key matched), so it is
+                // adopted as it is: the picture carries on without being prepared again.
+                val session = player?.timeshift?.takeIf { !it.isClosed }
                 lastUrl = session?.url ?: player?.exo?.currentMediaItem?.localConfiguration?.uri?.toString()
                 userAgent = container.channels.userAgentFor(channel)
-                session?.let(::watchTimeshift)
+                if (session != null) {
+                    watchTimeshift(session)
+                    timeshiftNote = session.unavailable
+                }
                 if (player?.exo?.isPlaying == true) watchStartedAt = SystemClock.elapsedRealtime()
-                // Taken over from the home preview, which plays straight from the provider:
+                // Nothing buffering yet (the stream was playing straight from the provider):
                 // the buffer has to start somewhere, and that costs one reconnect.
                 val url = lastUrl
                 if (session == null && url != null && timeshiftMode != TimeshiftMode.OFF && !isVod &&
@@ -489,32 +498,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
      */
     private suspend fun openTimeshift(channel: ChannelEntity, url: String): TimeshiftSession? {
         if (catchup || fileMode || channel.kind != ContentKind.LIVE) return null
-        val scheme = android.net.Uri.parse(url).scheme?.lowercase()
-        val mime = Player.guessMimeType(url)
-        if ((scheme != "http" && scheme != "https") || (mime != null && mime != androidx.media3.common.MimeTypes.VIDEO_MP2T)) {
-            timeshiftNote = TimeshiftUnavailable.UnsupportedStream
-            return null
-        }
         val p = player ?: return null
-        val upstream = p.upstream(userAgent, channel.referrer)
-        val dir = TimeshiftStorage.dir(this)
-        val channels = appContainer.channels
-        // Not cancellable: a session opened as the viewer zaps away must still be closed, not leaked.
-        val result = withContext(Dispatchers.IO + NonCancellable) {
-            TimeshiftSession.open(dir, timeshiftBufferMb * TimeshiftStorage.MB, upstream, url) {
-                kotlinx.coroutines.runBlocking { channels.resolveStreamUrl(channel) }
-            }
-        }
-        return when (result) {
-            is TimeshiftSession.OpenResult.Unavailable -> {
+        return when (val result = appContainer.timeshift.open(p, channel, url, userAgent) { player === p }) {
+            is TimeshiftSessions.Result.Unavailable -> {
                 timeshiftNote = result.reason
                 null
             }
-            is TimeshiftSession.OpenResult.Opened -> {
-                if (!currentCoroutineContext().isActive || player !== p) {
-                    result.session.close()
-                    throw CancellationException()
-                }
+            TimeshiftSessions.Result.NotLive -> null
+            is TimeshiftSessions.Result.Opened -> {
                 watchTimeshift(result.session)
                 result.session
             }
@@ -690,6 +681,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         }
         handler.removeCallbacks(hideBanner)
         handler.postDelayed(hideBanner, BANNER_MS)
+        startBarTick()
         startTimeshiftTicks()
     }
 
@@ -735,13 +727,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         binding.tsSkip.visibility = if (full) View.VISIBLE else View.GONE
         binding.tsPause.setText(if (p.exo.playWhenReady) R.string.action_ts_pause else R.string.action_ts_play)
 
-        val window = session.window()
-        val pending = pendingSeekMs
-        val behind = behindLive || pending != null
-        val behindMs = if (behind) (window.liveMs - (pending ?: p.timeshiftPosition())).coerceAtLeast(0) else 0L
-        binding.timeshiftBar.set(window.capacityMs, window.spanMs, behindMs)
-        binding.tsPosition.text = if (behind) getString(R.string.timeshift_behind, TimeshiftText.duration(behindMs))
-            else getString(R.string.timeshift_at_live)
+        val behind = behindLive || pendingSeekMs != null
+        updateTimeshiftBar()
 
         // Already live: nothing to go back to.
         val liveFocused = binding.tsLive.hasFocus()
@@ -749,6 +736,35 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         binding.tsLive.isFocusable = behind
         binding.tsLive.alpha = if (behind) 1f else 0.4f
         if (liveFocused && !behind) binding.tsPause.requestFocus()
+    }
+
+/**
+     * The bar and its label, redrawn on a short tick while it's on screen. Without this it only
+     * moved when the banner refreshed, which read as jumping about rather than flowing.
+     */
+    private fun updateTimeshiftBar() {
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        val window = session.window()
+        val pending = pendingSeekMs
+        val behind = behindLive || pending != null
+        val behindMs = if (behind) (window.liveMs - (pending ?: p.timeshiftPosition())).coerceAtLeast(0) else 0L
+        binding.timeshiftBar.set(window.capacityMs, window.spanMs, behindMs, scrubbing = pending != null)
+        binding.tsPosition.text = if (behind) getString(R.string.timeshift_behind, TimeshiftText.duration(behindMs))
+            else getString(R.string.timeshift_at_live)
+    }
+
+    private val barTick = object : Runnable {
+        override fun run() {
+            if (binding.timeshiftPanel.visibility != View.VISIBLE) return
+            updateTimeshiftBar()
+            handler.postDelayed(this, BAR_TICK_MS)
+        }
+    }
+
+    private fun startBarTick() {
+        handler.removeCallbacks(barTick)
+        handler.postDelayed(barTick, BAR_TICK_MS)
     }
 
     private fun togglePause() {
@@ -1131,6 +1147,9 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
         /** One press of rewind or skip. */
         private const val SKIP_MS = 30_000L
+
+        /** Bar redraw interval while the overlay is showing. */
+        private const val BAR_TICK_MS = 400L
         private const val LONG_PRESS_MS = 500L
 
         /** Remotes disagree about which code the menu button is; accept the common ones. */

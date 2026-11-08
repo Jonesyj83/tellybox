@@ -33,17 +33,21 @@ class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeS
     private var totalMs = 0L
     private var bufferedMs = 0L
     private var behindMs = 0L
+    /** True while the viewer is scrubbing: the marker is a hollow target, not the play head. */
+    private var scrubbing = false
 
     /**
      * [totalMs]: how much the buffer can hold, [bufferedMs]: how much it holds now,
      * [behindMs]: how far the picture is behind live.
      */
-    fun set(totalMs: Long, bufferedMs: Long, behindMs: Long) {
+    fun set(totalMs: Long, bufferedMs: Long, behindMs: Long, scrubbing: Boolean = false) {
         val total = maxOf(totalMs, bufferedMs, 1L)
-        if (total == this.totalMs && bufferedMs == this.bufferedMs && behindMs == this.behindMs) return
+        if (total == this.totalMs && bufferedMs == this.bufferedMs && behindMs == this.behindMs &&
+            scrubbing == this.scrubbing) return
         this.totalMs = total
         this.bufferedMs = bufferedMs.coerceIn(0, total)
         this.behindMs = behindMs.coerceIn(0, this.bufferedMs)
+        this.scrubbing = scrubbing
         invalidate()
     }
 
@@ -62,7 +66,12 @@ class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeS
         canvas.drawRect(start, 0f, w, h, buffered)
         canvas.drawRect(start, 0f, at, h, played)
         val half = resources.displayMetrics.density * 2
-        canvas.drawRect((at - half).coerceAtLeast(0f), 0f, (at + half).coerceAtMost(w), h, marker)
+        if (scrubbing) {
+            // Where the picture will be once the seek lands: an outline, not a filled head.
+            canvas.drawRoundRect((at - half).coerceAtLeast(0f), 0f, (at + half).coerceAtMost(w), h, 2f, 2f, focusRing)
+        } else {
+            canvas.drawRect((at - half).coerceAtLeast(0f), 0f, (at + half).coerceAtMost(w), h, marker)
+        }
         if (isFocused) {
             val inset = focusRing.strokeWidth / 2f
             canvas.drawRoundRect(inset, inset, w - inset, h - inset, 3f, 3f, focusRing)
