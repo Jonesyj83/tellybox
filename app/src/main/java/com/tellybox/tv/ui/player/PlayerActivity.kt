@@ -91,7 +91,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var lastScrubAt = 0L
     private val menuLongPress = Runnable {
         menuHeld = true
-        showChannels()
+        showOptions()
     }
     /** Where repeated rewind and skip presses have got to, before playback is moved there. */
     private var pendingSeekMs: Long? = null
@@ -126,7 +126,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.channelOverlay.layoutManager = LinearLayoutManager(this)
         archivePosition = savedInstanceState?.getLong("archive_position") ?: 0L
         val requested = intent.getLongExtra(EXTRA_CHANNEL_ID, -1)
         channelIds = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST) ?: longArrayOf(requested)
@@ -298,7 +297,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         loadChannel(index, resume)
         protectionJob = lifecycleScope.launch {
             appContainer.parental.changes.collect {
-                binding.channelOverlay.visibility = View.GONE
                 val ch = current
                 if (ch != null && (!appContainer.parental.allowed(ch, appContainer.database) ||
                     (appContainer.parental.allScreens && !appContainer.parental.unlocked))) loadChannel(index)
@@ -385,7 +383,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (isInPictureInPictureMode) {
             handler.removeCallbacks(hideBanner)
             binding.banner.visibility = View.GONE
-            binding.channelOverlay.visibility = View.GONE
             binding.playerView.hideController()
             binding.playerView.useController = false
         } else {
@@ -410,7 +407,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         handler.removeCallbacks(commitSeek)
         lastUrl = null
         binding.banner.visibility = View.GONE
-        binding.channelOverlay.visibility = View.GONE
         current = null
         index = i
         binding.errorBox.visibility = View.GONE
@@ -983,6 +979,20 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         return false
     }
 
+/**
+     * Back closes the overlay before it leaves the channel. Only when nothing is showing does
+     * it hand control back to the home screen.
+     */
+    override fun onBackPressed() {
+        if (binding.banner.visibility == View.VISIBLE) {
+            hideBanner.run()
+            binding.playerView.requestFocus()
+            return
+        }
+        @Suppress("DEPRECATION")
+        super.onBackPressed()
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         // The scrub line and the buttons below it are one control group. This has to happen
         // before the zapping handler, or down here changes channel instead of moving focus.
@@ -991,14 +1001,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
             loadChannel(index)
             return true
-        }
-        if (binding.channelOverlay.visibility == View.VISIBLE) {
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                binding.channelOverlay.visibility = View.GONE
-                binding.playerView.requestFocus()
-                return true
-            }
-            return super.onKeyDown(keyCode, event)
         }
         if (keyCode == KeyEvent.KEYCODE_MEDIA_RECORD) {
             instantRecord()
@@ -1025,39 +1027,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun showChannels() {
-        lifecycleScope.launch {
-            val channels = appContainer.channels.getByIds(channelIds).filter { it.kind == ContentKind.LIVE }
-            binding.channelOverlay.adapter = object : RecyclerView.Adapter<ChannelHolder>() {
-                override fun getItemCount() = channels.size
-                override fun onCreateViewHolder(parent: ViewGroup, type: Int) = ChannelHolder(TextView(parent.context).apply {
-                    isFocusable = true; isClickable = true; textSize = 20f
-                    setPadding(20, 18, 20, 18); setBackgroundResource(R.drawable.bg_focusable)
-                    layoutParams = RecyclerView.LayoutParams(-1, -2)
-                })
-                override fun onBindViewHolder(holder: ChannelHolder, position: Int) {
-                    val channel = channels[position]
-                    holder.label.text = "${channel.number ?: ""}  ${displayName(channel)}"
-                    holder.label.isActivated = channel.id == current?.id
-                    holder.label.setOnClickListener {
-                        binding.channelOverlay.visibility = View.GONE
-                        binding.playerView.requestFocus()
-                        loadChannel(channelIds.indexOf(channel.id))
-                    }
-                }
-            }
-            binding.banner.visibility = View.GONE
-            binding.channelOverlay.visibility = View.VISIBLE
-            val selected = channels.indexOfFirst { it.id == current?.id }.coerceAtLeast(0)
-            binding.channelOverlay.scrollToPosition(selected)
-            binding.channelOverlay.post {
-                binding.channelOverlay.findViewHolderForAdapterPosition(selected)?.itemView?.requestFocus()
-                    ?: binding.channelOverlay.requestFocus()
-            }
-        }
-    }
 
-    private class ChannelHolder(val label: TextView) : RecyclerView.ViewHolder(label)
 
     private fun showOptions() {
         val channel = current

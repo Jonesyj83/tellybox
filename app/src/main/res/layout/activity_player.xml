@@ -13,14 +13,6 @@
         app:show_buffering="when_playing"
         app:use_controller="false" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/channelOverlay"
-        android:layout_width="360dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:padding="24dp"
-        android:background="#E6171B22"
-        android:visibility="gone" />
 
     <!-- channel banner, shown on start and when zapping -->
     <LinearLayout
