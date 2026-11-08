@@ -1,5 +1,6 @@
 package com.tellybox.tv.ui.settings
 
+import com.tellybox.tv.R
 import android.net.Uri
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
@@ -20,7 +21,7 @@ internal fun SettingsActivity.exportBackup(uri: Uri) = lifecycleScope.launch {
             favorites = db.favorites().observeAll().first(), history = db.history().getAll(), blocks = c.parental.exportBlocks(), settings = c.settings.get()) }
         withContext(Dispatchers.IO) { contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(BackupCodec.encode(state)) } }
     }
-    AlertDialog.Builder(this@exportBackup).setMessage(result.fold({ "Backup exported. Keep this file private: it contains playlist credentials. The parental PIN is excluded." }, { "Export failed: ${it.message}" })).setPositiveButton("OK", null).show()
+    AlertDialog.Builder(this@exportBackup).setMessage(result.fold({ getString(R.string.ui_backup_exported_keep_this_file_private_it_contains_playlist_credential) }, { getString(R.string.ui_export_failed_1_s, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
 }
 
 internal fun SettingsActivity.importBackup(uri: Uri) = lifecycleScope.launch {
@@ -31,21 +32,21 @@ internal fun SettingsActivity.importBackup(uri: Uri) = lifecycleScope.launch {
                 while (true) {
                     val count = reader.read(buffer)
                     if (count < 0) break
-                    require(out.length + count <= 16_000_000) { "Backup is too large" }
+                    require(out.length + count <= 16_000_000) { getString(R.string.ui_backup_is_too_large) }
                     out.append(buffer, 0, count)
                 }
             }.toString()
-            require(text.length <= 16_000_000) { "Backup is too large" }
+            require(text.length <= 16_000_000) { getString(R.string.ui_backup_is_too_large) }
             BackupCodec.decode(text)
         }
     } }
     val state = result.getOrElse {
-        AlertDialog.Builder(this@importBackup).setMessage("Import failed: ${it.message}").setPositiveButton("OK", null).show()
+        AlertDialog.Builder(this@importBackup).setMessage(getString(R.string.ui_import_failed_1_s, it.message.orEmpty())).setPositiveButton(getString(R.string.ok), null).show()
         return@launch
     }
-    AlertDialog.Builder(this@importBackup).setTitle("Replace saved configuration?")
-        .setMessage("Replace playlists (${state.playlists.size}), guide assignments, favourites, watch history, blocked channels/groups and settings. Cached channels and programmes will be cleared; refresh playlists after importing. Recordings and reminders remain. The parental PIN is not included and will stay unchanged.")
-        .setNegativeButton("Cancel", null).setPositiveButton("Replace") { _, _ -> requestPin(always = true) { lifecycleScope.launch {
+    AlertDialog.Builder(this@importBackup).setTitle(getString(R.string.ui_replace_saved_configuration))
+        .setMessage(getString(R.string.ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block, state.playlists.size))
+        .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.ui_replace)) { _, _ -> requestPin(always = true) { lifecycleScope.launch {
             val restored = runCatching {
                 val c = appContainer
                 val db = c.database
@@ -61,6 +62,6 @@ internal fun SettingsActivity.importBackup(uri: Uri) = lifecycleScope.launch {
                 c.settings.replace(state.settings)
                 c.parental.replaceBlocks(state.blocks)
             }
-            AlertDialog.Builder(this@importBackup).setMessage(restored.fold({ "Backup restored. Open Playlists to refresh streams." }, { "Restore failed: ${it.message}" })).setPositiveButton("OK", null).show()
+            AlertDialog.Builder(this@importBackup).setMessage(restored.fold({ getString(R.string.ui_backup_restored_open_playlists_to_refresh_streams) }, { getString(R.string.ui_restore_failed_1_s, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
         } } }.show()
 }

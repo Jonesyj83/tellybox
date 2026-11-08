@@ -66,7 +66,7 @@ class PlaylistsActivity : SectionActivity() {
                 appContainer.playlists.observePlaylists().collect { list ->
                     val db = appContainer.database
                     details = list.associate { playlist ->
-                        playlist.id to "${db.channels().countForPlaylist(playlist.id)} channels · ${db.groups().getForPlaylist(playlist.id).size} groups · ${if (db.epg().getSourcesForPlaylist(playlist.id).any { it.enabled }) "Guide attached" else "No guide"}"
+                        playlist.id to playlistSummary(this@PlaylistsActivity, db.channels().countForPlaylist(playlist.id), db.groups().getForPlaylist(playlist.id).size, db.epg().getSourcesForPlaylist(playlist.id).any { it.enabled })
                     }
                     playlists = list
                     refreshAllButton.isEnabled = list.isNotEmpty()
@@ -138,8 +138,8 @@ class PlaylistsActivity : SectionActivity() {
             getString(R.string.playlist_refresh),
             getString(if (playlist.enabled) R.string.playlist_disable else R.string.playlist_enable),
             getString(R.string.playlist_delete),
-            "Edit playlist",
-            "Manage groups and channels",
+            getString(R.string.ui_edit_playlist),
+            getString(R.string.ui_manage_groups_and_channels),
         )
         AlertDialog.Builder(this)
             .setTitle(playlist.name)
@@ -173,25 +173,25 @@ class PlaylistsActivity : SectionActivity() {
             }
         }
         val sources = appContainer.database.epg().getSourcesForPlaylist(playlist.id)
-        val epg = field("EPG URLs (one per line; clear to remove)", sources.filter { it.enabled }.joinToString("\n") { it.url }).apply { setSingleLine(false); minLines = 2 }
-        val name = field("Playlist name", playlist.name)
-        val url = field("Source URL or file URI", playlist.url)
-        val user = if (playlist.type == PlaylistType.XTREAM) field("Username", playlist.username) else null
-        val password = if (playlist.type == PlaylistType.XTREAM) field("Password", playlist.password, true) else null
-        val mac = if (playlist.type == PlaylistType.STALKER) field("MAC address", playlist.macAddress) else null
-        val ua = field("User agent (optional)", playlist.userAgent)
-        val dialog = AlertDialog.Builder(this@PlaylistsActivity).setTitle("Edit playlist")
+        val epg = field(getString(R.string.ui_epg_urls_one_per_line_clear_to_remove), sources.filter { it.enabled }.joinToString("\n") { it.url }).apply { setSingleLine(false); minLines = 2 }
+        val name = field(getString(R.string.ui_playlist_name), playlist.name)
+        val url = field(getString(R.string.ui_source_url_or_file_uri), playlist.url)
+        val user = if (playlist.type == PlaylistType.XTREAM) field(getString(R.string.field_username), playlist.username) else null
+        val password = if (playlist.type == PlaylistType.XTREAM) field(getString(R.string.field_password), playlist.password, true) else null
+        val mac = if (playlist.type == PlaylistType.STALKER) field(getString(R.string.field_mac), playlist.macAddress) else null
+        val ua = field(getString(R.string.field_user_agent), playlist.userAgent)
+        val dialog = AlertDialog.Builder(this@PlaylistsActivity).setTitle(getString(R.string.ui_edit_playlist))
             .setView(android.widget.ScrollView(this@PlaylistsActivity).apply { addView(form) })
-            .setPositiveButton("Save and re-fetch", null).setNegativeButton(R.string.cancel) { _, _ -> showActions(playlist, 3) }.create()
+            .setPositiveButton(getString(R.string.ui_save_and_re_fetch), null).setNegativeButton(R.string.cancel) { _, _ -> showActions(playlist, 3) }.create()
         dialog.setOnCancelListener { showActions(playlist, 3) }
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 if (name.text.isBlank() || url.text.isBlank()) {
-                    Toast.makeText(this@PlaylistsActivity, "Name and source are required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PlaylistsActivity, getString(R.string.ui_name_and_source_are_required), Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 if (user != null && (user.text.isBlank() || password!!.text.isBlank())) {
-                    Toast.makeText(this@PlaylistsActivity, "Username and password are required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PlaylistsActivity, getString(R.string.ui_username_and_password_are_required), Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 val edited = playlist.copy(name = name.text.toString().trim(), url = url.text.toString().trim(),
@@ -200,7 +200,7 @@ class PlaylistsActivity : SectionActivity() {
                     macAddress = mac?.text?.toString()?.trim() ?: playlist.macAddress,
                     userAgent = ua.text.toString().trim().ifEmpty { null })
                 dialog.dismiss()
-                status = "Updating ${edited.name}…"
+                status = getString(R.string.playlist_refreshing, edited.name)
                 val container = appContainer
                 container.appScope.launch {
                     val result = container.playlists.edit(edited)
@@ -210,7 +210,7 @@ class PlaylistsActivity : SectionActivity() {
                     result.onSuccess { container.epg.refreshForPlaylist(edited.id) }
                     runOnUiThread {
                         if (!isDestroyed) {
-                            status = result.fold({ "Playlist updated" }, { "Saved; re-fetch failed: ${it.message}" })
+                            status = result.fold({ getString(R.string.ui_playlist_updated) }, { getString(R.string.ui_saved_re_fetch_failed_1_s, it.message.orEmpty()) })
                         }
                     }
                 }
@@ -257,10 +257,10 @@ class PlaylistsActivity : SectionActivity() {
         container.appScope.launch {
             val results = mutableListOf<String>()
             playlists.forEachIndexed { index, playlist ->
-                runOnUiThread { if (!isDestroyed) status = "Refreshing ${index + 1}/${playlists.size}: ${playlist.name}…" }
+                runOnUiThread { if (!isDestroyed) status = getString(R.string.ui_refreshing_1_d_2_d_3_s, index + 1, playlists.size, playlist.name) }
                 val result = container.playlists.refresh(playlist.id)
                 result.onSuccess { container.epg.refreshForPlaylist(playlist.id) }
-                results += result.fold({ "${playlist.name}: success" }, { "${playlist.name}: failed — ${it.message}" })
+                results += result.fold({ getString(R.string.ui_1_s_success, playlist.name) }, { getString(R.string.ui_1_s_failed_2_s, playlist.name, it.message.orEmpty()) })
             }
             runOnUiThread { if (!isDestroyed) {
                 status = results.joinToString("\n")

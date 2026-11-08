@@ -1,5 +1,6 @@
 package com.tellybox.tv.ui.vod
 
+import com.tellybox.tv.R
 import com.tellybox.tv.ui.parental.requestPin
 import android.os.Bundle
 import android.widget.*
@@ -36,11 +37,11 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
         historyJob?.cancel()
         loadJob?.cancel()
         content.removeAllViews()
-        text("Loading…")
+        text(getString(R.string.ui_loading))
         loadJob = lifecycleScope.launch {
             val channel = appContainer.channels.get(intent.getLongExtra("channel_id", -1))
             content.removeAllViews()
-            if (channel == null) { text("Title no longer available"); return@launch }
+            if (channel == null) { text(getString(R.string.ui_title_no_longer_available)); return@launch }
             if (appContainer.parental.allScreens && !appContainer.parental.unlocked) return@launch
             if (!appContainer.parental.allowed(channel, appContainer.database)) {
                 requestPin(cancel = { finish() }) { load() }
@@ -51,11 +52,11 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
             if (channel.kind != ContentKind.SERIES) playbackButtons(channel, null)
             try {
                 val details = appContainer.vod.details(channel)
-                listOf(details.year, details.duration, details.rating?.let { "Rating: $it" }, details.genre, details.country,
-                    details.plot, details.cast?.let { "Cast: $it" }, details.director?.let { "Director: $it" })
+                listOf(details.year, details.duration, details.rating?.let { getString(R.string.ui_rating_1_s, it) }, details.genre, details.country,
+                    details.plot, details.cast?.let { getString(R.string.ui_cast_1_s, it) }, details.director?.let { getString(R.string.ui_director_1_s, it) })
                     .filterNot { it.isNullOrBlank() }.forEach { text(it!!) }
                 if (channel.kind == ContentKind.SERIES) {
-                    if (details.episodes.isEmpty()) text("No episodes available")
+                    if (details.episodes.isEmpty()) text(getString(R.string.ui_no_episodes_available))
                     val episodes = LinearLayout(this@VodDetailActivity).apply { orientation = LinearLayout.VERTICAL }
                     val seasons = LinearLayout(this@VodDetailActivity)
                     content.addView(HorizontalScrollView(this@VodDetailActivity).apply { addView(seasons) })
@@ -72,31 +73,31 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
                                             val position = appContainer.database.history().get(playable.playlistId, playable.channelKey)?.positionMs ?: 0
                                             androidx.appcompat.app.AlertDialog.Builder(this@VodDetailActivity)
                                                 .setTitle(episode.title)
-                                                .setMessage(listOfNotNull(episode.plot, episode.durationSecs?.let { "${it / 60} min" }).joinToString("\n"))
-                                                .setPositiveButton(if (position > 0) "Resume" else "Play") { _, _ -> play(channel, episode.id, false) }
-                                                .setNeutralButton("Play from beginning") { _, _ -> play(channel, episode.id, true) }
-                                                .setNegativeButton("Cancel", null).show()
+                                                .setMessage(listOfNotNull(episode.plot, episode.durationSecs?.let { resources.getQuantityString(R.plurals.minutes, it / 60, it / 60) }).joinToString("\n"))
+                                                .setPositiveButton(if (position > 0) getString(R.string.ui_resume) else getString(R.string.recording_play)) { _, _ -> play(channel, episode.id, false) }
+                                                .setNeutralButton(getString(R.string.ui_play_from_beginning)) { _, _ -> play(channel, episode.id, true) }
+                                                .setNegativeButton(getString(R.string.cancel), null).show()
                                         } catch (e: CancellationException) { throw e }
-                                        catch (e: Exception) { Toast.makeText(this@VodDetailActivity, "Unable to open episode", Toast.LENGTH_LONG).show() }
+                                        catch (e: Exception) { Toast.makeText(this@VodDetailActivity, getString(R.string.ui_unable_to_open_episode), Toast.LENGTH_LONG).show() }
                                     }
                                 }
                             })
                         }
                     }
                     details.episodes.map { it.season }.distinct().forEach { number ->
-                        seasons.addView(Button(this@VodDetailActivity).apply { text = "Season $number"; setOnClickListener { season(number) } })
+                        seasons.addView(Button(this@VodDetailActivity).apply { text = getString(R.string.ui_season_1_d, number); setOnClickListener { season(number) } })
                     }
                     details.episodes.firstOrNull()?.let { season(it.season) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { text("Details unavailable. Check your connection and try again."); button("Retry") { load() } }
+            catch (e: Exception) { text(getString(R.string.ui_details_unavailable_check_your_connection_and_try_again)); button(getString(R.string.retry)) { load() } }
         }
     }
 
     private fun playbackButtons(channel: ChannelEntity, episode: Long?) {
-        val resume = Button(this).apply { text = "Play"; setOnClickListener { play(channel, episode, false) } }
+        val resume = Button(this).apply { text = getString(R.string.recording_play); setOnClickListener { play(channel, episode, false) } }
         val beginning = Button(this).apply {
-            text = "Play from beginning"; visibility = android.view.View.GONE
+            text = getString(R.string.ui_play_from_beginning); visibility = android.view.View.GONE
             setOnClickListener { play(channel, episode, true) }
         }
         content.addView(resume)
@@ -105,7 +106,7 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.database.history().observe(channel.playlistId, channel.channelKey).collect { history ->
                     val position = history?.positionMs ?: 0
-                    resume.text = if (position > 0) "Resume (${position / 60_000} min)" else "Play"
+                    resume.text = if (position > 0) getString(R.string.ui_resume_1_s, resources.getQuantityString(R.plurals.minutes, (position / 60_000).toInt(), (position / 60_000).toInt())) else getString(R.string.recording_play)
                     beginning.visibility = if (position > 0) android.view.View.VISIBLE else android.view.View.GONE
                 }
             }

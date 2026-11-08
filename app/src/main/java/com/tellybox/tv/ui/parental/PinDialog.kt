@@ -1,5 +1,6 @@
 package com.tellybox.tv.ui.parental
 
+import com.tellybox.tv.R
 import android.text.InputType
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
@@ -19,8 +20,8 @@ fun AppCompatActivity.requestPin(always: Boolean = false, cancel: () -> Unit = {
         imeOptions = android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI
         isSaveEnabled = false
     }
-    val dialog = AlertDialog.Builder(this).setTitle("Enter PIN").setView(input)
-        .setPositiveButton("Unlock", null).setNegativeButton("Cancel") { _, _ -> cancel() }
+    val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.ui_enter_pin)).setView(input)
+        .setPositiveButton(getString(R.string.ui_unlock), null).setNegativeButton(getString(R.string.cancel)) { _, _ -> cancel() }
         .setOnCancelListener { cancel() }.create()
     var timer: Job? = null
     dialog.setOnShowListener {
@@ -29,8 +30,8 @@ fun AppCompatActivity.requestPin(always: Boolean = false, cancel: () -> Unit = {
         fun update() {
             val seconds = repo.cooldownSeconds()
             button.isEnabled = seconds == 0L && !verifying
-            if (seconds > 0) dialog.setTitle("Try again in ${seconds}s")
-            else dialog.setTitle("Enter PIN")
+            if (seconds > 0) dialog.setTitle(getString(R.string.ui_try_again_in_1_s, resources.getQuantityString(R.plurals.seconds, seconds.toInt(), seconds)))
+            else dialog.setTitle(getString(R.string.ui_enter_pin))
         }
         timer = lifecycleScope.launch {
             while (dialog.isShowing) { update(); delay(1000) }
@@ -41,7 +42,7 @@ fun AppCompatActivity.requestPin(always: Boolean = false, cancel: () -> Unit = {
             button.isEnabled = false
             lifecycleScope.launch {
                 if (repo.verify(input.text.toString())) { dialog.dismiss(); success() }
-                else { verifying = false; input.text.clear(); input.error = "Incorrect PIN"; update() }
+                else { verifying = false; input.text.clear(); input.error = getString(R.string.ui_incorrect_pin); update() }
             }
         }
     }

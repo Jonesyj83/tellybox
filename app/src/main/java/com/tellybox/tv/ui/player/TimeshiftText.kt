@@ -10,7 +10,7 @@ import com.tellybox.tv.player.timeshift.TimeshiftUnavailable
 object TimeshiftText {
     fun reason(context: Context, reason: TimeshiftUnavailable): String = when (reason) {
         is TimeshiftUnavailable.LowStorage -> context.getString(
-            R.string.timeshift_low_storage, size(TimeshiftStorage.MIN_FREE_TO_START), size(reason.freeBytes),
+            R.string.timeshift_low_storage, size(context, TimeshiftStorage.MIN_FREE_TO_START), size(context, reason.freeBytes),
         )
         TimeshiftUnavailable.StorageRanLow -> context.getString(R.string.timeshift_storage_ran_low)
         TimeshiftUnavailable.WriteFailed -> context.getString(R.string.timeshift_write_failed)
@@ -25,14 +25,8 @@ object TimeshiftText {
         },
     )
 
-    /** Binary units with one decimal place, the way storage settings show them. */
-    fun size(bytes: Long): String = when {
-        bytes >= TimeshiftStorage.GB -> {
-            val tenths = bytes * 10 / TimeshiftStorage.GB
-            if (tenths % 10 == 0L) "${tenths / 10} GB" else "${tenths / 10}.${tenths % 10} GB"
-        }
-        else -> "${bytes / TimeshiftStorage.MB} MB"
-    }
+    /** Android localizes the number, decimal separator and storage unit. */
+    fun size(context: Context, bytes: Long): String = android.text.format.Formatter.formatShortFileSize(context, bytes)
 
     /** "1:05" or "1:02:05" behind live. */
     fun duration(ms: Long): String {

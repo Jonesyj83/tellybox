@@ -96,10 +96,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var userAgent: String? = null
 
     private val handler = Handler(Looper.getMainLooper())
+
+    /** True only when the viewer paused on purpose, not when the stream stalled. */
+    private var userPaused = false
     /** The banner and its buttons are one overlay: they appear and disappear together. */
     private val hideBanner = Runnable {
-        // A paused picture keeps its banner, so it's clear where in the buffer it is.
-        if (timeshiftShown() && player?.exo?.playWhenReady == false) return@Runnable
+        // A picture the viewer paused keeps its banner, so it's clear where in the buffer it
+        // is. A stalled stream is a different thing: testing playWhenReady alone meant a dead
+        // connection pinned the banner on screen and Back looked broken.
+        if (timeshiftShown() && userPaused) return@Runnable
         val focusInBanner = binding.banner.hasFocus()
         binding.banner.visibility = View.GONE
         binding.recordButton.visibility = View.GONE
@@ -431,7 +436,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 val episode = intent.getLongExtra("episode_id", -1)
                 if (episode >= 0) container.vod.episode(stored, episode) else stored
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { showError("Unable to open episode"); return@launch }
+            catch (e: Exception) { showError(getString(R.string.ui_unable_to_open_episode)); return@launch }
             current = channel
             updateButtons()
             triedHls = false
@@ -793,6 +798,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun togglePause() {
         val exo = player?.exo ?: return
         if (player?.timeshift == null) return
+        userPaused = !exo.playWhenReady
         if (exo.playWhenReady) exo.pause() else exo.play()
         refreshBanner()
     }
@@ -861,6 +867,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     }
 
     private fun goLive() {
+        userPaused = false
         lifecycleScope.launch { returnToLive() }
     }
 
@@ -872,6 +879,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val p = player ?: return
         val session = p.timeshift ?: return
         val ch = current ?: return
+        userPaused = false
         pendingSeekMs = null
         handler.removeCallbacks(commitSeek)
         val url = try {
@@ -1080,12 +1088,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             val left = appContainer.sleep.remainingMinutes()
             items += (if (left != null) getString(R.string.sleep_banner, left) else getString(R.string.sleep_title)) to { showSleep() }
             if (channel != null && !fileMode) items += getString(R.string.external_player) to { openExternal() }
-            items += "Audio tracks" to { pickTrack(C.TRACK_TYPE_AUDIO) }
-            items += "Subtitles" to { pickTrack(C.TRACK_TYPE_TEXT) }
-            items += "Display mode" to { pickDisplayMode() }
+            items += getString(R.string.ui_audio_tracks) to { pickTrack(C.TRACK_TYPE_AUDIO) }
+            items += getString(R.string.ui_subtitles) to { pickTrack(C.TRACK_TYPE_TEXT) }
+            items += getString(R.string.setting_display_mode) to { pickDisplayMode() }
             if (live) items += getString(R.string.multiview) to { openMultiview() }
             if (pipSupported()) items += getString(R.string.pip) to { enterPip(); Unit }
-            AlertDialog.Builder(this@PlayerActivity).setTitle("Playback options")
+            AlertDialog.Builder(this@PlayerActivity).setTitle(getString(R.string.ui_playback_options))
                 .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
                 .show()
         }
@@ -1095,14 +1103,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val exo = player?.exo ?: return
         val tracks = exo.currentTracks.groups.filter { it.type == type }
         val choices = tracks.flatMap { group -> (0 until group.length).filter { group.isTrackSupported(it) }.map { group to it } }
-        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) "Off" else "Automatic") + choices.mapIndexed { index, (group, track) ->
+        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) getString(R.string.off) else getString(R.string.ui_automatic)) + choices.mapIndexed { index, (group, track) ->
             val format = group.getTrackFormat(track)
-            listOfNotNull(format.label, format.language, format.channelCount.takeIf { it > 0 }?.let { "$it channels" })
-                .joinToString(" · ").ifBlank { "Track ${index + 1}" }
+            listOfNotNull(format.label, format.language, format.channelCount.takeIf { it > 0 }?.let { resources.getQuantityString(R.plurals.audio_channels, it, it) })
+                .joinToString(" · ").ifBlank { getString(R.string.ui_track_1_d, index + 1) }
         }
         val disabled = exo.trackSelectionParameters.disabledTrackTypes.contains(type)
         val selected = if (disabled) 0 else choices.indexOfFirst { (group, track) -> group.isTrackSelected(track) }.let { if (it < 0) 0 else it + 1 }
-        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) "Subtitles" else "Audio tracks")
+        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) getString(R.string.ui_subtitles) else getString(R.string.ui_audio_tracks))
             .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
                 val builder = exo.trackSelectionParameters.buildUpon().clearOverridesOfType(type)
                     .setTrackTypeDisabled(type, type == C.TRACK_TYPE_TEXT && which == 0)
@@ -1118,8 +1126,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun pickDisplayMode() {
         lifecycleScope.launch {
             val selected = appContainer.settings.get().displayMode.ordinal
-            AlertDialog.Builder(this@PlayerActivity).setTitle("Display mode")
-                .setSingleChoiceItems(arrayOf("Normal", "Full", "Zoom", "Reduced"), selected) { dialog, which ->
+            AlertDialog.Builder(this@PlayerActivity).setTitle(getString(R.string.setting_display_mode))
+                .setSingleChoiceItems(arrayOf(getString(R.string.display_fit), getString(R.string.display_fill), getString(R.string.display_zoom), getString(R.string.display_reduced)), selected) { dialog, which ->
                     val mode = DisplayMode.entries[which]
                     applyDisplayMode(mode)
                     lifecycleScope.launch { appContainer.settings.setDisplayMode(mode) }
