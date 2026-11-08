@@ -1,0 +1,47 @@
+name: Stable APK name
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to mirror the APK for"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  mirror-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror APK as Tellybox.apk
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name || github.event.inputs.tag }}"
+          echo "release: $TAG"
+
+          assets=$(gh release view "$TAG" --repo "$REPO" --json assets -q '.assets[].name')
+
+          if grep -qx 'Tellybox.apk' <<<"$assets"; then
+            echo "Tellybox.apk already attached - nothing to do."
+            exit 0
+          fi
+
+          apk=$(grep -iE '\.apk$' <<<"$assets" | head -n 1 || true)
+          if [ -z "${apk:-}" ]; then
+            echo "::error::No .apk asset found on release $TAG"
+            exit 1
+          fi
+          echo "mirroring asset: $apk -> Tellybox.apk"
+
+          mkdir -p /tmp/mirror
+          gh release download "$TAG" --repo "$REPO" -p "$apk" -D /tmp/mirror
+          mv "/tmp/mirror/$apk" /tmp/mirror/Tellybox.apk
+
+          gh release upload "$TAG" /tmp/mirror/Tellybox.apk --repo "$REPO" --clobber
+          echo "done."
