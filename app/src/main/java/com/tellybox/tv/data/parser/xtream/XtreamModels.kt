@@ -65,6 +65,8 @@ data class XtreamEpisode(
     val plot: String?,
     val durationSecs: Int?,
     val image: String?,
+    /** Stalker only: the portal's season id, needed to ask for this episode's stream. */
+    val seasonId: String? = null,
 )
 
 data class XtreamSeriesInfo(
@@ -97,4 +99,7 @@ data class VodDetails(
     val cast: String? = null,
     val director: String? = null,
     val episodes: List<XtreamEpisode> = emptyList(),
+    val genre: String? = null,
+    val country: String? = null,
+    val rating: Double? = null,
 )

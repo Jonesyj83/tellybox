@@ -51,7 +51,8 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
             if (channel.kind != ContentKind.SERIES) playbackButtons(channel, null)
             try {
                 val details = appContainer.vod.details(channel)
-                listOf(details.year, details.duration, details.plot, details.cast?.let { "Cast: $it" }, details.director?.let { "Director: $it" })
+                listOf(details.year, details.duration, details.rating?.let { "Rating: $it" }, details.genre, details.country,
+                    details.plot, details.cast?.let { "Cast: $it" }, details.director?.let { "Director: $it" })
                     .filterNot { it.isNullOrBlank() }.forEach { text(it!!) }
                 if (channel.kind == ContentKind.SERIES) {
                     if (details.episodes.isEmpty()) text("No episodes available")

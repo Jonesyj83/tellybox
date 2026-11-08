@@ -67,6 +67,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var current: ChannelEntity? = null
     private var lastUrl: String? = null
     private var triedHls = false
+    /** Portal VOD links expire; a failing one is asked for again, once per title. */
+    private var reResolved = false
     private var loadJob: Job? = null
     private var watchStartedAt = 0L
     private val catchup get() = intent.hasExtra(EXTRA_ARCHIVE_START)
@@ -433,6 +435,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             current = channel
             updateButtons()
             triedHls = false
+            reResolved = false
             showBanner(channel, null)
 
             val isVod = channel.kind != ContentKind.LIVE
@@ -639,6 +642,26 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             }
             // The stream hasn't shown what it is yet: handled like any other below.
             timeshiftNote = TimeshiftUnavailable.UnsupportedStream
+        }
+        // A portal title's cached link may simply have expired: ask the portal for a new one.
+        if (!reResolved && ch != null && !catchup && !fileMode && appContainer.channels.canReResolve(ch)) {
+            reResolved = true
+            val position = player?.exo?.currentPosition ?: 0L
+            lifecycleScope.launch {
+                val fresh = try {
+                    appContainer.channels.reResolveStreamUrl(ch)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    showError(describe(error))
+                    return@launch
+                }
+                if (current !== ch) return@launch
+                lastUrl = fresh
+                player?.play(fresh, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer)
+                if (position > 0) player?.exo?.seekTo(position)
+            }
+            return
         }
         // Extensionless URLs are often HLS underneath; give that one more go before giving up.
         if (!triedHls && url != null && ch != null && Player.guessMimeType(url) == null) {

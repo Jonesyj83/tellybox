@@ -134,6 +134,10 @@ interface ChannelDao {
 
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId AND channelKey = :channelKey")
     suspend fun findByKey(playlistId: Long, channelKey: String): ChannelEntity?
+
+    /** Returns how many rows changed; zero for titles that have no row (series episodes). */
+    @Query("UPDATE channels SET resolvedUrl = :url WHERE playlistId = :playlistId AND channelKey = :channelKey")
+    suspend fun setResolvedUrl(playlistId: Long, channelKey: String, url: String?): Int
 }
 
 @Dao

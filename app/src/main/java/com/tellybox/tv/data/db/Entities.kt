@@ -106,6 +106,20 @@ data class ChannelEntity(
     val sortOrder: Int = 0,
     val hidden: Boolean = false,
     val addedAt: Long = System.currentTimeMillis(),
+    /** Title details for sources that list them with the title (Stalker); others fetch on demand. */
+    val plot: String? = null,
+    val year: String? = null,
+    val cast: String? = null,
+    val director: String? = null,
+    val genre: String? = null,
+    val country: String? = null,
+    val durationMinutes: Int? = null,
+    val rating: Double? = null,
+    /**
+     * Last stream link resolved from a `stalker://` [streamUrl], so a second play doesn't
+     * ask the portal again. It can expire; the player re-resolves once when it fails.
+     */
+    val resolvedUrl: String? = null,
 )
 
 @Entity(

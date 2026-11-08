@@ -42,6 +42,7 @@ class StalkerException(message: String) : IOException(message)
  * Minimal Ministra/Stalker middleware client, enough for live TV: it identifies as a
  * MAG set-top box by MAC address, gets a session token, and lists genres and channels.
  * Stream URLs on these portals are short-lived, so [createLink] must be called at play time.
+ * Movies and series are listed with metadata only; [resolve] fetches a title's stream on play.
  */
 class StalkerClient(
     portalUrl: String,
@@ -91,6 +92,48 @@ class StalkerClient(
             ?: throw StalkerException("Portal returned no archive link")
         return StalkerMapper.urlFromCmd(linked)
             ?: throw StalkerException("Portal returned no archive link")
+    }
+
+    // --- VOD -----------------------------------------------------------------------------
+
+    /** Movie and series categories together; the portal has no separate series list. */
+    suspend fun vodCategories(): List<StalkerVodCategory> = StalkerVodMapper.categories(call("vod", "get_categories"))
+
+    suspend fun vodPage(categoryId: String, page: Int): StalkerVodPage = StalkerVodMapper.page(
+        call("vod", "get_ordered_list", mapOf("category" to categoryId, "p" to page.toString())),
+        endpoint ?: candidates.firstOrNull(),
+    )
+
+    /** Every title in a category, metadata only. Nothing here is resolved to a stream. */
+    suspend fun vodItems(categoryId: String, maxPages: Int = MAX_PAGES): List<StalkerVodItem> =
+        collectPages(maxPages) { p -> vodPage(categoryId, p).let { it.totalItems to it.items } }
+
+    suspend fun seasons(seriesId: String): List<StalkerSeason> = collectPages { p ->
+        val js = call("vod", "get_ordered_list", mapOf("movie_id" to seriesId, "season_id" to "0", "p" to p.toString()))
+        (js as? JsonObject)?.int("total_items") to StalkerVodMapper.seasons(js)
+    }.distinctBy { it.id }.sortedBy { it.number ?: Int.MAX_VALUE }
+
+    suspend fun episodes(seriesId: String, seasonId: String): List<StalkerEpisode> = collectPages { p ->
+        val js = call("vod", "get_ordered_list", mapOf("movie_id" to seriesId, "season_id" to seasonId, "p" to p.toString()))
+        (js as? JsonObject)?.int("total_items") to StalkerVodMapper.episodes(js)
+    }.distinctBy { it.id }.sortedBy { it.number ?: Int.MAX_VALUE }
+
+    /** Asks the portal for the real stream behind a stored `stalker://` marker. */
+    suspend fun resolve(ref: StalkerVodRef): String {
+        val params = when (ref) {
+            is StalkerVodRef.Movie -> mapOf("movie_id" to ref.movieId)
+            is StalkerVodRef.Episode -> mapOf(
+                "movie_id" to ref.seriesId, "season_id" to ref.seasonId, "episode_id" to ref.episodeId,
+            )
+            is StalkerVodRef.Series -> throw StalkerException("A series has no stream of its own")
+        }
+        val cmd = StalkerVodMapper.streamCmd(call("vod", "get_ordered_list", params))
+            ?: throw StalkerException("Portal returned no stream for this title")
+        StalkerMapper.urlFromCmd(cmd)?.let { return it }
+        // Some portals hand back a storage path here that still needs exchanging.
+        val linked = (call("vod", "create_link", mapOf("cmd" to cmd, "forced_storage" to "undefined", "disable_ad" to "0"))
+            as? JsonObject)?.str("cmd")
+        return linked?.let(StalkerMapper::urlFromCmd) ?: throw StalkerException("Portal returned no stream for this title")
     }
 
     private suspend fun call(type: String, action: String, params: Map<String, String> = emptyMap()): JsonElement? {

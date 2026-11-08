@@ -40,6 +40,8 @@ class PlaylistRepository(
     private val db: TellyboxDatabase,
     private val http: OkHttpClient,
     private val stalkerClients: StalkerClientCache,
+    /** True when adult (portal-flagged) categories should not be imported. */
+    private val hideAdult: () -> Boolean = { false },
 ) {
     fun observePlaylists(): Flow<List<PlaylistEntity>> = db.playlists().observeAll()
 
@@ -243,28 +245,9 @@ class PlaylistRepository(
     private suspend fun refreshStalker(playlist: PlaylistEntity): RefreshSummary {
         val client = stalkerClients.get(playlist)
         client.connect()
-        val genres = client.genres().associateBy { it.id }
-        val groups = genres.values.map { ImportedGroup(it.title, ContentKind.LIVE, it.id) }
-        val channels = client.channels().mapIndexed { i, c ->
-            ImportedChannel(
-                groupName = genres[c.genreId]?.title ?: UNGROUPED,
-                kind = ContentKind.LIVE,
-                channel = ChannelEntity(
-                    playlistId = playlist.id,
-                    channelKey = "stalker:${c.id}",
-                    name = c.name,
-                    // Resolved through create_link at play time.
-                    streamUrl = c.cmd,
-                    logoUrl = c.logo,
-                    tvgId = c.xmltvId,
-                    number = c.number,
-                    catchupType = if (c.hasArchive) CATCHUP_STALKER else null,
-                    catchupDays = c.archiveDays,
-                    sortOrder = i,
-                ),
-            )
-        }
-        return store(playlist.id, channels, emptyList(), groups)
+        // Adult categories are left out entirely once a parental PIN exists.
+        val imported = StalkerImport.load(client, playlist.id, hideCensored = hideAdult())
+        return store(playlist.id, imported.channels, emptyList(), imported.groups)
     }
 
     // --- persistence -------------------------------------------------------------------

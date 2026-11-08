@@ -1,0 +1,32 @@
+{
+ "js": {
+  "total_items": "1",
+  "max_page_items": 14,
+  "selected_item": 0,
+  "cur_page": 0,
+  "data": [
+   {
+    "id": "3545371",
+    "video_id": "491960",
+    "series_id": null,
+    "file_type": "video",
+    "protocol": "custom",
+    "url": "http://89.187.181.21/CF5A68754DSTZZZ16867aca8615f56dca544994788cc750476a4ebe6bc3ea4b538676d9f16872cedaabbf517ca749c89dd8814676faa4cc65bfc667d5f83516029c0a07600b709df/index.m3u8",
+    "file_name": "",
+    "languages": "a:1:{i:0;s:2:\"en\";}",
+    "quality": "6",
+    "volume_level": "0",
+    "accessed": "1",
+    "status": "1",
+    "date_add": "2026-10-31 11:24:36",
+    "date_modify": "2026-10-31 11:24:36",
+    "tmp_link_type": "flussonic",
+    "for_rent": 0,
+    "name": "English / Excellent quality (1080)",
+    "is_file": true,
+    "cmd": "http://89.187.181.21/CF5A68754DSTZZZ16867aca8615f56dca544994788cc750476a4ebe6bc3ea4b538676d9f16872cedaabbf517ca749c89dd8814676faa4cc65bfc667d5f83516029c0a07600b709df/index.m3u8"
+   }
+  ]
+ },
+ "text": "generated in: 0.032s; query counter: 14; cache hits: 0; cache miss: 0; php errors: 0; sql errors: 0;"
+}

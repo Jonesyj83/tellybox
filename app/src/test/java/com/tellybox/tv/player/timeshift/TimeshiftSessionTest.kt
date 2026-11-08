@@ -189,10 +189,19 @@ class TimeshiftSessionTest {
         assertNull(s.unavailable)
         provider.refuse = false
         s.restart("http://p/1.ts?token=again")
-        provider.next().send(TsPackets.stream(seconds = 1))
-        val again = s.buffer.Cursor(s.buffer.head)
-        assertTrue(s.buffer.read(again, ByteArray(10), 0, 10) > 0)
-        again.close()
+        // The new connection may not be attached yet, so nudge it until bytes actually land
+        // rather than assuming the very next send is read by the restarted session.
+        val afterRestart = s.buffer.head
+        var bytes = -1
+        val recoverDeadline = System.currentTimeMillis() + 5_000
+        while (bytes <= 0 && System.currentTimeMillis() < recoverDeadline) {
+            runCatching { provider.next().send(TsPackets.stream(seconds = 1)) }
+            val again = s.buffer.Cursor(afterRestart)
+            bytes = runCatching { s.buffer.read(again, ByteArray(10), 0, 10) }.getOrDefault(-1)
+            again.close()
+            if (bytes <= 0) Thread.sleep(50)
+        }
+        assertTrue("no data after restart (got $bytes)", bytes > 0)
     }
 
     @Test
