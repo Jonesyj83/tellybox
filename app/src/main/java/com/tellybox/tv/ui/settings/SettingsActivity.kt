@@ -18,6 +18,10 @@ import com.tellybox.tv.ui.chrome.SimpleRow
 import com.tellybox.tv.ui.chrome.SimpleRowAdapter
 import com.tellybox.tv.ui.chrome.TwoColumn
 import com.tellybox.tv.player.BufferSize
+import com.tellybox.tv.player.timeshift.TimeshiftMode
+import com.tellybox.tv.player.timeshift.TimeshiftSession
+import com.tellybox.tv.player.timeshift.TimeshiftStorage
+import com.tellybox.tv.ui.player.TimeshiftText
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlin.math.abs
@@ -36,7 +40,7 @@ class SettingsActivity : SectionActivity() {
     private val exportFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { it?.let(::exportBackup) }
     private val importFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(::importBackup) }
 
-    private class Row(val title: String, val value: String, val isHeader: Boolean = false, val description: String = "", val onClick: () -> Unit)
+    private class Row(val title: String, val value: String, val isHeader: Boolean = false, val description: String = "", val dimmed: Boolean = false, val onClick: () -> Unit)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -166,6 +170,7 @@ class SettingsActivity : SectionActivity() {
             Row(getString(R.string.setting_background_playback), onOff(s.backgroundPlayback)) {
                 pick(R.string.setting_background_playback, onOff, s.backgroundPlayback, repo::setBackgroundPlayback)
             },
+            *timeshiftRows(s),
             Row(getString(R.string.setting_preview_follows_focus), onOff(s.previewFollowsFocus)) {
                 pick(R.string.setting_preview_follows_focus, onOff, s.previewFollowsFocus, repo::setPreviewFollowsFocus)
             },
@@ -209,6 +214,54 @@ class SettingsActivity : SectionActivity() {
             },
             Row(getString(R.string.setting_update_guides), "") { reimportGuides() },
         )
+    }
+
+    /**
+     * Timeshift and its buffer size. With too little storage both stay on screen, dimmed,
+     * with the reason in place of the value, so it's clear why the option does nothing.
+     */
+    private fun timeshiftRows(s: AppSettings): Array<Row> {
+        val repo = appContainer.settings
+        val dir = TimeshiftStorage.dir(this).apply { mkdirs() }
+        val session = appContainer.playback.player?.timeshift
+        val blocked = when (val plan = TimeshiftStorage.capacity(dir.usableSpace, s.timeshiftBufferMb * TimeshiftStorage.MB)) {
+            is TimeshiftStorage.Result.Unavailable -> TimeshiftText.reason(this, plan.reason)
+            is TimeshiftStorage.Result.Capacity -> session?.unavailable?.let { TimeshiftText.reason(this, it) }
+        }
+        val blockedClick = { android.widget.Toast.makeText(this, blocked, android.widget.Toast.LENGTH_LONG).show(); Unit }
+
+        val measured = session?.window()?.bytesPerSecond?.takeIf { it > 0 } ?: TimeshiftSession.lastByteRate
+        val rate = measured.takeIf { it > 0 } ?: TYPICAL_HD_BYTES_PER_SECOND
+        val channelName = appContainer.playback.player?.takeIf { appContainer.playback.liveChannelId != null }
+            ?.exo?.mediaMetadata?.title?.toString()
+        val rateNote = when {
+            measured > 0 && channelName != null -> getString(R.string.timeshift_rate_channel, channelName)
+            measured > 0 -> getString(R.string.timeshift_rate_last)
+            else -> getString(R.string.timeshift_rate_typical)
+        }
+        fun sizeLabel(mb: Int) = getString(R.string.timeshift_size_minutes, TimeshiftText.size(mb * TimeshiftStorage.MB),
+            TimeshiftStorage.minutesFor(mb * TimeshiftStorage.MB, rate))
+
+        return arrayOf(
+            Row(getString(R.string.setting_timeshift), blocked ?: TimeshiftText.mode(this, s.timeshift), dimmed = blocked != null) {
+                if (blocked != null) blockedClick()
+                else pickSetting(R.string.setting_timeshift, TimeshiftMode.entries.map { TimeshiftText.mode(this, it) to it }, s.timeshift, repo::setTimeshift)
+            },
+            Row(getString(R.string.setting_timeshift_buffer), blocked ?: sizeLabel(s.timeshiftBufferMb),
+                description = getString(R.string.setting_timeshift_buffer_desc) + " " + rateNote, dimmed = blocked != null) {
+                if (blocked != null) blockedClick()
+                else pickSetting(R.string.setting_timeshift_buffer, TimeshiftStorage.SIZES_MB.map { sizeLabel(it) to it }, s.timeshiftBufferMb, repo::setTimeshiftBufferMb)
+            },
+        )
+    }
+
+    private fun <T> pickSetting(title: Int, options: List<Pair<String, T>>, current: T, save: suspend (T) -> Unit) {
+        val index = options.indexOfFirst { it.second == current }
+        AlertDialog.Builder(this).setTitle(title)
+            .setSingleChoiceItems(options.map { it.first }.toTypedArray(), index) { d, which ->
+                d.dismiss()
+                if (which != index) lifecycleScope.launch { save(options[which].second) }
+            }.show()
     }
 
     private fun maintenance() = listOf(Row("Clear EPG", "Maintenance") { clearEpg() }, Row("Clear logo cache", "Maintenance") {
@@ -305,6 +358,7 @@ class SettingsActivity : SectionActivity() {
             getString(R.string.setting_tunneling) to "Use supported hardware audio and video synchronisation.",
             getString(R.string.setting_display_mode) to "Choose how video fits the screen.",
             getString(R.string.setting_background_playback) to "Keep playback running when leaving the player.",
+            getString(R.string.setting_timeshift) to getString(R.string.setting_timeshift_desc),
             getString(R.string.setting_preview_follows_focus) to "Update the preview as you move between channels.",
             getString(R.string.setting_multiview_warning) to "Remind on opening multiview that each screen uses one provider connection.",
             getString(R.string.setting_guide_interval) to "Choose how often guides refresh automatically.",
@@ -333,6 +387,7 @@ class SettingsActivity : SectionActivity() {
                 title = row.title,
                 value = if (explanatoryValue) "" else row.value,
                 detail = row.description.ifEmpty { descriptions[row.title].orEmpty() }.ifEmpty { if (explanatoryValue) row.value else "" },
+                dimmed = row.dimmed,
             )
         })
         if (focused != null && focused >= 0) {
@@ -341,6 +396,8 @@ class SettingsActivity : SectionActivity() {
     }
 
     companion object {
+        /** About 5 Mbit/s, for estimates before any channel has been measured. */
+        private const val TYPICAL_HD_BYTES_PER_SECOND = 625_000L
         private val SECTIONS = listOf("General", "Playlists", "EPG", "Player", "Appearance", "Recording", "Reminders", "Parental", "Backup & restore", "About")
         private val SUMMARIES = listOf("Channel names, multiview warning and cache maintenance", "Add, edit and refresh your playlists", "Guide sources, matching and refresh options", "Decoders, buffering and playback behaviour", "Clock, guide shading and panel appearance", "Recordings, padding and default duration", "Reminder timing and popup duration", "PIN, blocked channels and unlock duration", "Save or restore your configuration", "Version information and open-source licences")
     }

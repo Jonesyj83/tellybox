@@ -9,6 +9,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -17,6 +18,10 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import com.tellybox.tv.player.timeshift.DataSourceUpstream
+import com.tellybox.tv.player.timeshift.TimeshiftDataSource
+import com.tellybox.tv.player.timeshift.TimeshiftSession
+import com.tellybox.tv.player.timeshift.Upstream
 import okhttp3.OkHttpClient
 
 /** How much to buffer before and during playback. Bigger rides out flaky providers. */
@@ -106,7 +111,7 @@ object PlayerFactory {
             .setHandleAudioBecomingNoisy(true)
             .build()
 
-        return Player(exo, httpFactory)
+        return Player(exo, httpFactory, dataSourceFactory)
     }
 }
 
@@ -115,13 +120,20 @@ object PlayerFactory {
 class Player internal constructor(
     val exo: ExoPlayer,
     private val httpFactory: OkHttpDataSource.Factory,
+    /** What live streams are read through; a timeshift session reads the provider with the same stack. */
+    private val upstreamFactory: DataSource.Factory,
 ) {
+    /** The buffer the picture is playing from, while a live channel is timeshifted. */
+    var timeshift: TimeshiftSession? = null
+        private set
+
+    /** Buffer offset the current timeshift item was opened at. */
+    private var timeshiftStart = 0L
+    private var timeshiftTitle: String? = null
+
     fun play(url: String, title: String?, userAgent: String?, referrer: String? = null, forceHls: Boolean = false) {
-        val headers = buildMap {
-            if (!referrer.isNullOrBlank()) put("Referer", referrer)
-        }
-        httpFactory.setUserAgent(userAgent)
-        httpFactory.setDefaultRequestProperties(headers)
+        endTimeshift()
+        setHeaders(userAgent, referrer)
 
         val item = MediaItem.Builder()
             .setUri(Uri.parse(url))
@@ -133,7 +145,60 @@ class Player internal constructor(
         exo.playWhenReady = true
     }
 
-    fun release() = exo.release()
+    private fun setHeaders(userAgent: String?, referrer: String?) {
+        val headers = buildMap {
+            if (!referrer.isNullOrBlank()) put("Referer", referrer)
+        }
+        httpFactory.setUserAgent(userAgent)
+        httpFactory.setDefaultRequestProperties(headers)
+    }
+
+    /** The provider side of a timeshift session, with the channel's headers applied. */
+    fun upstream(userAgent: String?, referrer: String?): Upstream {
+        setHeaders(userAgent, referrer)
+        return DataSourceUpstream(upstreamFactory)
+    }
+
+    /** Hands [session] to this player and starts playing it from the beginning of the buffer. */
+    fun playTimeshift(session: TimeshiftSession, title: String?) {
+        if (timeshift !== session) endTimeshift()
+        timeshift = session
+        timeshiftTitle = title
+        playBuffer(0)
+    }
+
+    /** Restarts playback at [offset] in the buffer: a seek, as far as the viewer is concerned. */
+    fun playBuffer(offset: Long) {
+        val session = timeshift ?: return
+        timeshiftStart = offset
+        val item = MediaItem.Builder()
+            .setUri(TimeshiftDataSource.uriFor(offset))
+            .setMimeType(MimeTypes.VIDEO_MP2T)
+            .setMediaMetadata(MediaMetadata.Builder().setTitle(timeshiftTitle).build())
+            .build()
+        val keepPlaying = exo.playWhenReady || exo.playbackState == androidx.media3.common.Player.STATE_IDLE
+        exo.setMediaSource(DefaultMediaSourceFactory(TimeshiftDataSource.Factory(session)).createMediaSource(item))
+        exo.prepare()
+        exo.playWhenReady = keepPlaying
+    }
+
+    /** Content time of the picture on screen, on the session's timeline. */
+    fun timeshiftPosition(): Long {
+        val session = timeshift ?: return 0L
+        return session.contentAt(timeshiftStart) + exo.currentPosition.coerceAtLeast(0)
+    }
+
+    /** Stops buffering and deletes the buffer. The player itself is left as it is. */
+    fun endTimeshift() {
+        val session = timeshift ?: return
+        timeshift = null
+        session.close()
+    }
+
+    fun release() {
+        endTimeshift()
+        exo.release()
+    }
 
     companion object {
         /**

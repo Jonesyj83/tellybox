@@ -30,6 +30,10 @@ class TellyboxApp : Application() {
             container.recordings.restore()
             container.reminders.restore()
         }
+        // A timeshift buffer left behind by a run that was killed is no use to anyone now.
+        container.appScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            com.tellybox.tv.player.timeshift.TimeshiftFiles.sweep(com.tellybox.tv.player.timeshift.TimeshiftStorage.dir(this@TellyboxApp))
+        }
         // Follows the guide refresh interval setting, including later changes to it.
         container.appScope.launch {
             container.settings.settings.map { it.guideRefreshHours }.distinctUntilChanged().collect {

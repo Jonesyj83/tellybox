@@ -41,7 +41,17 @@ import com.tellybox.tv.data.db.ChannelEntity
 import com.tellybox.tv.data.db.ContentKind
 import com.tellybox.tv.databinding.ActivityPlayerBinding
 import com.tellybox.tv.player.Player
+import com.tellybox.tv.player.timeshift.TimeshiftMode
+import com.tellybox.tv.player.timeshift.TimeshiftSession
+import com.tellybox.tv.player.timeshift.TimeshiftStorage
+import com.tellybox.tv.player.timeshift.TimeshiftUnavailable
+import com.tellybox.tv.player.timeshift.TimeshiftUnsupportedException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -69,13 +79,35 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private val fileMode get() = intent.hasExtra(EXTRA_FILE)
     private var archivePosition = 0L
 
+    private var timeshiftMode = TimeshiftMode.OFF
+    private var timeshiftBufferMb = TimeshiftStorage.DEFAULT_SIZE_MB
+    /** Why the channel on screen isn't timeshifted although timeshift is on. */
+    private var timeshiftNote: TimeshiftUnavailable? = null
+    /** The picture has been paused or rewound since it was last at the live edge. */
+    private var behindLive = false
+    /** Where repeated rewind and skip presses have got to, before playback is moved there. */
+    private var pendingSeekMs: Long? = null
+    private var userAgent: String? = null
+
     private val handler = Handler(Looper.getMainLooper())
     /** The banner and its buttons are one overlay: they appear and disappear together. */
     private val hideBanner = Runnable {
+        // A paused picture keeps its banner, so it's clear where in the buffer it is.
+        if (timeshiftShown() && player?.exo?.playWhenReady == false) return@Runnable
+        val focusInBanner = binding.banner.hasFocus()
         binding.banner.visibility = View.GONE
         binding.recordButton.visibility = View.GONE
         binding.sleepButton.visibility = View.GONE
+        if (focusInBanner) binding.playerView.requestFocus()
     }
+    private val timeshiftTick = object : Runnable {
+        override fun run() {
+            if (binding.banner.visibility != View.VISIBLE || !timeshiftShown()) return
+            updateTimeshiftUi()
+            handler.postDelayed(this, 500)
+        }
+    }
+    private val commitSeek = Runnable { commitPendingSeek() }
 
     private var nameTokens = ""
     private fun displayName(channel: com.tellybox.tv.data.db.ChannelEntity) =
@@ -94,6 +126,10 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             ?: intent.getIntExtra(EXTRA_POSITION, channelIds.indexOf(requested)).coerceIn(0, (channelIds.size - 1).coerceAtLeast(0))
         binding.recordButton.setOnClickListener { instantRecord() }
         binding.sleepButton.setOnClickListener { showSleep() }
+        binding.tsPause.setOnClickListener { togglePause() }
+        binding.tsRewind.setOnClickListener { nudge(-SKIP_MS) }
+        binding.tsSkip.setOnClickListener { nudge(SKIP_MS) }
+        binding.tsLive.setOnClickListener { goLive() }
         appContainer.sleep.addListener(this)
         updateSleep()
     }
@@ -173,6 +209,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             if (opened) {
                 if (catchup || channel.kind != ContentKind.LIVE) archivePosition = player?.exo?.currentPosition ?: archivePosition
                 recordWatch()
+                // The other app needs the provider connection the buffer is holding.
+                player?.endTimeshift()
                 player?.exo?.stop()
             }
         }
@@ -197,6 +235,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         }
         override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) = updatePip()
         override fun onIsPlayingChanged(isPlaying: Boolean) = updatePip()
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            if (player?.timeshift == null) return
+            // Paused from anywhere (the remote, a phone, Bluetooth): the picture falls behind live.
+            if (!playWhenReady) behindLive = true
+            current?.let { if (binding.banner.visibility == View.VISIBLE || !playWhenReady) refreshBanner() }
+        }
     }
     private var backgroundPlayback = true
 
@@ -226,6 +270,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val settings = runBlocking { appContainer.settings.get() }
         nameTokens = settings.channelNameTokens
         backgroundPlayback = settings.backgroundPlayback
+        timeshiftMode = settings.timeshift
+        timeshiftBufferMb = settings.timeshiftBufferMb
         applyDisplayMode(settings.displayMode)
         val playback = appContainer.playback
         val p = playback.acquire(settings.playerConfig, this)
@@ -256,6 +302,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         // Before the home screen starts again, so it can pick the player straight back up.
         if (isFinishing && returnToPreview && player != null) {
             recordWatch()
+            leaveTimeshift()
             appContainer.playback.handBack(this)
         }
         super.onPause()
@@ -263,6 +310,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     /** The home preview (or another screen) took the player over, e.g. while this was in picture-in-picture. */
     override fun onPlaybackTaken() {
+        leaveTimeshift()
         player?.exo?.removeListener(listener)
         binding.playerView.player = null
         player = null
@@ -273,6 +321,9 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var protectionJob: Job? = null
     override fun onStop() {
         mainHandler.removeCallbacks(watchdog)
+        handler.removeCallbacks(timeshiftTick)
+        handler.removeCallbacks(commitSeek)
+        pendingSeekMs = null
         if (catchup || fileMode) archivePosition = player?.exo?.currentPosition ?: archivePosition
         recordWatch()
         loadJob?.cancel()
@@ -342,7 +393,13 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (fileMode) return playFile(resume)
         if (channelIds.isEmpty()) return finish()
         recordWatch()
-        if (!resume) player?.exo?.stop()
+        if (!resume) {
+            // The old channel's buffer goes with it.
+            player?.endTimeshift()
+            player?.exo?.stop()
+        }
+        pendingSeekMs = null
+        handler.removeCallbacks(commitSeek)
         lastUrl = null
         binding.banner.visibility = View.GONE
         binding.channelOverlay.visibility = View.GONE
@@ -379,14 +436,30 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             )
 
             if (resume) {
-                lastUrl = player?.exo?.currentMediaItem?.localConfiguration?.uri?.toString()
+                val session = player?.timeshift
+                lastUrl = session?.url ?: player?.exo?.currentMediaItem?.localConfiguration?.uri?.toString()
+                userAgent = container.channels.userAgentFor(channel)
+                session?.let(::watchTimeshift)
                 if (player?.exo?.isPlaying == true) watchStartedAt = SystemClock.elapsedRealtime()
+                // Taken over from the home preview, which plays straight from the provider:
+                // the buffer has to start somewhere, and that costs one reconnect.
+                val url = lastUrl
+                if (session == null && url != null && timeshiftMode != TimeshiftMode.OFF && !isVod &&
+                    intent.getLongExtra("episode_id", -1) < 0) {
+                    openTimeshift(channel, url)?.let { player?.playTimeshift(it, channel.name) }
+                }
             } else try {
                 val url = if (catchup) container.channels.resolveCatchupUrl(channel,
                     intent.getLongExtra(EXTRA_ARCHIVE_START, 0), intent.getLongExtra(EXTRA_ARCHIVE_STOP, 0))
                 else container.channels.resolveStreamUrl(channel)
                 lastUrl = url
-                player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
+                userAgent = container.channels.userAgentFor(channel)
+                timeshiftNote = null
+                behindLive = false
+                val session = if (timeshiftMode != TimeshiftMode.OFF && !isVod && intent.getLongExtra("episode_id", -1) < 0)
+                    openTimeshift(channel, url) else null
+                if (session != null) player?.playTimeshift(session, channel.name)
+                else player?.play(url, channel.name, userAgent, channel.referrer)
                 container.playback.key = playbackKey(i)
                 container.playback.liveChannelId =
                     channel.id.takeIf { !catchup && !isVod && intent.getLongExtra("episode_id", -1) < 0 }
@@ -404,6 +477,68 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             val now = container.epg.currentProgram(channel.id.toString())
             if (current?.id == channel.id) showBanner(channel, if (catchup) intent.getStringExtra(EXTRA_ARCHIVE_TITLE) else now?.title)
         }
+    }
+
+    /**
+     * Starts buffering [channel] if it can be, or notes why not. Catch-up, VOD, files and
+     * multiview never get here; only a live MPEG-TS stream over HTTP can be buffered.
+     */
+    private suspend fun openTimeshift(channel: ChannelEntity, url: String): TimeshiftSession? {
+        if (catchup || fileMode || channel.kind != ContentKind.LIVE) return null
+        val scheme = android.net.Uri.parse(url).scheme?.lowercase()
+        val mime = Player.guessMimeType(url)
+        if ((scheme != "http" && scheme != "https") || (mime != null && mime != androidx.media3.common.MimeTypes.VIDEO_MP2T)) {
+            timeshiftNote = TimeshiftUnavailable.UnsupportedStream
+            return null
+        }
+        val p = player ?: return null
+        val upstream = p.upstream(userAgent, channel.referrer)
+        val dir = TimeshiftStorage.dir(this)
+        val channels = appContainer.channels
+        // Not cancellable: a session opened as the viewer zaps away must still be closed, not leaked.
+        val result = withContext(Dispatchers.IO + NonCancellable) {
+            TimeshiftSession.open(dir, timeshiftBufferMb * TimeshiftStorage.MB, upstream, url) {
+                kotlinx.coroutines.runBlocking { channels.resolveStreamUrl(channel) }
+            }
+        }
+        return when (result) {
+            is TimeshiftSession.OpenResult.Unavailable -> {
+                timeshiftNote = result.reason
+                null
+            }
+            is TimeshiftSession.OpenResult.Opened -> {
+                if (!currentCoroutineContext().isActive || player !== p) {
+                    result.session.close()
+                    throw CancellationException()
+                }
+                watchTimeshift(result.session)
+                result.session
+            }
+        }
+    }
+
+    private fun watchTimeshift(session: TimeshiftSession) {
+        session.onUnavailable = { reason ->
+            handler.post {
+                if (player?.timeshift === session) {
+                    timeshiftNote = reason
+                    behindLive = false
+                    refreshBanner()
+                }
+            }
+        }
+    }
+
+    /**
+     * Leaving the player while another screen carries on with the channel: the buffer is
+     * deleted and the stream continues straight from the provider.
+     */
+    private fun leaveTimeshift() {
+        val p = player ?: return
+        if (p.timeshift == null) return
+        val url = p.timeshift?.url ?: lastUrl
+        val ch = current
+        if (url != null && ch != null) p.play(url, ch.name, userAgent, ch.referrer) else p.endTimeshift()
     }
 
     private fun playFile(resume: Boolean) {
@@ -482,6 +617,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         lifecycleScope.launch {
             delay(RECONNECT_DELAY_MS * reconnects)
             if (isFinishing || isDestroyed) return@launch
+            // Timeshifted: keep the buffer and reconnect it, with a fresh URL in case the old one expired.
+            if (player?.timeshift != null) return@launch returnToLive()
             player?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer, forceHls = triedHls)
             if (keep > 0) player?.exo?.seekTo(keep)
         }
@@ -490,6 +627,24 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun handleError(error: PlaybackException) {
         val url = lastUrl
         val ch = current
+        val session = player?.timeshift
+        if (session != null && url != null && ch != null) {
+            val unsupported = session.unavailable == TimeshiftUnavailable.UnsupportedStream ||
+                generateSequence<Throwable>(error) { it.cause }.any { it is TimeshiftUnsupportedException }
+            if (unsupported) {
+                // Not something the buffer can hold; play it the ordinary way, which also tries HLS.
+                timeshiftNote = TimeshiftUnavailable.UnsupportedStream
+                player?.play(url, ch.name, userAgent, ch.referrer)
+                refreshBanner()
+                return
+            }
+            if (session.isTs) {
+                if (reconnects < MAX_RECONNECTS) reconnect() else showError(describe(error))
+                return
+            }
+            // The stream hasn't shown what it is yet: handled like any other below.
+            timeshiftNote = TimeshiftUnavailable.UnsupportedStream
+        }
         // Extensionless URLs are often HLS underneath; give that one more go before giving up.
         if (!triedHls && url != null && ch != null && Player.guessMimeType(url) == null) {
             triedHls = true
@@ -531,6 +686,151 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         }
         handler.removeCallbacks(hideBanner)
         handler.postDelayed(hideBanner, BANNER_MS)
+        startTimeshiftTicks()
+    }
+
+    /** Brings the banner back as it is, without reloading the logo, e.g. on a pause. */
+    private fun refreshBanner() {
+        if (current == null || inPip()) return
+        binding.banner.visibility = View.VISIBLE
+        binding.sleepButton.visibility = View.VISIBLE
+        if (!catchup && !fileMode && current?.kind == ContentKind.LIVE) binding.recordButton.visibility = View.VISIBLE
+        handler.removeCallbacks(hideBanner)
+        handler.postDelayed(hideBanner, BANNER_MS)
+        startTimeshiftTicks()
+    }
+
+    private fun startTimeshiftTicks() {
+        updateTimeshiftUi()
+        handler.removeCallbacks(timeshiftTick)
+        if (timeshiftShown()) handler.postDelayed(timeshiftTick, 500)
+    }
+
+    /** Timeshift controls are offered: a live channel playing from a buffer that is still being kept. */
+    private fun timeshiftShown(): Boolean {
+        val session = player?.timeshift ?: return false
+        return session.unavailable == null && !inPip()
+    }
+
+    private fun updateTimeshiftUi() {
+        val live = !catchup && !fileMode && current?.kind == ContentKind.LIVE
+        val note = timeshiftNote?.takeIf { live && timeshiftMode != TimeshiftMode.OFF }
+        binding.timeshiftNote.text = note?.let { getString(R.string.timeshift_banner_off, TimeshiftText.reason(this, it)) }.orEmpty()
+        binding.timeshiftNote.visibility = if (note != null) View.VISIBLE else View.GONE
+
+        val p = player
+        val session = p?.timeshift
+        if (p == null || session == null || !timeshiftShown()) {
+            if (binding.timeshiftControls.hasFocus()) binding.playerView.requestFocus()
+            binding.timeshiftPanel.visibility = View.GONE
+            return
+        }
+        binding.timeshiftPanel.visibility = View.VISIBLE
+        val full = timeshiftMode == TimeshiftMode.FULL
+        binding.tsRewind.visibility = if (full) View.VISIBLE else View.GONE
+        binding.tsSkip.visibility = if (full) View.VISIBLE else View.GONE
+        binding.tsPause.setText(if (p.exo.playWhenReady) R.string.action_ts_pause else R.string.action_ts_play)
+
+        val window = session.window()
+        val pending = pendingSeekMs
+        val behind = behindLive || pending != null
+        val behindMs = if (behind) (window.liveMs - (pending ?: p.timeshiftPosition())).coerceAtLeast(0) else 0L
+        binding.timeshiftBar.set(window.capacityMs, window.spanMs, behindMs)
+        binding.tsPosition.text = if (behind) getString(R.string.timeshift_behind, TimeshiftText.duration(behindMs))
+            else getString(R.string.timeshift_at_live)
+
+        // Already live: nothing to go back to.
+        val liveFocused = binding.tsLive.hasFocus()
+        binding.tsLive.isEnabled = behind
+        binding.tsLive.isFocusable = behind
+        binding.tsLive.alpha = if (behind) 1f else 0.4f
+        if (liveFocused && !behind) binding.tsPause.requestFocus()
+    }
+
+    private fun togglePause() {
+        val exo = player?.exo ?: return
+        if (player?.timeshift == null) return
+        if (exo.playWhenReady) exo.pause() else exo.play()
+        refreshBanner()
+    }
+
+    /**
+     * Rewind or skip by [deltaMs]. Presses in quick succession add up, and playback moves
+     * once they stop, so holding the button doesn't restart the decoder every time.
+     */
+    private fun nudge(deltaMs: Long) {
+        if (timeshiftMode != TimeshiftMode.FULL || !timeshiftShown()) return
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        if (deltaMs > 0 && !behindLive && pendingSeekMs == null) return
+        val window = session.window()
+        val from = pendingSeekMs ?: p.timeshiftPosition()
+        pendingSeekMs = (from + deltaMs).coerceIn(window.oldestMs, maxOf(window.oldestMs, window.liveMs))
+        handler.removeCallbacks(commitSeek)
+        handler.postDelayed(commitSeek, SEEK_SETTLE_MS)
+        refreshBanner()
+    }
+
+    private fun commitPendingSeek() {
+        val target = pendingSeekMs ?: return
+        pendingSeekMs = null
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        if (target >= session.window().liveMs - LIVE_EDGE_MS) return goLive()
+        behindLive = true
+        p.playBuffer(session.offsetFor(target))
+        refreshBanner()
+    }
+
+    private fun goLive() {
+        lifecycleScope.launch { returnToLive() }
+    }
+
+    /**
+     * Back to the live edge on a new connection. The URL is resolved again first: a token in
+     * the old one may have expired while the viewer was watching from the buffer.
+     */
+    private suspend fun returnToLive() {
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        val ch = current ?: return
+        pendingSeekMs = null
+        handler.removeCallbacks(commitSeek)
+        val url = try {
+            appContainer.channels.resolveStreamUrl(ch)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            session.url
+        }
+        lastUrl = url
+        val offset = withContext(Dispatchers.IO) { session.restart(url) }
+        if (player !== p || p.timeshift !== session) return
+        behindLive = false
+        p.playBuffer(offset)
+        p.exo.play()
+        refreshBanner()
+    }
+
+    /** Remote keys for timeshift. True when the key was used. */
+    private fun timeshiftKey(keyCode: Int): Boolean {
+        val exo = player?.exo ?: return false
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> togglePause()
+            KeyEvent.KEYCODE_MEDIA_PLAY -> { exo.play(); refreshBanner() }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> { exo.pause(); refreshBanner() }
+            KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD -> nudge(-SKIP_MS)
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD -> nudge(SKIP_MS)
+            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                // First press brings up the controls; after that the arrows move between them.
+                val focus = currentFocus
+                if (binding.timeshiftControls.hasFocus() || (focus != null && focus !== binding.playerView)) return false
+                refreshBanner()
+                binding.tsPause.requestFocus()
+            }
+            else -> return false
+        }
+        return true
     }
 
     private fun recordWatch() {
@@ -555,6 +855,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var okLongPressed = false
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // Using the timeshift controls keeps them on screen.
+        if (event.action == KeyEvent.ACTION_DOWN && binding.banner.visibility == View.VISIBLE &&
+            binding.timeshiftPanel.visibility == View.VISIBLE) {
+            handler.removeCallbacks(hideBanner)
+            handler.postDelayed(hideBanner, BANNER_MS)
+        }
         // Remotes here have no Menu key, so holding OK opens the player menu. A short press
         // is only known on release; it then goes through as a normal press (channel list,
         // retry, the focused button, the playback controls).
@@ -608,6 +914,11 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (keyCode == KeyEvent.KEYCODE_MEDIA_RECORD) {
             instantRecord()
             return true
+        }
+        if (timeshiftShown()) {
+            if (timeshiftKey(keyCode)) return true
+            // Up and down move around the controls rather than changing channel.
+            if (binding.timeshiftControls.hasFocus()) return super.onKeyDown(keyCode, event)
         }
         val vod = catchup || fileMode || (current?.kind?.let { it != ContentKind.LIVE } ?: false)
         when (keyCode) {
@@ -758,6 +1069,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
         /** Wait a bit longer between each attempt. */
         private const val RECONNECT_DELAY_MS = 1_500L
+
+        /** One press of rewind or skip. */
+        private const val SKIP_MS = 30_000L
+
+        /** Quiet time after the last rewind or skip press before playback moves. */
+        private const val SEEK_SETTLE_MS = 700L
+
+        /** A skip landing this close to live goes live instead. */
+        private const val LIVE_EDGE_MS = 10_000L
 
         private const val EXTRA_ARCHIVE_START = "archive_start"
         private const val EXTRA_ARCHIVE_STOP = "archive_stop"

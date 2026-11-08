@@ -322,4 +322,29 @@
     <string name="external_player_none">No installed app can play this stream</string>
     <string name="external_player_failed">Could not open the stream: %1$s</string>
     <string name="setting_resume_last_channel">Open last channel on start</string>
+
+    <!-- timeshift -->
+    <string name="setting_timeshift">Timeshift</string>
+    <string name="setting_timeshift_buffer">Timeshift buffer size</string>
+    <string name="setting_timeshift_desc">Pause and rewind live channels. The buffer is kept on this device and deleted when you leave the channel.</string>
+    <string name="setting_timeshift_buffer_desc">How much live TV to keep for rewinding. Never more than a quarter of free storage.</string>
+    <string name="timeshift_off">Off</string>
+    <string name="timeshift_pause_only">Pause only</string>
+    <string name="timeshift_full">Full</string>
+    <string name="timeshift_size_minutes">%1$s · about %2$d min</string>
+    <string name="timeshift_rate_channel">At the bitrate of %1$s.</string>
+    <string name="timeshift_rate_last">At the bitrate of the last channel watched.</string>
+    <string name="timeshift_rate_typical">At a typical HD bitrate; the real figure shows once a channel has played.</string>
+    <string name="timeshift_low_storage">Unavailable: needs %1$s free storage, %2$s free</string>
+    <string name="timeshift_storage_ran_low">Stopped: storage is nearly full</string>
+    <string name="timeshift_write_failed">Stopped: the buffer couldn\'t be written</string>
+    <string name="timeshift_unsupported">Unavailable for this stream format</string>
+    <string name="timeshift_banner_off">Timeshift: %1$s</string>
+    <string name="action_ts_rewind">◀◀ 30s</string>
+    <string name="action_ts_pause">❚❚ Pause</string>
+    <string name="action_ts_play">▶ Play</string>
+    <string name="action_ts_skip">30s ▶▶</string>
+    <string name="action_ts_live">● Live</string>
+    <string name="timeshift_at_live">Live</string>
+    <string name="timeshift_behind">−%1$s</string>
 </resources>
