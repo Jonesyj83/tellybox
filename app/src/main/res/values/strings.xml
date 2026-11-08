@@ -322,6 +322,9 @@
     <string name="external_player_none">No installed app can play this stream</string>
     <string name="external_player_failed">Could not open the stream: %1$s</string>
     <string name="setting_resume_last_channel">Open last channel on start</string>
+    <string name="setting_language">Language</string>
+    <string name="setting_language_desc">Choose the language for menus and messages.</string>
+    <string name="language_system">System default</string>
 
     <!-- timeshift -->
     <string name="setting_timeshift">Timeshift</string>

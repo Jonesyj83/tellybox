@@ -124,6 +124,11 @@ class SettingsActivity : SectionActivity() {
             Row("Parental controls", "PIN, blocks and unlock duration") {
                 startActivity(android.content.Intent(this, com.tellybox.tv.ui.parental.ParentalActivity::class.java))
             },
+            // Stays before the Player header: the Player section takes every row between its header and the next.
+            Row(getString(R.string.setting_language), AppLanguages.current()?.name ?: getString(R.string.language_system)) {
+                val languages = listOf(getString(R.string.language_system) to "") + AppLanguages.all.map { it.name to it.tag }
+                pick(R.string.setting_language, languages, AppLanguages.current()?.tag.orEmpty(), { tag -> AppLanguages.apply(tag) })
+            },
             Row("Channel name cleanup", s.channelNameTokens.ifEmpty { "Off" }) {
                 val input = android.widget.EditText(this).apply {
                     inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -330,7 +335,7 @@ class SettingsActivity : SectionActivity() {
         return when (name) {
             "Playlists" -> listOf(Row("Manage playlists", "Add, edit, refresh and remove streams") { openSection(Section.PLAYLISTS) })
             "Parental" -> all.take(1)
-            "General" -> all.filter { it.title in listOf("Channel name cleanup", getString(R.string.setting_resume_last_channel), getString(R.string.setting_multiview_warning)) } + maintenance()
+            "General" -> all.filter { it.title in listOf(getString(R.string.setting_language), "Channel name cleanup", getString(R.string.setting_resume_last_channel), getString(R.string.setting_multiview_warning)) } + maintenance()
             "EPG" -> all.dropWhile { it.title != getString(R.string.settings_guide) }.filterNot { it.isHeader } + all.filter { it.title == "Full guide scan" } + listOf(Row("Guide sources and assignments", "URLs and last update times") { showGuides() }, Row("Clear EPG", "") { clearEpg() })
             "Player" -> all.dropWhile { it.title != getString(R.string.settings_player) }.drop(1).takeWhile { !it.isHeader }.filterNot { it.title in listOf(getString(R.string.setting_preview_follows_focus), getString(R.string.setting_multiview_warning), getString(R.string.setting_resume_last_channel)) }
             "Appearance" -> all.filter { it.title in listOf(getString(R.string.setting_preview_follows_focus), "Show clock", "Dim past programmes", "Panel transparency") }
@@ -361,6 +366,7 @@ class SettingsActivity : SectionActivity() {
             getString(R.string.setting_timeshift) to getString(R.string.setting_timeshift_desc),
             getString(R.string.setting_preview_follows_focus) to "Update the preview as you move between channels.",
             getString(R.string.setting_multiview_warning) to "Remind on opening multiview that each screen uses one provider connection.",
+            getString(R.string.setting_language) to getString(R.string.setting_language_desc),
             getString(R.string.setting_guide_interval) to "Choose how often guides refresh automatically.",
             getString(R.string.setting_epg_offset) to "Shift programme times to correct a provider time offset.",
             getString(R.string.setting_store_descriptions) to "Keep programme descriptions for guide details.",
