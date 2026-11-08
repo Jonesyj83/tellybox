@@ -43,6 +43,7 @@ import com.tellybox.tv.databinding.ActivityPlayerBinding
 import com.tellybox.tv.player.Player
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.Date
@@ -187,6 +188,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         override fun onPlayerError(error: PlaybackException) = handleError(error)
         override fun onPlaybackStateChanged(state: Int) {
             if (state == androidx.media3.common.Player.STATE_READY) {
+                reconnects = 0
+                stallSince = 0L
                 binding.errorBox.visibility = View.GONE
                 // Only count time once the stream actually plays; failed channels aren't "watched".
                 if (watchStartedAt == 0L) watchStartedAt = SystemClock.elapsedRealtime()
@@ -197,6 +200,27 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     }
     private var backgroundPlayback = true
 
+    // Live streams from a panel drop out now and then, usually every 15 to 30 minutes.
+    // Instead of leaving the viewer on a dead picture, try to bring the stream back.
+    private var stallSince = 0L
+    private var reconnects = 0
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val watchdog = object : Runnable {
+        override fun run() {
+            val exo = player?.exo
+            if (exo != null && !fileMode) {
+                val buffering = exo.playbackState == androidx.media3.common.Player.STATE_BUFFERING
+                if (buffering && exo.playWhenReady) {
+                    if (stallSince == 0L) stallSince = android.os.SystemClock.elapsedRealtime()
+                    if (android.os.SystemClock.elapsedRealtime() - stallSince > STALL_MS) reconnect()
+                } else {
+                    stallSince = 0L
+                }
+            }
+            mainHandler.postDelayed(this, 2000)
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         val settings = runBlocking { appContainer.settings.get() }
@@ -206,6 +230,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val playback = appContainer.playback
         val p = playback.acquire(settings.playerConfig, this)
         p.exo.addListener(listener)
+        mainHandler.removeCallbacks(watchdog)
+        mainHandler.postDelayed(watchdog, 2000)
         binding.playerView.player = p.exo
         player = p
         playback.handoffChannelId?.let { id ->
@@ -246,6 +272,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     private var protectionJob: Job? = null
     override fun onStop() {
+        mainHandler.removeCallbacks(watchdog)
         if (catchup || fileMode) archivePosition = player?.exo?.currentPosition ?: archivePosition
         recordWatch()
         loadJob?.cancel()
@@ -432,6 +459,34 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         }
     }
 
+    /**
+     * Reopens the same stream where it left off. Live channels come back at the live edge,
+     * anything with a position (catch-up, recordings, files) seeks back to where it was.
+     */
+    private fun reconnect() {
+        stallSince = 0L
+        val url = lastUrl
+        val ch = current
+        if (url == null || ch == null) {
+            showError(getString(R.string.player_stream_stopped))
+            return
+        }
+        if (reconnects >= MAX_RECONNECTS) {
+            showError(getString(R.string.player_stream_stopped))
+            return
+        }
+        reconnects++
+        val keep = if (catchup || fileMode) archivePosition else 0L
+        binding.errorDetail.text = getString(R.string.player_reconnecting, reconnects, MAX_RECONNECTS)
+        binding.errorBox.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            delay(RECONNECT_DELAY_MS * reconnects)
+            if (isFinishing || isDestroyed) return@launch
+            player?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer, forceHls = triedHls)
+            if (keep > 0) player?.exo?.seekTo(keep)
+        }
+    }
+
     private fun handleError(error: PlaybackException) {
         val url = lastUrl
         val ch = current
@@ -443,6 +498,11 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 player?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer, forceHls = true)
                 if ((ch.kind != ContentKind.LIVE || catchup) && position > 0) player?.exo?.seekTo(position)
             }
+            return
+        }
+        // A dropped live stream is worth another go before we tell the viewer it's broken.
+        if (ch != null && ch.kind == ContentKind.LIVE && !catchup && !fileMode && reconnects < MAX_RECONNECTS) {
+            reconnect()
             return
         }
         showError(describe(error))
@@ -690,6 +750,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     }
 
     companion object {
+        /** How long a picture may sit buffering before we assume the stream has dropped. */
+        private const val STALL_MS = 12_000L
+
+        /** Reconnect attempts before falling back to the error box. */
+        private const val MAX_RECONNECTS = 3
+
+        /** Wait a bit longer between each attempt. */
+        private const val RECONNECT_DELAY_MS = 1_500L
+
         private const val EXTRA_ARCHIVE_START = "archive_start"
         private const val EXTRA_ARCHIVE_STOP = "archive_stop"
         private const val EXTRA_ARCHIVE_TITLE = "archive_title"
