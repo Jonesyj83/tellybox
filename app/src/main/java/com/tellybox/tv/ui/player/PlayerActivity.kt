@@ -85,6 +85,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var timeshiftNote: TimeshiftUnavailable? = null
     /** The picture has been paused or rewound since it was last at the live edge. */
     private var behindLive = false
+    private var menuHeld = false
+    /** Steps get bigger while the scrub keys are hammered, so a long jump is a few presses. */
+    private var scrubStepMs = 0L
+    private var lastScrubAt = 0L
+    private val menuLongPress = Runnable {
+        menuHeld = true
+        showOptions()
+    }
     /** Where repeated rewind and skip presses have got to, before playback is moved there. */
     private var pendingSeekMs: Long? = null
     private var userAgent: String? = null
@@ -758,6 +766,32 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
      * Rewind or skip by [deltaMs]. Presses in quick succession add up, and playback moves
      * once they stop, so holding the button doesn't restart the decoder every time.
      */
+/** Menu, or the first arrow press: bring the overlay up with the scrub line in focus. */
+    private fun showControls() {
+        refreshBanner()
+        if (timeshiftMode == TimeshiftMode.FULL && binding.timeshiftPanel.visibility == View.VISIBLE) {
+            binding.timeshiftBar.requestFocus()
+        } else {
+            binding.playerView.requestFocus()
+        }
+    }
+
+    /** Left and right on the bar, accelerating the longer it is held down. */
+    private fun scrub(direction: Int): Boolean {
+        if (timeshiftMode != TimeshiftMode.FULL || !timeshiftShown()) return false
+        val now = SystemClock.elapsedRealtime()
+        val quick = now - lastScrubAt < 400
+        lastScrubAt = now
+        scrubStepMs = when {
+            !quick -> 10_000L
+            scrubStepMs < 30_000L -> 30_000L
+            scrubStepMs < 60_000L -> 60_000L
+            else -> 120_000L
+        }
+        nudge(direction * scrubStepMs)
+        return true
+    }
+
     private fun nudge(deltaMs: Long) {
         if (timeshiftMode != TimeshiftMode.FULL || !timeshiftShown()) return
         val p = player ?: return
@@ -822,11 +856,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD -> nudge(-SKIP_MS)
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD -> nudge(SKIP_MS)
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                // First press brings up the controls; after that the arrows move between them.
+                // On the bar the arrows scrub; anywhere else the first press just brings the
+                // controls up with the bar in focus.
+                if (binding.timeshiftBar.hasFocus()) {
+                    scrub(if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) -1 else 1)
+                    return true
+                }
                 val focus = currentFocus
                 if (binding.timeshiftControls.hasFocus() || (focus != null && focus !== binding.playerView)) return false
-                refreshBanner()
-                binding.tsPause.requestFocus()
+                showControls()
             }
             else -> return false
         }
@@ -890,14 +928,56 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 }
             }
         }
-        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
-            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showOptions()
+        if (event.keyCode in MENU_KEYS) {
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    if (event.repeatCount == 0) {
+                        menuHeld = false
+                        handler.postDelayed(menuLongPress, LONG_PRESS_MS)
+                    }
+                }
+                KeyEvent.ACTION_UP -> {
+                    handler.removeCallbacks(menuLongPress)
+                    // A tap is the everyday gesture: show the controls and put the cursor on the
+                    // scrub line. Holding still gets the old options list.
+                    if (!menuHeld) showControls()
+                }
+            }
             return true
         }
         return super.dispatchKeyEvent(event)
     }
 
+/**
+     * Up and down inside the timeshift controls move between the scrub line and the buttons.
+     * Returns true when the key belonged to the controls and must not zap.
+     */
+    private fun timeshiftGroupNav(keyCode: Int): Boolean {
+        if (binding.timeshiftPanel.visibility != View.VISIBLE) return false
+        val up = keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_CHANNEL_UP
+        val down = keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_CHANNEL_DOWN
+        if (!up && !down) return false
+        if (binding.timeshiftBar.hasFocus()) {
+            if (down) {
+                binding.tsPause.requestFocus()
+                return true
+            }
+            return false
+        }
+        if (binding.timeshiftControls.hasFocus()) {
+            if (up) {
+                binding.timeshiftBar.requestFocus()
+                return true
+            }
+            return true
+        }
+        return false
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        // The scrub line and the buttons below it are one control group. This has to happen
+        // before the zapping handler, or down here changes channel instead of moving focus.
+        if (timeshiftGroupNav(keyCode)) return true
         if (binding.errorBox.visibility == View.VISIBLE &&
             (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
             loadChannel(index)
@@ -1072,6 +1152,10 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
         /** One press of rewind or skip. */
         private const val SKIP_MS = 30_000L
+        private const val LONG_PRESS_MS = 500L
+
+        /** Remotes disagree about which code the menu button is; accept the common ones. */
+        private val MENU_KEYS = intArrayOf(KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_TV_CONTENTS_MENU, KeyEvent.KEYCODE_INFO)
 
         /** Quiet time after the last rewind or skip press before playback moves. */
         private const val SEEK_SETTLE_MS = 700L

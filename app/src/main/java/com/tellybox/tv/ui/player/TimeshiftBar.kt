@@ -14,6 +14,17 @@ import com.tellybox.tv.R
  * marker is the picture on screen. It is the only sign of how far back the viewer can go.
  */
 class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+
+    private val focusRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * resources.displayMetrics.density
+        color = ContextCompat.getColor(context, R.color.accent)
+    }
+
+    init {
+        isFocusable = true
+        isFocusableInTouchMode = true
+    }
     private val track = Paint().apply { color = 0x33FFFFFF }
     private val buffered = Paint().apply { color = ContextCompat.getColor(context, R.color.accent_dim) }
     private val played = Paint().apply { color = ContextCompat.getColor(context, R.color.accent) }
@@ -36,6 +47,11 @@ class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeS
         invalidate()
     }
 
+    override fun onFocusChanged(gainFocus: Boolean, direction: Int, previouslyFocusedRect: android.graphics.Rect?) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
+        invalidate()
+    }
+
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat()
         val h = height.toFloat()
@@ -47,5 +63,9 @@ class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeS
         canvas.drawRect(start, 0f, at, h, played)
         val half = resources.displayMetrics.density * 2
         canvas.drawRect((at - half).coerceAtLeast(0f), 0f, (at + half).coerceAtMost(w), h, marker)
+        if (isFocused) {
+            val inset = focusRing.strokeWidth / 2f
+            canvas.drawRoundRect(inset, inset, w - inset, h - inset, 3f, 3f, focusRing)
+        }
     }
 }
