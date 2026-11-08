@@ -91,7 +91,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var lastScrubAt = 0L
     private val menuLongPress = Runnable {
         menuHeld = true
-        showOptions()
+        showChannels()
     }
     /** Where repeated rewind and skip presses have got to, before playback is moved there. */
     private var pendingSeekMs: Long? = null
@@ -766,7 +766,16 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
      * Rewind or skip by [deltaMs]. Presses in quick succession add up, and playback moves
      * once they stop, so holding the button doesn't restart the decoder every time.
      */
-/** Menu, or the first arrow press: bring the overlay up with the scrub line in focus. */
+    /** Menu, or the first arrow press: bring the overlay up with the scrub line in focus. */
+    /** OK and Menu both bring the overlay up; pressing again puts it away. */
+    private fun toggleControls() {
+        if (binding.banner.visibility == View.VISIBLE) {
+            hideBanner.run()
+        } else {
+            showControls()
+        }
+    }
+
     private fun showControls() {
         refreshBanner()
         if (timeshiftMode == TimeshiftMode.FULL && binding.timeshiftPanel.visibility == View.VISIBLE) {
@@ -1009,7 +1018,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> { zap(-1); return true }
                 KeyEvent.KEYCODE_DPAD_DOWN -> { zap(1); return true }
-                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { showChannels(); return true }
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { toggleControls(); return true }
                 KeyEvent.KEYCODE_INFO -> { current?.let { showBanner(it, null) }; return true }
             }
         }
