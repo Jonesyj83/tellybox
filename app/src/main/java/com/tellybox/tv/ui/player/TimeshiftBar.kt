@@ -13,6 +13,19 @@ import com.tellybox.tv.R
  * filled part, which ends at the right edge (live), is what has been buffered so far; the
  * marker is the picture on screen. It is the only sign of how far back the viewer can go.
  */
+/**
+ * Where the play head sits along the bar, as a fraction of the buffered window.
+ *
+ * The window is what the buffer actually holds, not what it could hold: scaling against the
+ * capacity made a two-minute buffer occupy a sliver of the bar, so a thirty-second skip moved
+ * the marker a few pixels and every arriving chunk twitched the buffered edge.
+ */
+internal fun markerFraction(windowMs: Long, behindMs: Long): Float {
+    if (windowMs <= 0L) return 1f
+    val held = windowMs - behindMs.coerceIn(0L, windowMs)
+    return (held.toDouble() / windowMs.toDouble()).toFloat().coerceIn(0f, 1f)
+}
+
 class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
     private val focusRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -62,7 +75,10 @@ class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeS
         canvas.drawRect(0f, 0f, w, h, track)
         if (totalMs <= 0) return
         val start = w * (1f - bufferedMs.toFloat() / totalMs)
-        val at = w * (1f - behindMs.toFloat() / totalMs)
+        // Keep the head inside the view, or at the live edge it is drawn off the right side
+        // and disappears exactly when it matters.
+        val edge = resources.displayMetrics.density * 2
+        val at = (w * markerFraction(totalMs, behindMs)).coerceIn(edge, w - edge)
         canvas.drawRect(start, 0f, w, h, buffered)
         canvas.drawRect(start, 0f, at, h, played)
         val half = resources.displayMetrics.density * 2

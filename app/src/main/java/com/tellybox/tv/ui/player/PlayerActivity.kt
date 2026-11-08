@@ -247,6 +247,10 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         override fun onIsPlayingChanged(isPlaying: Boolean) = updatePip()
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             if (player?.timeshift == null) return
+            // Paused on purpose means the picture is ready but not running. A stalled stream
+            // keeps playWhenReady true while it buffers, so it can't pin the banner on screen.
+            userPaused = !playWhenReady &&
+                player?.exo?.playbackState == androidx.media3.common.Player.STATE_READY
             // Paused from anywhere (the remote, a phone, Bluetooth): the picture falls behind live.
             if (!playWhenReady) behindLive = true
             current?.let { if (binding.banner.visibility == View.VISIBLE || !playWhenReady) refreshBanner() }
@@ -777,7 +781,10 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val pending = pendingSeekMs
         val behind = behindLive || pending != null
         val behindMs = if (behind) (window.liveMs - (pending ?: p.timeshiftPosition())).coerceAtLeast(0) else 0L
-        binding.timeshiftBar.set(window.capacityMs, window.spanMs, behindMs, scrubbing = pending != null)
+        // Scale to what is actually in the buffer, not what it could hold. Against the capacity
+        // a two-minute buffer only filled the last sliver of the bar, so a skip of thirty seconds
+        // moved the marker a few pixels and the buffered edge twitched as each chunk arrived.
+        binding.timeshiftBar.set(window.spanMs, window.spanMs, behindMs, scrubbing = pending != null)
         binding.tsPosition.text = if (behind) getString(R.string.timeshift_behind, TimeshiftText.duration(behindMs))
             else getString(R.string.timeshift_at_live)
     }
@@ -798,7 +805,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun togglePause() {
         val exo = player?.exo ?: return
         if (player?.timeshift == null) return
-        userPaused = !exo.playWhenReady
         if (exo.playWhenReady) exo.pause() else exo.play()
         refreshBanner()
     }
@@ -1180,7 +1186,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         private const val SKIP_MS = 30_000L
 
         /** Bar redraw interval while the overlay is showing. */
-        private const val BAR_TICK_MS = 400L
+        private const val BAR_TICK_MS = 250L
         private const val LONG_PRESS_MS = 500L
 
         /** Remotes disagree about which code the menu button is; accept the common ones. */
