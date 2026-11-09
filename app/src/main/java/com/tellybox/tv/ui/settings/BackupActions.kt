@@ -106,10 +106,22 @@ private fun SettingsActivity.applyBackupText(text: String) = lifecycleScope.laun
     }
     AlertDialog.Builder(this@applyBackupText).setTitle(getString(R.string.backup_replace_title))
         .setMessage(getString(R.string.backup_replace_summary, state.playlists.size) + if (state.parental == null || state.version == 1) "\n" + getString(R.string.backup_pin_not_included) else "")
-        .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.common_replace)) { _, _ -> requestPin(always = true) { lifecycleScope.launch {
-            val restored = BackupRestore.restore(appContainer, state)
-            AlertDialog.Builder(this@applyBackupText).setMessage(restored.fold({ getString(R.string.backup_restored) }, { getString(R.string.backup_restore_failed, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
-        } } }.show()
+        .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.common_replace)) { _, _ -> requestPin(always = true) {
+            // Not lifecycleScope: a backup carrying a parental PIN locks the app, and that takes
+            // the screen down with it. The restore has to outlive the screen that asked for it.
+            val activity = this@applyBackupText
+            val container = appContainer
+            container.appScope.launch {
+                val restored = BackupRestore.restore(container, state)
+                withContext(Dispatchers.Main) {
+                    if (activity.isFinishing || activity.isDestroyed) return@withContext
+                    AlertDialog.Builder(activity)
+                        .setMessage(restored.fold({ getString(R.string.backup_restored) }, { getString(R.string.backup_restore_failed, it.message.orEmpty()) }))
+                        .setPositiveButton(getString(R.string.ok), null)
+                        .show()
+                }
+            }
+        } }.show()
 }
 
 /** The sentence shown for each reason a backup was refused. */

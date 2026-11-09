@@ -1,6 +1,8 @@
 package com.tellybox.tv.data.backup
 
 import androidx.room.withTransaction
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import com.tellybox.tv.AppContainer
 
@@ -22,9 +24,12 @@ object BackupRestore {
         }
     }
 
-    suspend fun restore(container: AppContainer, state: BackupState): Result<Unit> {
+    suspend fun restore(container: AppContainer, state: BackupState): Result<Unit> = withContext(NonCancellable) {
+        // Applying a backup that carries a parental PIN locks the app, which tears down the
+        // screen that asked for it. Without this the restore is cancelled halfway, and the
+        // rollback is cancelled with it.
         val snapshot = capture(container)
-        return try {
+        try {
             apply(container, state)
             Result.success(Unit)
         } catch (failure: Throwable) {
