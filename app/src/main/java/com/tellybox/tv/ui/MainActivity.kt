@@ -472,7 +472,7 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
     /** Takes the shared player for this screen, creating it if needed, and shows it in the tile. */
     private fun attachPlayer(): Player {
         previewPlayer?.let { return it }
-        val config = runBlocking { appContainer.settings.get() }.playerConfig
+        val config = (appContainer.settings.current() ?: runBlocking { appContainer.settings.get() }).playerConfig
         val p = appContainer.playback.acquire(config, this)
         p.exo.addListener(previewListener)
         binding.previewPlayer.player = p.exo

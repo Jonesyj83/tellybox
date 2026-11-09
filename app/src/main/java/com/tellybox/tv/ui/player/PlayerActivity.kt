@@ -302,7 +302,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     override fun onStart() {
         super.onStart()
-        val settings = runBlocking { appContainer.settings.get() }
+        val settings = appContainer.settings.current() ?: runBlocking { appContainer.settings.get() }
         nameTokens = settings.channelNameTokens
         backgroundPlayback = settings.backgroundPlayback
         timeshiftMode = settings.timeshift

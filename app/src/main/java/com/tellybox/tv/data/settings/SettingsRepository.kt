@@ -14,6 +14,7 @@ import com.tellybox.tv.player.timeshift.TimeshiftMode
 import com.tellybox.tv.player.timeshift.TimeshiftStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
 
 /** How the video fills the screen. */
@@ -164,7 +165,21 @@ class SettingsRepository(context: Context) {
 
     suspend fun setSoftwareAudioDecoders(v: Boolean) = store.edit { it[Keys.softwareAudioDecoders] = v }
 
-    suspend fun get(): AppSettings = settings.first()
+    /**
+     * Last known settings, kept current by [prime]. Screens that need config before the first
+     * frame can read this instead of blocking the main thread on a DataStore round trip.
+     */
+    @Volatile
+    private var cached: AppSettings? = null
+
+    fun current(): AppSettings? = cached
+
+    suspend fun get(): AppSettings = settings.first().also { cached = it }
+
+    /** Keeps [current] in step with the store. Started once, from the application. */
+    fun prime(scope: kotlinx.coroutines.CoroutineScope) {
+        scope.launch { settings.collect { cached = it } }
+    }
 
     suspend fun setChannelNameTokens(v: String) = store.edit { it[Keys.channelNameTokens] = v }
 

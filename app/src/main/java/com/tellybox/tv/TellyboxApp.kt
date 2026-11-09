@@ -26,6 +26,7 @@ class TellyboxApp : Application() {
         registerActivityLifecycleCallbacks(container.foreground)
         com.tellybox.tv.schedule.Notifications.ensureChannels(this)
         // Alarms are lost on force-stop; put back anything still pending.
+        container.settings.prime(container.appScope)
         container.appScope.launch {
             container.recordings.restore()
             container.reminders.restore()
