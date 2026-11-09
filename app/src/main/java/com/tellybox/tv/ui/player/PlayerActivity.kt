@@ -1162,7 +1162,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val wanted = typedNumber.toString().toIntOrNull() ?: return
         typedNumber.setLength(0)
         lifecycleScope.launch {
-            val id = appContainer.database.channels().idForNumber(wanted) ?: return@launch
+            val id = appContainer.database.channels().idForNumber(wanted, channelIds.toList()) ?: return@launch
             channelIds.indexOf(id).takeIf { it >= 0 }?.let { loadChannel(it) }
         }
     }

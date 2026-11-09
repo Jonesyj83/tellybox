@@ -269,8 +269,6 @@ class PlaylistRepository(
             val oldChannels = db.channels().getForPlaylist(playlistId).associateBy { it.channelKey }
             val nextGroupOrder = (previous.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
             val nextChannelOrder = (oldChannels.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
-            db.channels().deleteForPlaylist(playlistId)
-            db.groups().deleteForPlaylist(playlistId)
 
             val groupEntities = groupKeys.values.mapIndexed { i, g ->
                 val old = previous[g.kind to g.name]
@@ -281,26 +279,29 @@ class PlaylistRepository(
                     remoteId = g.remoteId,
                 ).withLocalChoices(old, nextGroupOrder + i)
             }
-            val ids = db.groups().insertAll(groupEntities)
-            val idByKey = groupEntities.zip(ids).associate { (g, id) -> (g.kind to g.name) to id }
+            // Explicit ids keep open players and guides attached to the same rows.
+            val groupPlan = planGroupRefresh(previous.values.toList(), groupEntities)
+            val ids = db.groups().insertAll(groupPlan.upserts)
+            val idByKey = groupPlan.upserts.zip(ids).associate { (g, id) -> (g.kind to g.name) to id }
 
             val seenKeys = HashMap<String, Int>()
             val nextNumber = HashMap<ContentKind, Int>()
-            channels.asSequence()
-                .map { ic ->
-                    // Duplicate URLs happen in hand-made lists; keep every entry but make keys unique.
-                    val n = seenKeys.merge(ic.channel.channelKey, 1, Int::plus)!!
-                    val key = if (n == 1) ic.channel.channelKey else "${ic.channel.channelKey}#$n"
-                    // Channels without a provider number are numbered in playlist order.
-                    val position = nextNumber.merge(ic.kind, 1, Int::plus)!!
-                    ic.channel.copy(
-                        channelKey = key,
-                        groupId = idByKey[ic.kind to ic.groupName],
-                        number = ic.channel.number ?: position,
-                    ).withLocalChoices(oldChannels[key], nextChannelOrder + position)
-                }
-                .chunked(INSERT_CHUNK)
-                .forEach { db.channels().insertAll(it) }
+            val incomingChannels = channels.map { ic ->
+                // Duplicate URLs happen in hand-made lists; keep every entry but make keys unique.
+                val n = seenKeys.merge(ic.channel.channelKey, 1, Int::plus)!!
+                val key = if (n == 1) ic.channel.channelKey else "${ic.channel.channelKey}#$n"
+                // Channels without a provider number are numbered in playlist order.
+                val position = nextNumber.merge(ic.kind, 1, Int::plus)!!
+                ic.withGroupId(idByKey).copy(
+                    channelKey = key,
+                    number = ic.channel.number ?: position,
+                ).withLocalChoices(oldChannels[key], nextChannelOrder + position)
+            }
+            val channelPlan = planChannelRefresh(oldChannels.values.toList(), incomingChannels)
+            channelPlan.upserts.chunked(INSERT_CHUNK).forEach { db.channels().insertAll(it) }
+            channelPlan.deleteIds.chunked(INSERT_CHUNK).forEach { db.channels().deleteByIds(it) }
+            // Remove groups after channels have moved, so SET_NULL cannot detach surviving rows.
+            groupPlan.deleteIds.chunked(INSERT_CHUNK).forEach { db.groups().deleteByIds(it) }
         }
 
         return RefreshSummary(

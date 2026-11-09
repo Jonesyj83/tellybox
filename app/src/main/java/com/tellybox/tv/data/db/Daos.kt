@@ -45,6 +45,9 @@ interface ChannelGroupDao {
     @Query("SELECT * FROM channel_groups WHERE playlistId = :playlistId")
     suspend fun getForPlaylist(playlistId: Long): List<ChannelGroupEntity>
 
+    @Query("DELETE FROM channel_groups WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
+
     @Query("DELETE FROM channel_groups WHERE playlistId = :playlistId")
     suspend fun deleteForPlaylist(playlistId: Long)
 
@@ -74,15 +77,21 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(channels: List<ChannelEntity>)
 
-    /** For typing a channel number on the remote. */
-    @Query("SELECT id FROM channels WHERE number = :number LIMIT 1")
-    suspend fun idForNumber(number: Int): Long?
+    /**
+     * For typing a channel number on the remote. Scoped to the list on screen, otherwise a
+     * number that exists in another playlist can match first and nothing tunes.
+     */
+    @Query("SELECT id FROM channels WHERE number = :number AND id IN (:ids) LIMIT 1")
+    suspend fun idForNumber(number: Int, ids: List<Long>): Long?
 
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortOrder, id")
     suspend fun getForPlaylist(playlistId: Long): List<ChannelEntity>
 
     @Query("UPDATE channels SET sortOrder = :position WHERE id = :id")
     suspend fun setOrder(id: Long, position: Int)
+
+    @Query("DELETE FROM channels WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
 
     @Query("DELETE FROM channels WHERE playlistId = :playlistId")
     suspend fun deleteForPlaylist(playlistId: Long)

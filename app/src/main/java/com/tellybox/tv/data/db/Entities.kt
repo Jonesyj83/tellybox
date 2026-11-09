@@ -258,7 +258,7 @@ enum class RecordingSource { LIVE, CATCHUP }
 
 /**
  * A scheduled, running or finished recording. Channels are referenced by (playlistId,
- * channelKey) because channel row ids change every time a playlist is refreshed.
+ * channelKey) so they remain identifiable even if the channel is removed and later reimported.
  */
 @Entity(tableName = "recordings", indices = [Index("status"), Index("startAt")])
 data class RecordingEntity(
