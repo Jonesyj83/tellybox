@@ -38,6 +38,16 @@ class ChannelMatcherTest {
         assertEquals(listOf(ChannelMatcher.Match(2, "bbc", "id")), matches)
     }
 
+    @Test fun feedsSharingATvgIdAllGetTheGuide() {
+        // HD and FHD feeds of one channel, as providers usually list them.
+        val matches = ChannelMatcher.match(
+            listOf(channel(1, "Sky Sports F1 HD", "sky"), channel(2, "Sky Sports F1 FHD", "sky")),
+            listOf(guide("sky", "Sky Sports F1")),
+        )
+        assertEquals(listOf(1L, 2L), matches.map { it.channel }.sorted())
+        assertTrue(matches.all { it.guideId == "sky" && it.pass == "id" })
+    }
+
     @Test fun regionalDuplicatesNeverShareGuideAndWinnerIsDeterministic() {
         val channels = listOf(channel(9, "AU: News HD"), channel(2, "UK | News HD"))
         val guides = listOf(guide("news", "News"))

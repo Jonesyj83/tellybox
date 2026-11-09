@@ -1,6 +1,8 @@
 package com.tellybox.tv.data.recording
 
 import com.tellybox.tv.data.catchup.CatchupUrls
+import com.tellybox.tv.data.db.RecordingEntity
+import com.tellybox.tv.data.db.RecordingStatus
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -49,6 +51,32 @@ object RecordingPlan {
     }
 
     fun instant(now: Long, durationMs: Long): Plan.Live = Plan.Live(now, now + durationMs.coerceAtLeast(MINUTE))
+
+    /**
+     * When [rec] can start given the recordings already active on its channel, or null if it
+     * clashes with one. With padding, one programme's recording runs into the start of the
+     * next, so an overlap made only of padding is settled by starting [rec] when the earlier
+     * recording stops.
+     */
+    fun startAfter(rec: RecordingEntity, active: List<RecordingEntity>): Long? {
+        var start = rec.startAt
+        for (other in active.sortedBy { it.stopAt }) {
+            if (other.startAt >= rec.stopAt || other.stopAt <= start) continue
+            // The other programme ends before this one begins, so only padding overlaps.
+            if (other.programStop > rec.programStart) return null
+            start = maxOf(start, other.stopAt)
+        }
+        return start.takeIf { it < rec.stopAt }
+    }
+
+    /**
+     * A row that says RECORDING but that nothing is recording any more. Kept as a finished
+     * recording with [note] if anything reached the file, otherwise given [emptyStatus]; the
+     * note goes with that only when it is a failure.
+     */
+    fun closeOut(rec: RecordingEntity, fileSize: Long, note: String?, emptyStatus: RecordingStatus): RecordingEntity =
+        if (fileSize > 0) rec.copy(status = RecordingStatus.COMPLETED, bytes = fileSize, error = note)
+        else rec.copy(status = emptyStatus, error = if (emptyStatus == RecordingStatus.FAILED) note else null)
 
     /** Wall-clock deadline for an archive download started at [now]. */
     fun catchupDeadline(now: Long, start: Long, stop: Long): Long = now + (stop - start) + CATCHUP_SLACK_MS

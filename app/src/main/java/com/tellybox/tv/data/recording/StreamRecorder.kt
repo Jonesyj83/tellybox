@@ -28,7 +28,9 @@ import javax.crypto.spec.SecretKeySpec
  *   full. TS segments are concatenated into one .ts file, decrypting AES-128 on the way.
  *
  * Dropped connections are retried with backoff until the deadline. The output is opened
- * in append mode so an interrupted recording can carry on into the same file.
+ * in append mode so an interrupted recording can carry on into the same file. A plain
+ * archive download asks for the rest of the file on a retry, and starts the file again if
+ * the server sends the whole thing instead.
  *
  * [record] blocks; call [stop] from another thread to end it early.
  */
@@ -61,6 +63,8 @@ class StreamRecorder(
     @Volatile private var call: Call? = null
     private var written = 0L
     private var lastSequence = -1L
+    /** Whether the source is HLS, known once the first response has been looked at. */
+    private var hls: Boolean? = null
     private val keys = HashMap<String, ByteArray>()
 
     fun stop() {
@@ -85,11 +89,22 @@ class StreamRecorder(
         var error: String? = null
         var failures = 0
         try {
-            BufferedOutputStream(FileOutputStream(req.output, true), 256 * 1024).use { out ->
+            val file = FileOutputStream(req.output, true)
+            BufferedOutputStream(file, 256 * 1024).use { out ->
+                // The server is sending the archive from the start again, so what we already
+                // have would end up in the file twice.
+                val restart = {
+                    out.flush()
+                    file.channel.truncate(0)
+                    // Truncating does not move the write position, so put it back at the start
+                    // or the new copy lands after a hole.
+                    file.channel.position(0)
+                    written = 0L
+                }
                 while (!finished(req)) {
                     val before = written
                     try {
-                        val done = attempt(req, out)
+                        val done = attempt(req, out, restart)
                         out.flush()
                         error = null
                         if (done) break
@@ -120,17 +135,26 @@ class StreamRecorder(
     }
 
     /** One connection's worth of work. Returns true when there is nothing more to fetch. */
-    private fun attempt(req: Request, out: OutputStream): Boolean {
-        execute(req.url, req).use { resp ->
+    private fun attempt(req: Request, out: OutputStream, restart: () -> Unit): Boolean {
+        // Live recordings carry on from wherever the stream is now, so only an archive that
+        // is already known not to be HLS asks for the rest of the file.
+        val from = if (req.finite && hls == false && written > 0) written else 0L
+        execute(req.url, req, from).use { resp ->
+            // Asked for the bytes after the end: the file was already complete.
+            if (from > 0 && resp.code == 416) return true
             val source = resp.body?.source() ?: throw IOException("Empty response")
             val type = resp.header("Content-Type").orEmpty().lowercase()
             val peek = source.peek()
             peek.request(16)
             val head = peek.readUtf8(minOf(peek.buffer.size, 16L))
-            if ("mpegurl" in type || HlsPlaylist.looksLikePlaylist(head)) {
+            val isHls = "mpegurl" in type || HlsPlaylist.looksLikePlaylist(head)
+            hls = isHls
+            if (isHls) {
                 return recordHls(resp.request.url.toString(), source.readUtf8(), req, out)
             }
             if ("text/html" in type) throw IOException("The server sent a web page instead of a stream")
+            // The whole file (200) rather than the rest of it (206), on a retry or a resumed row.
+            if (req.finite && written > 0 && resp.code != 206) restart()
             copy(source, req, out)
             return req.finite && !finished(req)
         }
@@ -243,15 +267,16 @@ class StreamRecorder(
         }
     }
 
-    private fun execute(url: String, req: Request): Response {
+    private fun execute(url: String, req: Request, from: Long = 0L): Response {
         val builder = okhttp3.Request.Builder().url(url)
         if (!req.userAgent.isNullOrBlank()) builder.header("User-Agent", req.userAgent)
         if (!req.referrer.isNullOrBlank()) builder.header("Referer", req.referrer)
+        if (from > 0) builder.header("Range", "bytes=$from-")
         val c = http.newCall(builder.build())
         call = c
         if (finished(req)) c.cancel()
         val resp = c.execute()
-        if (!resp.isSuccessful) {
+        if (!resp.isSuccessful && !(from > 0 && resp.code == 416)) {
             resp.close()
             throw IOException(httpMessage(resp.code))
         }

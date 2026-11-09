@@ -78,7 +78,15 @@ object ChannelMatcher {
                 }
             }
         }
-        pass("id") { c -> c.tvgId?.trim()?.takeIf { it in exactIds }?.let { setOf(it) }.orEmpty() }
+        // A tvg-id is the provider saying "this is that channel", so every channel carrying it
+        // gets the guide. HD and FHD feeds of one channel share an id, and so do the same
+        // channels in two playlists. Name passes still claim, to stop one guide landing twice.
+        ordered.forEach { c ->
+            val id = c.tvgId?.trim()?.takeIf { it in exactIds } ?: return@forEach
+            result[c.key] = Match(c.key, id, "id")
+            // Claimed, so a different channel cannot also pick it up by name.
+            claimed.add(id)
+        }
         pass("name") { c -> c.names.flatMap { exact[normalize(it, false)].orEmpty() }.toSet() }
         pass("normalized") { c -> c.names.flatMap { clean[normalize(it)].orEmpty() }.toSet() }
         pass("contained") { c -> c.names.flatMap { name ->

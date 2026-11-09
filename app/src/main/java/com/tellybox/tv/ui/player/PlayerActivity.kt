@@ -125,12 +125,18 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         // is. A stalled stream is a different thing: testing playWhenReady alone meant a dead
         // connection pinned the banner on screen and Back looked broken.
         if (timeshiftShown() && userPaused && binding.errorBox.visibility != View.VISIBLE) return@Runnable
+        closeBanner()
+    }
+
+    /** Takes the banner down whatever state playback is in. Back uses this so it always works. */
+    private fun closeBanner() {
         val focusInBanner = binding.banner.hasFocus()
         binding.banner.visibility = View.GONE
         binding.recordButton.visibility = View.GONE
         binding.sleepButton.visibility = View.GONE
         if (focusInBanner) binding.playerView.requestFocus()
     }
+
     private val timeshiftTick = object : Runnable {
         override fun run() {
             if (binding.banner.visibility != View.VISIBLE || !timeshiftShown()) return
@@ -282,6 +288,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     // Instead of leaving the viewer on a dead picture, try to bring the stream back.
     private var stallSince = 0L
     private var reconnects = 0
+    private var reconnectJob: Job? = null
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val watchdog = object : Runnable {
         override fun run() {
@@ -374,6 +381,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         startJob?.cancel()
         mainHandler.removeCallbacks(watchdog)
         handler.removeCallbacks(timeshiftTick)
+        handler.removeCallbacks(barTick)
         handler.removeCallbacks(commitSeek)
         pendingSeekMs = null
         if (catchup || fileMode) archivePosition = player?.exo?.currentPosition ?: archivePosition
@@ -444,7 +452,13 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (fileMode) return playFile(resume)
         if (channelIds.isEmpty()) return finish()
         recordWatch()
+        reconnectJob?.cancel()
         if (!resume) {
+            // A catch-up retry starts again where the picture got to, not where it was at the
+            // last onStop. Only when the player really holds this programme.
+            if (catchup && current != null && appContainer.playback.key == playbackKey(index)) {
+                player?.exo?.let { archivePosition = it.currentPosition }
+            }
             // The old channel's buffer goes with it.
             player?.endTimeshift()
             player?.exo?.stop()
@@ -459,7 +473,11 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         loadJob?.cancel()
         loadJob = lifecycleScope.launch {
             val container = appContainer
-            val stored = container.channels.get(channelIds[i]) ?: return@launch
+            // A refresh can drop the channel from the playlist; say so rather than sit on a black screen.
+            val stored = container.channels.get(channelIds[i]) ?: run {
+                showError(getString(R.string.reminder_channel_gone))
+                return@launch
+            }
             if (!container.parental.allowed(stored, container.database) || (container.parental.allScreens && !container.parental.unlocked)) {
                 player?.exo?.stop()
                 if (!pinPending) {
@@ -503,7 +521,13 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 val url = lastUrl
                 if (session == null && url != null && timeshiftMode != TimeshiftMode.OFF && !isVod &&
                     intent.getLongExtra("episode_id", -1) < 0) {
-                    openTimeshift(channel, url)?.let { player?.playTimeshift(it, channel.name) }
+                    // The buffer opens its own connection to the provider, and many accounts allow
+                    // only one, so the direct stream is let go first, as the home preview does.
+                    val wasPlaying = player?.exo?.playbackState != androidx.media3.common.Player.STATE_IDLE
+                    if (wasPlaying) player?.exo?.stop()
+                    val opened = openTimeshift(channel, url)
+                    if (opened != null) player?.playTimeshift(opened, channel.name)
+                    else if (wasPlaying) player?.play(url, channel.name, userAgent, channel.referrer)
                 }
             } else try {
                 val url = if (catchup) container.channels.resolveCatchupUrl(channel,
@@ -661,7 +685,9 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val keep = com.tellybox.tv.player.resumeAt(catchup || fileMode, player?.exo?.currentPosition, archivePosition)
         binding.errorDetail.text = getString(R.string.player_reconnecting, reconnects, MAX_RECONNECTS)
         binding.errorBox.visibility = View.VISIBLE
-        lifecycleScope.launch {
+        reconnectJob?.cancel()
+        // Kept so a channel change cancels it; otherwise the old URL would play under the new banner.
+        reconnectJob = lifecycleScope.launch {
             delay(RECONNECT_DELAY_MS * reconnects)
             if (isFinishing || isDestroyed) return@launch
             // Timeshifted: keep the buffer and reconnect it, with a fresh URL in case the old one expired.
@@ -765,6 +791,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (!catchup && !fileMode && current?.kind == ContentKind.LIVE) binding.recordButton.visibility = View.VISIBLE
         handler.removeCallbacks(hideBanner)
         handler.postDelayed(hideBanner, BANNER_MS)
+        // The bar tick stops with the banner now, so it has to start again with it.
+        startBarTick()
         startTimeshiftTicks()
     }
 
@@ -852,7 +880,9 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     private val barTick = object : Runnable {
         override fun run() {
-            if (binding.timeshiftPanel.visibility != View.VISIBLE) return
+            // The panel sits inside the banner and keeps its own visibility when the banner
+            // goes, so testing the panel alone kept this running for as long as timeshift was on.
+            if (binding.banner.visibility != View.VISIBLE || binding.timeshiftPanel.visibility != View.VISIBLE) return
             updateTimeshiftBar()
             handler.postDelayed(this, BAR_TICK_MS)
         }
@@ -1130,7 +1160,9 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
      */
     override fun onBackPressed() {
         if (binding.banner.visibility == View.VISIBLE) {
-            hideBanner.run()
+            // Not hideBanner, which keeps the banner up while timeshift is paused.
+            handler.removeCallbacks(hideBanner)
+            closeBanner()
             binding.playerView.requestFocus()
             return
         }

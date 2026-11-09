@@ -3,6 +3,7 @@ package com.tellybox.tv.data.db
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +40,13 @@ interface PlaylistDao {
 
 @Dao
 interface ChannelGroupDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /**
+     * Update in place, not replace. SQLite implements REPLACE as a delete then an insert, which
+     * fires the foreign keys: every channel pointing at the old row loses its group, and the
+     * guide matches go with it. Rows kept from an earlier import never get re-sent, so they stay
+     * orphaned.
+     */
+    @Upsert
     suspend fun insertAll(groups: List<ChannelGroupEntity>): List<Long>
 
     @Query("SELECT * FROM channel_groups WHERE playlistId = :playlistId")
@@ -74,7 +81,7 @@ interface ChannelGroupDao {
 
 @Dao
 interface ChannelDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAll(channels: List<ChannelEntity>)
 
     /**
@@ -364,7 +371,8 @@ interface RecordingDao {
     @Update
     suspend fun update(recording: RecordingEntity)
 
-    @Query("UPDATE recordings SET bytes = :bytes WHERE id = :id")
+    /** Progress only: a late write must not change the final size once the row is closed. */
+    @Query("UPDATE recordings SET bytes = :bytes WHERE id = :id AND status = 'RECORDING'")
     suspend fun setBytes(id: Long, bytes: Long)
 
     @Query("DELETE FROM recordings WHERE id = :id")

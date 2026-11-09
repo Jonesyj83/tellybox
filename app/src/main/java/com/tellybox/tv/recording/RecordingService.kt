@@ -49,6 +49,8 @@ class RecordingService : Service() {
     private val jobs = HashMap<Long, Job>()
     private val recorders = ConcurrentHashMap<Long, StreamRecorder>()
     private val titles = ConcurrentHashMap<Long, String>()
+    /** Stops for jobs that were still starting up, checked before the started state is written. */
+    private val earlyStops: MutableSet<Long> = ConcurrentHashMap.newKeySet()
     @Volatile private var timedOut = false
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
@@ -65,7 +67,7 @@ class RecordingService : Service() {
         val id = intent?.getLongExtra(EXTRA_ID, -1L) ?: -1L
         when (intent?.action) {
             ACTION_START -> if (id >= 0) launch(id)
-            ACTION_STOP -> recorders[id]?.stop()
+            ACTION_STOP -> if (id >= 0) stopRecording(id)
             // Restarted by the system after the process was killed mid-recording.
             null -> {
                 scope.launch {
@@ -102,8 +104,31 @@ class RecordingService : Service() {
             main.post {
                 jobs.remove(id)
                 titles.remove(id)
+                earlyStops.remove(id)
                 if (jobs.isNotEmpty()) goForeground() else stopIfIdle()
             }
+        }
+    }
+
+    /** Main thread. */
+    private fun stopRecording(id: Long) {
+        if (jobs.containsKey(id)) {
+            // Noted before the recorder is asked, so a job that registers its recorder in
+            // between still sees the stop when it checks.
+            earlyStops.add(id)
+            recorders[id]?.stop()
+            return
+        }
+        // Nothing here is recording it, e.g. the process died and the service never picked
+        // it back up. The row would say RECORDING for good, so close it out. The app scope
+        // outlives this service, which stops as soon as it sees it is idle.
+        val c = appContainer
+        val note = getString(com.tellybox.tv.R.string.rec_interrupted)
+        c.appScope.launch {
+            val dao = c.database.recordings()
+            val rec = dao.get(id)?.takeIf { it.status == RecordingStatus.RECORDING } ?: return@launch
+            val size = rec.filePath?.let { File(it).length() } ?: 0L
+            dao.update(RecordingPlan.closeOut(rec, size, note, RecordingStatus.CANCELLED))
         }
     }
 
@@ -158,15 +183,26 @@ class RecordingService : Service() {
         // Picking up a recording the system or a reboot cut short: the gap can't be filled.
         val resumed = rec.status == RecordingStatus.RECORDING && (rec.filePath?.let { File(it).length() } ?: 0L) > 0
         val file = rec.filePath?.let(::File) ?: uniqueFile(dir, RecordingPlan.fileName(rec.channelName, rec.title, rec.programStart))
-        val started = rec.copy(status = RecordingStatus.RECORDING, filePath = file.path, error = null)
-        dao.update(started)
-        titles[id] = rec.title
-        withContext(Dispatchers.Main) { goForeground() }
 
+        // Registered before the started state is written, so any stop from here on reaches it.
         val recorder = StreamRecorder(c.http)
         recorders[id] = recorder
         var lastSaved = 0L
         val result = try {
+            // Stopped, cancelled or deleted while the stream was being looked up. Writing the
+            // started state now would put RECORDING back over that and the file would grow.
+            val current = dao.get(id)
+            if (current == null || id in earlyStops ||
+                (current.status != RecordingStatus.SCHEDULED && current.status != RecordingStatus.RECORDING)) {
+                if (current != null && current.status == RecordingStatus.RECORDING) {
+                    finish(RecordingPlan.closeOut(current, file.length(), getString(com.tellybox.tv.R.string.rec_interrupted), RecordingStatus.CANCELLED))
+                }
+                return
+            }
+            dao.update(current.copy(status = RecordingStatus.RECORDING, filePath = file.path, error = null))
+            titles[id] = rec.title
+            withContext(Dispatchers.Main) { goForeground() }
+
             recorder.record(
                 StreamRecorder.Request(
                     url = url,

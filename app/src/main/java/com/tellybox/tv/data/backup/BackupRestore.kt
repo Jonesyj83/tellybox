@@ -1,6 +1,7 @@
 package com.tellybox.tv.data.backup
 
 import androidx.room.withTransaction
+import kotlinx.coroutines.launch
 import com.tellybox.tv.AppContainer
 
 /**
@@ -51,10 +52,15 @@ object BackupRestore {
 
     private suspend fun apply(container: AppContainer, state: BackupState) {
         val db = container.database
+        // Anything still running against the rows we are about to replace has to stop first,
+        // and the cached portal connection goes with it.
+        db.playlists().getAll().forEach { container.playlists.forgetRuntimeState(it.id) }
         db.withTransaction {
             db.playlists().getAll().forEach { db.playlists().delete(it.id) }
             db.epg().all().forEach { db.epg().deleteSource(it.id) }
-            state.playlists.forEach { db.playlists().insert(it) }
+            // Marked never refreshed, so the lists refill themselves instead of coming back
+            // empty for a whole refresh interval.
+            state.playlists.forEach { db.playlists().insert(it.copy(lastUpdated = 0, lastError = null)) }
             state.guides.forEach { db.epg().insertSource(it.copy(lastUpdated = 0, lastError = null)) }
             state.favorites.forEach { db.favorites().insert(it) }
             db.history().clear()
@@ -65,5 +71,7 @@ object BackupRestore {
         com.tellybox.tv.data.parental.applyParentalBackup(state.blocks, state.parental.takeIf { state.version >= 2 }) { blocks, config ->
             container.parental.replaceConfiguration(blocks, config)
         }
+        // Fill the restored lists back in without making the caller wait for it.
+        container.appScope.launch { container.backgroundRefresh.refreshStale() }
     }
 }

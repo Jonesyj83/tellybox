@@ -68,10 +68,11 @@ class RecordingRepository(
     }
 
     private suspend fun insertAndArm(rec: RecordingEntity): Result<RecordingEntity> {
-        if (dao.activeOverlapping(rec.playlistId, rec.channelKey, rec.startAt, rec.stopAt).isNotEmpty()) {
-            return Result.failure(IllegalStateException(app.getString(com.tellybox.tv.R.string.rec_already_recording)))
-        }
-        val saved = rec.copy(id = dao.insert(rec))
+        val active = dao.activeOverlapping(rec.playlistId, rec.channelKey, rec.startAt, rec.stopAt)
+        val startAt = RecordingPlan.startAfter(rec, active)
+            ?: return Result.failure(IllegalStateException(app.getString(com.tellybox.tv.R.string.rec_already_recording)))
+        val fitted = if (startAt == rec.startAt) rec else rec.copy(startAt = startAt)
+        val saved = fitted.copy(id = dao.insert(fitted))
         arm(saved, fromForeground = true)
         return Result.success(saved)
     }
@@ -108,7 +109,8 @@ class RecordingRepository(
         val rec = dao.get(id) ?: return
         if (rec.status == RecordingStatus.RECORDING || rec.status == RecordingStatus.SCHEDULED) {
             Alarms.cancel(app, alarm(id))
-            if (rec.status == RecordingStatus.RECORDING) RecordingService.stop(app, id)
+            // A scheduled catch-up download may already be picked up by the service, as in stop().
+            if (rec.status == RecordingStatus.RECORDING || rec.source == RecordingSource.CATCHUP) RecordingService.stop(app, id)
         }
         dao.delete(id)
         rec.filePath?.let { File(it).delete() }

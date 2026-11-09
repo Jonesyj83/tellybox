@@ -277,6 +277,16 @@ class PlaylistRepository(
     suspend fun refreshStalkerVod(playlistId: Long) = stalkerRefresh.vod(playlistId)
 
     /**
+     * Drop everything held in memory for a playlist: its half-finished film walk and the portal
+     * connection with its MAC. Called when the rows are replaced, so a reused id cannot end up
+     * talking to the previous portal.
+     */
+    suspend fun forgetRuntimeState(playlistId: Long) {
+        stalkerRefresh.cancel(playlistId)
+        stalkerClients.forget(playlistId)
+    }
+
+    /**
      * Runs after the live channels are on screen, so a big film library cannot block them.
      *
      * Two passes. The first asks for one page of every category, which is cheap and means no
@@ -365,7 +375,10 @@ class PlaylistRepository(
             // Explicit ids keep open players and guides attached to the same rows.
             val groupPlan = planGroupRefresh(previous.values.toList(), groupEntities, { completion.canPrune(it.kind, it) })
             val ids = db.groups().insertAll(groupPlan.upserts)
-            val idByKey = groupPlan.upserts.zip(ids).associate { (g, id) -> (g.kind to g.name) to id }
+            // An upsert of an existing row reports -1, so take the id we already gave it.
+            val idByKey = groupPlan.upserts.zip(ids).associate { (g, returned) ->
+                (g.kind to g.name) to (if (g.id != 0L) g.id else returned)
+            }
 
             val seenKeys = HashMap<String, Int>()
             val nextNumber = HashMap<ContentKind, Int>()

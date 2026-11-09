@@ -51,6 +51,57 @@ class StreamRecorderTest {
     }
 
     @Test
+    fun droppedArchiveAsksForTheRestOnRetry() {
+        val data = Random(5).nextBytes(200_000)
+        val half = 80_000
+        val ranges = mutableListOf<String?>()
+        serve("/timeshift/2.ts") { ex ->
+            synchronized(ranges) { ranges += ex.headers["range"] }
+            if (ex.headers["range"] == null) ex.sendCut(data.copyOfRange(0, half), data.size.toLong())
+            else ex.send(data.copyOfRange(half, data.size), code = 206)
+        }
+        val out = tmp.root.resolve("range.ts")
+        val result = StreamRecorder(http, pause = noPause).record(
+            StreamRecorder.Request("$base/timeshift/2.ts", out, System.currentTimeMillis() + 30_000, finite = true),
+        )
+        assertNull(result.error)
+        assertEquals(listOf(null, "bytes=$half-"), ranges)
+        assertEquals(data.size.toLong(), result.bytes)
+        assertArrayEquals(data, out.readBytes())
+    }
+
+    @Test
+    fun archiveServerThatIgnoresRangeStartsTheFileAgain() {
+        val data = Random(6).nextBytes(200_000)
+        val hits = AtomicInteger()
+        serve("/timeshift/3.ts") { ex ->
+            if (hits.getAndIncrement() == 0) ex.sendCut(data.copyOfRange(0, 50_000), data.size.toLong())
+            else ex.send(data)
+        }
+        val out = tmp.root.resolve("norange.ts")
+        val result = StreamRecorder(http, pause = noPause).record(
+            StreamRecorder.Request("$base/timeshift/3.ts", out, System.currentTimeMillis() + 30_000, finite = true),
+        )
+        assertNull(result.error)
+        assertEquals(2, hits.get())
+        assertEquals(data.size.toLong(), result.bytes)
+        assertArrayEquals(data, out.readBytes())
+    }
+
+    @Test
+    fun resumedArchiveIsNotAppendedToWhatItAlreadyHad() {
+        val data = Random(7).nextBytes(100_000)
+        serve("/timeshift/4.ts") { it.send(data) }
+        val out = tmp.root.resolve("resumed.ts").apply { writeBytes(data.copyOfRange(0, 30_000)) }
+        val result = StreamRecorder(http, pause = noPause).record(
+            StreamRecorder.Request("$base/timeshift/4.ts", out, System.currentTimeMillis() + 30_000, finite = true),
+        )
+        assertNull(result.error)
+        assertEquals(data.size.toLong(), result.bytes)
+        assertArrayEquals(data, out.readBytes())
+    }
+
+    @Test
     fun finishedHlsPlaylistIsConcatenatedFromBestVariant() {
         serve("/master.m3u8") {
             it.send("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=100\nlow.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=900\nhi/index.m3u8\n".toByteArray(), m3u8)
