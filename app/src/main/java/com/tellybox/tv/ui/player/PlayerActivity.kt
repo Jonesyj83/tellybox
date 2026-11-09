@@ -1014,9 +1014,10 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var okLongPressed = false
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        // Using the timeshift controls keeps them on screen.
-        if (event.action == KeyEvent.ACTION_DOWN && binding.banner.visibility == View.VISIBLE &&
-            binding.timeshiftPanel.visibility == View.VISIBLE) {
+        // Anything pressed while the banner is up counts as using it, so the banner stays until the
+        // viewer stops. Without this the bar vanished four seconds after it appeared — mid-press,
+        // on a remote that has to travel from the playback row up to Sleep and Record.
+        if (event.action == KeyEvent.ACTION_DOWN && binding.banner.visibility == View.VISIBLE) {
             handler.removeCallbacks(hideBanner)
             handler.postDelayed(hideBanner, BANNER_MS)
         }
@@ -1359,7 +1360,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         private const val EXTRA_CHANNEL_LIST = "channel_list"
         private const val EXTRA_POSITION = "position"
         private const val STATE_INDEX = "index"
-        private const val BANNER_MS = 4_000L
+        private const val BANNER_MS = 10_000L
 
         fun intent(context: Context, channelId: Long, list: LongArray, position: Int): Intent =
             Intent(context, PlayerActivity::class.java)
