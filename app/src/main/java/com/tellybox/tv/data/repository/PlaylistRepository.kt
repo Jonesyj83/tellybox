@@ -14,6 +14,7 @@ import com.tellybox.tv.data.parser.m3u.M3uParser
 import com.tellybox.tv.data.parser.m3u.M3uPlaylist
 import com.tellybox.tv.data.parser.stalker.LoadCompletion
 import com.tellybox.tv.data.parser.stalker.StalkerClient
+import com.tellybox.tv.data.parser.stalker.StalkerVodCategory
 import com.tellybox.tv.data.parser.xtream.XtreamClient
 import com.tellybox.tv.data.parser.xtream.XtreamCredentials
 import kotlinx.coroutines.CancellationException
@@ -276,9 +277,13 @@ class PlaylistRepository(
     suspend fun refreshStalkerVod(playlistId: Long) = stalkerRefresh.vod(playlistId)
 
     /**
-     * Runs after the live channels are on screen, so a big film library cannot block them. The
-     * walk is stored a chunk of categories at a time, so the film list fills in as it goes rather
-     * than staying empty until the last page.
+     * Runs after the live channels are on screen, so a big film library cannot block them.
+     *
+     * Two passes. The first asks for one page of every category, which is cheap and means no
+     * category looks empty while the rest is still coming down. The second goes back and walks
+     * each category to the end. A portal with a hundred and fifty categories and thousands of
+     * titles takes a few minutes, and it is all of them, not the first however many fit in a
+     * budget.
      */
     private suspend fun importStalkerVod(playlistId: Long) {
         try {
@@ -291,16 +296,33 @@ class PlaylistRepository(
                 return
             }
             val started = System.nanoTime()
-            categories.chunked(VOD_CHUNK).forEach { chunk ->
-                val left = VOD_BUDGET_MS - (System.nanoTime() - started) / 1_000_000
-                if (left <= 0) return@forEach
-                val part = StalkerImport.loadVod(playlistId, false, chunk, left, client::vodItemsResult)
-                // Only this chunk may be pruned. Every other category is marked PARTIAL for this
-                // store, otherwise its rows look missing and get deleted.
+            val all = categories.map { it.id }
+
+            suspend fun keep(part: StalkerImportResult, chunk: List<StalkerVodCategory>) {
                 val chunkIds = chunk.map { it.id }.toSet()
-                val others = categories.map { it.id }.filterNot { it in chunkIds }
-                store(playlistId, part.channels, emptyList(), part.groups, batchedCompletion(part.completion.categories, others))
+                store(playlistId, part.channels, emptyList(), part.groups,
+                    batchedCompletion(part.completion.categories, all.filterNot { it in chunkIds }))
                 part.vodError?.let { Log.w("PlaylistRepository", "Stalker VOD: $it") }
+            }
+
+            fun timeLeft() = WALK_LIMIT_MS - (System.nanoTime() - started) / 1_000_000
+
+            categories.chunked(BREADTH_CHUNK).forEach { chunk ->
+                val left = timeLeft()
+                if (left <= 0) return@forEach
+                val part = StalkerImport.loadVod(
+                    playlistId, false, chunk, left, pagesPerCategory = 1, fetch = client::vodItemsResult,
+                )
+                keep(part, chunk)
+            }
+
+            categories.forEach { category ->
+                val left = timeLeft()
+                if (left <= 0) return@forEach
+                val part = StalkerImport.loadVod(
+                    playlistId, false, listOf(category), left, fetch = client::vodItemsResult,
+                )
+                keep(part, listOf(category))
             }
         } catch (e: CancellationException) {
             throw e
@@ -380,12 +402,10 @@ class PlaylistRepository(
 
     companion object {
         private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        /**
-         * Categories per store. One at a time: a single big category can take a minute, and the
-         * point is that the ones already walked are visible while the rest are still coming.
-         */
-        private const val VOD_CHUNK = 1
-        private const val VOD_BUDGET_MS = 10 * 60 * 1000L
+        /** Categories per store in the first pass, which only reads one page of each. */
+        private const val BREADTH_CHUNK = 10
+        /** Runaway guard only. Every category gets walked, so this is not a truncation budget. */
+        private const val WALK_LIMIT_MS = 60 * 60 * 1000L
         const val UNGROUPED = "Other"
         const val CATCHUP_XTREAM = "xtream"
         const val CATCHUP_STALKER = "stalker"

@@ -168,5 +168,52 @@ class StalkerResilienceTest {
         assertTrue(result.channels.isNotEmpty())
     }
 
+    /** One page per category is enough to show it, but it must never count as finished. */
+    @Test
+    fun aShallowPassIsMarkedPartialSoItCannotPrune() = runBlocking {
+        val p = FakePortal({ q ->
+            when {
+                q["action"] == "handshake" -> 200 to """{"js":{"token":"s"}}"""
+                q["action"] == "get_profile" -> 200 to """{"js":{}}"""
+                q["action"] == "get_categories" -> 200 to """{"js":[{"id":"5","title":"Films","censored":0}]}"""
+                q["p"]?.toIntOrNull()?.let { it <= 36 } == true -> 200 to page("s", 500)
+                else -> 200 to empty()
+            }
+        }).also { servers += it }
+
+        val client = StalkerClient("http://127.0.0.1:${p.port}/portal.php", "00:1A:79:AB:CD:EF", OkHttpClient())
+        val first = withTimeout(20_000) {
+            StalkerImport.loadVod(1, false, client.vodCategories(), pagesPerCategory = 1, fetch = client::vodItemsResult)
+        }
+        assertEquals(14, first.channels.size)
+        assertEquals(LoadCompletion.PARTIAL, first.completion.categories["5"])
+
+        // The second pass walks it to the end and only then may it prune.
+        val second = withTimeout(20_000) {
+            StalkerImport.loadVod(1, false, client.vodCategories(), fetch = client::vodItemsResult)
+        }
+        assertTrue("deep pages were not fetched", second.channels.size >= 500)
+        assertEquals(LoadCompletion.FULL, second.completion.categories["5"])
+    }
+
+    /** A movie link must be exchanged before it is played, or the server answers 403. */
+    @Test
+    fun aMovieLinkIsExchangedBeforePlayback() = runBlocking {
+        val p = FakePortal({ q ->
+            when {
+                q["action"] == "handshake" -> 200 to """{"js":{"token":"s"}}"""
+                q["action"] == "get_profile" -> 200 to """{"js":{}}"""
+                q["action"] == "create_link" -> 200 to """{"js":{"cmd":"ffmpeg http://cdn.example/signed.m3u8?token=1"}}"""
+                q["movie_id"] == "491960" -> 200 to """{"js":{"data":[{"cmd":"http://cdn.example/plain.m3u8"}]}}"""
+                else -> 200 to empty()
+            }
+        }).also { servers += it }
+
+        val client = StalkerClient("http://127.0.0.1:${p.port}/portal.php", "00:1A:79:AB:CD:EF", OkHttpClient())
+        val url = withTimeout(20_000) { client.resolve(StalkerVodRef.parse("stalker://movie/491960")!!) }
+        assertEquals("http://cdn.example/signed.m3u8?token=1", url)
+        assertTrue(p.requests.any { it["action"] == "create_link" })
+    }
+
     private val moved = java.util.concurrent.atomic.AtomicBoolean(true)
 }

@@ -179,6 +179,8 @@ class StalkerVodTest {
             q["type"] == "itv" && q["action"] == "get_all_channels" ->
                 200 to """{"js":{"total_items":1,"data":[{"id":"10","name":"One","number":"1","cmd":"ffmpeg http://localhost/ch/10_","tv_genre_id":"3"}]}}"""
             q["type"] == "vod" && failVod -> 500 to "Internal Server Error"
+            q["action"] == "create_link" ->
+                200 to """{"js":{"cmd":"${q["cmd"]?.replace("\"", "")}"}}"""
             q["action"] == "get_categories" -> 200 to fixture("real-vod-get-categories.json")
             q["action"] != "get_ordered_list" -> 404 to ""
             q["episode_id"] != null -> 200 to fixture("real-episode-2986168.json")
@@ -213,10 +215,11 @@ class StalkerVodTest {
         val url = client(p).resolve(StalkerVodRef.parse("stalker://movie/491960")!!)
         assertTrue(url.endsWith("/index.m3u8"))
         assertTrue(url.startsWith("http://89.187.181.21/"))
-        val q = p.requests.last()
-        assertEquals("get_ordered_list", q["action"])
-        assertEquals("491960", q["movie_id"])
-        assertNull(q["category"])
+        val lookup = p.requests.last { it["action"] == "get_ordered_list" }
+        assertEquals("491960", lookup["movie_id"])
+        assertNull(lookup["category"])
+        // The link is exchanged before it is played.
+        assertEquals("create_link", p.requests.last()["action"])
     }
 
     @Test
@@ -236,8 +239,9 @@ class StalkerVodTest {
         assertEquals("stalker://episode/273000/144224/2986168", ref.marker)
         val url = c.resolve(StalkerVodRef.parse(ref.marker)!!)
         assertTrue(url.startsWith("http://95.173.206.33/") && url.endsWith("/index.m3u8"))
-        val q = p.requests.last()
-        assertEquals(listOf("273000", "144224", "2986168"), listOf(q["movie_id"], q["season_id"], q["episode_id"]))
+        val lookup = p.requests.last { it["action"] == "get_ordered_list" }
+        assertEquals(listOf("273000", "144224", "2986168"),
+            listOf(lookup["movie_id"], lookup["season_id"], lookup["episode_id"]))
     }
 
     @Test

@@ -62,7 +62,9 @@ internal object StalkerImport {
         playlistId: Long,
         hideCensored: Boolean,
         declaredCategories: List<StalkerVodCategory>,
-        budgetMs: Long = 10 * 60 * 1000L,
+        budgetMs: Long = 30 * 60 * 1000L,
+        /** How deep to go per category. One page is enough to make a category appear. */
+        pagesPerCategory: Int = com.tellybox.tv.data.parser.stalker.MAX_PAGES,
         fetch: suspend (String, Int) -> PageCollection<StalkerVodItem>,
     ): StalkerImportResult {
         // A portal that answers with no categories is a bad answer, not an empty film library.
@@ -82,7 +84,7 @@ internal object StalkerImport {
                         gate.withPermit {
                             results[index] = try {
                                 // Off the UI thread, so the whole category is worth having.
-                                Result.success(fetch(cat.id, com.tellybox.tv.data.parser.stalker.MAX_PAGES))
+                                Result.success(fetch(cat.id, pagesPerCategory))
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {

@@ -139,11 +139,15 @@ class StalkerClient(
         }
         val cmd = StalkerVodMapper.streamCmd(call("vod", "get_ordered_list", params))
             ?: throw StalkerException("Portal returned no stream for this title")
-        StalkerMapper.urlFromCmd(cmd)?.let { return it }
-        // Some portals hand back a storage path here that still needs exchanging.
-        val linked = (call("vod", "create_link", mapOf("cmd" to cmd, "forced_storage" to "undefined", "disable_ad" to "0"))
-            as? JsonObject)?.str("cmd")
-        return linked?.let(StalkerMapper::urlFromCmd) ?: throw StalkerException("Portal returned no stream for this title")
+        // Always exchange it, even when it already looks like a URL. Portals hand out paths that
+        // are only playable once they have been turned into a signed link, and playing the bare
+        // path is what earns a 403 from the server.
+        val linked = runCatching {
+            (call("vod", "create_link", mapOf("cmd" to cmd, "forced_storage" to "undefined", "disable_ad" to "0"))
+                as? JsonObject)?.str("cmd")
+        }.getOrNull()
+        val playable = linked?.let(StalkerMapper::urlFromCmd) ?: StalkerMapper.urlFromCmd(cmd)
+        return playable ?: throw StalkerException("Portal returned no stream for this title")
     }
 
     private suspend fun call(type: String, action: String, params: Map<String, String> = emptyMap()): JsonElement? {
