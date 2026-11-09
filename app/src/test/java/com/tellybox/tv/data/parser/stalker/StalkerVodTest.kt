@@ -317,6 +317,8 @@ class StalkerVodTest {
 
 /** A tiny HTTP server answering each request from its query string, one connection at a time. */
 class FakePortal(private val route: (Map<String, String>) -> Pair<Int, String>) : AutoCloseable {
+    /** Extra response headers, for redirects and the like. */
+    var headers: (Map<String, String>) -> Map<String, String> = { emptyMap() }
     private val server = ServerSocket(0)
     val port get() = server.localPort
     val requests = CopyOnWriteArrayList<Map<String, String>>()
@@ -333,8 +335,10 @@ class FakePortal(private val route: (Map<String, String>) -> Pair<Int, String>) 
                 requests += q
                 val (code, body) = route(q)
                 val bytes = body.toByteArray()
+                val extra = headers(q).entries.joinToString("") { (k, v) -> "$k: $v\r\n" }
                 it.getOutputStream().write(
-                    ("HTTP/1.1 $code X\r\nContent-Type: application/json\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n").toByteArray() + bytes,
+                    ("HTTP/1.1 $code X\r\nContent-Type: application/json\r\n$extra" +
+                        "Content-Length: ${bytes.size}\r\nConnection: close\r\n\r\n").toByteArray() + bytes,
                 )
             }
         }
