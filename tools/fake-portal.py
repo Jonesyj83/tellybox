@@ -1,31 +1,44 @@
 #!/usr/bin/env python3
 """A fake Stalker portal, for testing imports without a real one.
 
-Serves a small live lineup instantly and a deliberately slow film library, so the difference
-between "channels wait for the films" and "channels first, films after" is measurable. Every
-request is appended to requests.log with a timestamp, which is how you check the ordering.
+Two modes.
 
-    python3 tools/fake-portal.py [port] [vod delay seconds] [vod categories]
+    python3 tools/fake-portal.py [port] [delay] [categories]     invented data
+    python3 tools/fake-portal.py [port] [delay] --real            replay real payloads
 
-Then point a Stalker playlist at http://<this machine>:8099. On an emulator, the host is
-10.0.2.2, so use http://10.0.2.2:8099.
+Invented mode serves a small live lineup instantly and a deliberately slow film library, so the
+difference between "channels wait for the films" and "channels first, films after" is measurable.
 
-The log is the point. A healthy import asks for stb/handshake, stb/get_profile, itv/get_genres
-and itv/get_all_channels first, and only then starts on vod/get_ordered_list. If the vod lines
-come first, or the channel list takes minutes to appear, the split has regressed.
+Real mode replays the JSON captured from an actual portal, in app/src/test/resources/stalker:
+153 categories, nine of them censored, a 3,759 item movie category and a 7,777 item series
+category, plus seasons, episodes and movie lookups. That is what a real import has to chew
+through, and it is the only way to exercise deep paging without a provider.
+
+Every request is appended to /tmp/fakeportal/requests.log with a timestamp. That log is the
+point. A healthy import asks for stb/handshake, stb/get_profile, itv/get_genres and
+itv/get_all_channels first, and only then starts on vod/get_ordered_list. If the vod lines come
+first, or the channel list takes minutes to appear, the split has regressed.
+
+On an emulator the host is 10.0.2.2, so use http://10.0.2.2:8099 as the portal URL.
 """
 import json
+import os
 import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8099
-DELAY = float(sys.argv[2]) if len(sys.argv) > 2 else 1.5
-VOD_CATEGORIES = int(sys.argv[3]) if len(sys.argv) > 3 else 30
+ARGS = sys.argv[1:]
+PORT = int(ARGS[0]) if ARGS and ARGS[0].isdigit() else 8099
+REAL = "--real" in ARGS
+_nums = [a for a in ARGS if a.isdigit()][1:] if ARGS and ARGS[0].isdigit() else []
+DELAY = float(ARGS[1]) if len(ARGS) > 1 and ARGS[1] not in ("--real",) else 1.5
+VOD_CATEGORIES = int(_nums[0]) if _nums else 30
 ITEMS_PER_PAGE = 14
 LOG = "/tmp/fakeportal/requests.log"
+FIXTURES = Path(__file__).resolve().parent.parent / "app/src/test/resources/stalker"
 
 lock = threading.Lock()
 
@@ -34,6 +47,11 @@ def log(line):
     with lock:
         with open(LOG, "a") as f:
             f.write(f"{time.time():.2f} {line}\n")
+
+
+def fixture(name):
+    with open(FIXTURES / name) as f:
+        return json.load(f)
 
 
 def channels():
@@ -75,6 +93,48 @@ def vod_items(category_id, page):
     return {"total_items": "120", "max_page_items": str(ITEMS_PER_PAGE), "data": items}
 
 
+# --- real payloads -------------------------------------------------------------------------
+
+REAL_CATEGORIES = None
+DEEP = {"5": "real-movies-cat-5.json", "42": "real-series-cat-42.json"}  # the big two
+
+
+def real_categories():
+    global REAL_CATEGORIES
+    if REAL_CATEGORIES is None:
+        REAL_CATEGORIES = fixture("real-vod-get-categories.json")["js"]
+    return REAL_CATEGORIES
+
+
+def real_page(category_id, page):
+    """Real items on page one, the rest synthesised so the claimed totals are actually there."""
+    name = DEEP.get(str(category_id))
+    if name is None:
+        base = fixture("real-movies-cat-5.json")["js"]
+        total = len(base["data"])
+        if page > 1:
+            return {"total_items": str(total), "max_page_items": str(ITEMS_PER_PAGE), "data": []}
+        items = [dict(it, id=f"{category_id}{i:04d}", category_id=str(category_id))
+                 for i, it in enumerate(base["data"])]
+        return {"total_items": str(total), "max_page_items": str(ITEMS_PER_PAGE), "data": items}
+
+    base = fixture(name)["js"]
+    total = int(base["total_items"])
+    start = (page - 1) * ITEMS_PER_PAGE
+    if start >= total:
+        return {"total_items": str(total), "max_page_items": str(ITEMS_PER_PAGE), "data": []}
+    template = base["data"]
+    items = []
+    for i in range(ITEMS_PER_PAGE):
+        n = start + i
+        if n >= total:
+            break
+        src = template[n % len(template)]
+        items.append(dict(src, id=f"{category_id}{n:06d}", category_id=str(category_id),
+                          name=f"{src.get('name', 'Item')} {n + 1}"))
+    return {"total_items": str(total), "max_page_items": str(ITEMS_PER_PAGE), "data": items}
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -111,25 +171,26 @@ class Handler(BaseHTTPRequestHandler):
         elif (t, a) == ("itv", "get_all_channels"):
             self.send_json(channels())
         elif (t, a) == ("vod", "get_categories"):
-            self.send_json([{"id": str(i), "title": f"VOD Category {i}", "censored": False}
+            self.send_json(real_categories() if REAL else
+                           [{"id": str(i), "title": f"VOD Category {i}", "censored": False}
                             for i in range(1, VOD_CATEGORIES + 1)])
         elif (t, a) == ("vod", "get_ordered_list"):
             if q.get("movie_id") or q.get("episode_id"):
-                self.send_json({"data": [{"cmd": f"http://127.0.0.1:{PORT}/vod/play.ts"}]})
+                self.send_json(fixture("real-movie-491960.json")["js"] if REAL else
+                               {"data": [{"cmd": f"http://127.0.0.1:{PORT}/vod/play.ts"}]})
                 return
             time.sleep(DELAY)
-            self.send_json(vod_items(q.get("category", "0"), int(q.get("p", "1"))))
+            cat, page = q.get("category", "0"), int(q.get("p", "1"))
+            self.send_json(real_page(cat, page) if REAL else vod_items(cat, page))
         else:
             self.send_json({"error": "unknown"}, 404)
 
 
 if __name__ == "__main__":
-    import os
-
     os.makedirs("/tmp/fakeportal", exist_ok=True)
     open(LOG, "w").close()
-    print(f"fake portal on {PORT}, {DELAY}s per VOD page, {VOD_CATEGORIES} categories, log at {LOG}",
-          flush=True)
+    mode = "real payloads" if REAL else f"{VOD_CATEGORIES} invented categories"
+    print(f"fake portal on {PORT}, {DELAY}s per VOD page, {mode}, log at {LOG}", flush=True)
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
     server.daemon_threads = True
     server.serve_forever()
