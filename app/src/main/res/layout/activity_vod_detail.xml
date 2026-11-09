@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <!-- The same artwork, blown up and dimmed, so the screen has depth instead of a flat panel. -->
+    <ImageView android:id="@+id/backdrop" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:alpha="0.22" android:scaleType="centerCrop"
+        android:importantForAccessibility="no" />
+    <View android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="#CC000000" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+        android:orientation="horizontal" android:padding="@dimen/category_gap">
+    <FrameLayout android:id="@+id/artwork" android:layout_width="220dp"
+        android:layout_height="match_parent" android:layout_marginEnd="@dimen/category_gap"
+        android:background="@drawable/bg_row" android:focusable="true" android:padding="8dp">
+        <TextView android:id="@+id/artworkFallback" style="@style/Text.Title"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:gravity="center" android:maxLines="5" android:ellipsize="end" />
+        <ImageView android:id="@+id/poster" android:layout_width="match_parent"
+            android:layout_height="match_parent" android:scaleType="fitCenter"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1"
+        android:layout_height="match_parent" android:orientation="vertical"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="24dp">
+        <TextView android:id="@+id/title" style="@style/Text.Title" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="8dp"
+            android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/metadata" style="@style/Text.Caption" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="4dp"
+            android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/genre" style="@style/Text.Body" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/plot" style="@style/Text.Body" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:layout_marginBottom="4dp"
+            android:maxLines="4" android:ellipsize="end" />
+        <TextView android:id="@+id/credits" style="@style/Text.Caption" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:maxLines="2" android:ellipsize="end" />
+        <LinearLayout android:id="@+id/actions" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="16dp"
+            android:orientation="horizontal" android:visibility="gone">
+            <Button android:id="@+id/watch" style="@style/Button.TV" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/recording_play" />
+            <Button android:id="@+id/beginning" style="@style/Button.TV" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:visibility="gone" android:text="@string/ui_play_from_beginning" />
+        </LinearLayout>
+        <TextView android:id="@+id/status" style="@style/Text.Body" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/ui_loading" />
+        <Button android:id="@+id/retry" style="@style/Button.TV" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:visibility="gone" android:text="@string/retry" />
+        <HorizontalScrollView android:id="@+id/seasonScroll" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:visibility="gone" android:scrollbars="none">
+            <LinearLayout android:id="@+id/seasons" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:orientation="horizontal" />
+        </HorizontalScrollView>
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/episodes"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="@dimen/category_gap" android:visibility="gone" />
+    </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
