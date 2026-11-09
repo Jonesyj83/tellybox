@@ -43,6 +43,18 @@ class SettingsActivity : SectionActivity() {
             .setMessage(R.string.backup_storage_denied).setPositiveButton(R.string.ok, null).show()
     }
 
+    private val importPermission = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { granted ->
+        // Listed answers are a convenience; the picker below needs no permission either way.
+        chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) })
+    }
+
+    private fun requestBackupImport() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q &&
+            androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            importPermission.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+        } else chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) })
+    }
+
     private fun requestBackupExport() {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q &&
             androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -344,7 +356,7 @@ class SettingsActivity : SectionActivity() {
             SettingsSection.GENERAL -> maintenance()
             SettingsSection.PLAYLISTS -> listOf(Row(R.string.playlist_manage, getString(R.string.playlist_manage_summary)) { openSection(Section.PLAYLISTS) })
             SettingsSection.EPG -> listOf(Row(R.string.guide_sources, getString(R.string.guide_sources_summary)) { showGuides() }, Row(R.string.guide_clear_all, "") { clearEpg() })
-            SettingsSection.BACKUP -> listOf(Row(R.string.backup_export, getString(R.string.backup_export_summary)) { requestBackupExport() }, Row(R.string.backup_import, getString(R.string.backup_import_summary)) { chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) }) })
+            SettingsSection.BACKUP -> listOf(Row(R.string.backup_export, getString(R.string.backup_export_summary)) { requestBackupExport() }, Row(R.string.backup_import, getString(R.string.backup_import_summary)) { requestBackupImport() })
             SettingsSection.ABOUT -> listOf(Row(R.string.about_version, getString(R.string.settings_about_summary), title = getString(R.string.about_version, com.tellybox.tv.BuildConfig.VERSION_NAME)) {}, Row(R.string.settings_licences, getString(R.string.settings_licences_summary)) { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton(R.string.ok, null).show() })
             else -> emptyList()
         }
