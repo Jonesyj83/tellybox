@@ -548,4 +548,7 @@
     <string name="recording_limit_message">Android 每天六小时后会停止后台录制，所以这次录制会提前结束。</string>
     <string name="recording_limit_continue">仍然录制</string>
     <string name="backup_pin_not_included">此备份不包含 PIN 码；将保留当前 PIN 码。</string>
+    <string name="ui_backup_saved_in_downloads">已保存到 Downloads/%1$s。请妥善保管此文件：其中包含播放列表凭据和家长密码。</string>
+    <string name="ui_no_backups_in_downloads">Downloads 中没有备份文件。请先把备份文件复制到那里。</string>
+    <string name="ui_choose_a_file">选择文件…</string>
 </resources>

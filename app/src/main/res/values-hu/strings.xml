@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Az Android napi hat óra után leállítja a háttérfelvételt, így ez korábban véget ér.</string>
     <string name="recording_limit_continue">Felvétel mindenképp</string>
     <string name="backup_pin_not_included">Ez a biztonsági mentés nem tartalmaz PIN-kódot; a jelenlegi PIN-kód megmarad.</string>
+    <string name="ui_backup_saved_in_downloads">Mentve ide: Downloads/%1$s. Tartsa privátan a fájlt: lejátszólisták belépési adatait és a szülői PIN-kódot tartalmazza.</string>
+    <string name="ui_no_backups_in_downloads">Nincs biztonsági mentés a Downloads mappában. Először másoljon oda egy fájlt.</string>
+    <string name="ui_choose_a_file">Fájl kiválasztása…</string>
 </resources>

@@ -564,4 +564,7 @@
     <string name="recording_limit_message">Android stops background recording after six hours in a day, so this will finish early.</string>
     <string name="recording_limit_continue">Record anyway</string>
     <string name="backup_pin_not_included">PIN not included in this backup; the current PIN is kept.</string>
+    <string name="ui_backup_saved_in_downloads">Saved to Downloads/%1$s. Keep this file private: it holds playlist credentials and the parental PIN.</string>
+    <string name="ui_no_backups_in_downloads">No backups in Downloads. Copy a backup file there first.</string>
+    <string name="ui_choose_a_file">Choose a file…</string>
 </resources>

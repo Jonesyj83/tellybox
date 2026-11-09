@@ -602,4 +602,7 @@
     <string name="recording_limit_message">Android po šestih urah na dan ustavi snemanje v ozadju, zato se bo to končalo prej.</string>
     <string name="recording_limit_continue">Vseeno posnami</string>
     <string name="backup_pin_not_included">Ta varnostna kopija ne vsebuje kode PIN; trenutna koda PIN se ohrani.</string>
+    <string name="ui_backup_saved_in_downloads">Shranjeno v Downloads/%1$s. Datoteko hranite zasebno: vsebuje prijavne podatke seznamov in starševski PIN.</string>
+    <string name="ui_no_backups_in_downloads">V mapi Downloads ni varnostnih kopij. Najprej tja kopirajte datoteko.</string>
+    <string name="ui_choose_a_file">Izberi datoteko…</string>
 </resources>

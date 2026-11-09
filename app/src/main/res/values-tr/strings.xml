@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android arka planda kaydı günde altı saat sonra durdurur, bu yüzden bu kayıt erken bitecek.</string>
     <string name="recording_limit_continue">Yine de kaydet</string>
     <string name="backup_pin_not_included">Bu yedek PIN içermez; mevcut PIN korunur.</string>
+    <string name="ui_backup_saved_in_downloads">Downloads/%1$s konumuna kaydedildi. Bu dosyayı gizli tutun: liste giriş bilgilerini ve ebeveyn PIN kodunu içerir.</string>
+    <string name="ui_no_backups_in_downloads">Downloads klasöründe yedek yok. Önce oraya bir dosya kopyalayın.</string>
+    <string name="ui_choose_a_file">Dosya seç…</string>
 </resources>

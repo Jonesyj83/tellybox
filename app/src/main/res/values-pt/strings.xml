@@ -566,4 +566,7 @@
     <string name="recording_limit_message">O Android para a gravação em segundo plano após seis horas por dia, por isso esta vai terminar antes.</string>
     <string name="recording_limit_continue">Gravar mesmo assim</string>
     <string name="backup_pin_not_included">Esta cópia de segurança não inclui o PIN; o PIN atual é mantido.</string>
+    <string name="ui_backup_saved_in_downloads">Guardado em Downloads/%1$s. Mantenha este ficheiro privado: contém credenciais das listas e o PIN parental.</string>
+    <string name="ui_no_backups_in_downloads">Não há cópias em Downloads. Copie primeiro um ficheiro para lá.</string>
+    <string name="ui_choose_a_file">Escolher um ficheiro…</string>
 </resources>

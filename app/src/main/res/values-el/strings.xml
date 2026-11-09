@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Το Android σταματά την εγγραφή στο παρασκήνιο μετά από έξι ώρες την ημέρα, οπότε θα τελειώσει νωρίτερα.</string>
     <string name="recording_limit_continue">Εγγραφή ούτως ή άλλως</string>
     <string name="backup_pin_not_included">Αυτό το αντίγραφο ασφαλείας δεν περιλαμβάνει PIN· το τρέχον PIN διατηρείται.</string>
+    <string name="ui_backup_saved_in_downloads">Αποθηκεύτηκε στο Downloads/%1$s. Κρατήστε το αρχείο ιδιωτικό: περιέχει στοιχεία σύνδεσης λιστών και το PIN γονικού ελέγχου.</string>
+    <string name="ui_no_backups_in_downloads">Δεν υπάρχουν αντίγραφα στο Downloads. Αντιγράψτε πρώτα ένα αρχείο εκεί.</string>
+    <string name="ui_choose_a_file">Επιλογή αρχείου…</string>
 </resources>

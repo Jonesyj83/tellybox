@@ -602,4 +602,7 @@
     <string name="recording_limit_message">Android sustabdo įrašymą fone po šešių valandų per dieną, todėl šis įrašas baigsis anksčiau.</string>
     <string name="recording_limit_continue">Vis tiek įrašyti</string>
     <string name="backup_pin_not_included">Šioje atsarginėje kopijoje nėra PIN kodo; dabartinis PIN kodas išsaugomas.</string>
+    <string name="ui_backup_saved_in_downloads">Išsaugota Downloads/%1$s. Saugokite failą: jame yra grojaraščių prisijungimo duomenys ir tėvų PIN.</string>
+    <string name="ui_no_backups_in_downloads">Downloads aplanke nėra atsarginių kopijų. Pirmiausia nukopijuokite failą ten.</string>
+    <string name="ui_choose_a_file">Pasirinkti failą…</string>
 </resources>

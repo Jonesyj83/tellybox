@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android stoppar bakgrundsinspelning efter sex timmar per dag, så den här avslutas tidigt.</string>
     <string name="recording_limit_continue">Spela in ändå</string>
     <string name="backup_pin_not_included">Denna säkerhetskopia innehåller ingen PIN-kod; den nuvarande PIN-koden behålls.</string>
+    <string name="ui_backup_saved_in_downloads">Sparat i Downloads/%1$s. Håll filen privat: den innehåller inloggningsuppgifter för spellistor och föräldra-PIN.</string>
+    <string name="ui_no_backups_in_downloads">Inga säkerhetskopior i Downloads. Kopiera en fil dit först.</string>
+    <string name="ui_choose_a_file">Välj en fil…</string>
 </resources>

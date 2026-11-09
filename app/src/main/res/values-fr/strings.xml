@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android arrête l\'enregistrement en arrière-plan au bout de six heures par jour, donc celui-ci s\'arrêtera avant la fin.</string>
     <string name="recording_limit_continue">Enregistrer quand même</string>
     <string name="backup_pin_not_included">Cette sauvegarde ne contient pas de code PIN ; le code PIN actuel est conservé.</string>
+    <string name="ui_backup_saved_in_downloads">Enregistré dans Downloads/%1$s. Gardez ce fichier privé : il contient les identifiants des listes et le code PIN parental.</string>
+    <string name="ui_no_backups_in_downloads">Aucune sauvegarde dans Downloads. Copiez d\'abord un fichier à cet endroit.</string>
+    <string name="ui_choose_a_file">Choisir un fichier…</string>
 </resources>

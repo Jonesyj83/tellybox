@@ -602,4 +602,7 @@
     <string name="recording_limit_message">Android po šesti hodinách denně zastaví nahrávání na pozadí, takže to skončí dřív.</string>
     <string name="recording_limit_continue">Přesto nahrát</string>
     <string name="backup_pin_not_included">Tato záloha neobsahuje PIN; aktuální PIN bude zachován.</string>
+    <string name="ui_backup_saved_in_downloads">Uloženo do Downloads/%1$s. Chraňte soubor: obsahuje přihlašovací údaje playlistů a rodičovský PIN.</string>
+    <string name="ui_no_backups_in_downloads">V Downloads nejsou žádné zálohy. Nejprve tam zkopírujte soubor.</string>
+    <string name="ui_choose_a_file">Vybrat soubor…</string>
 </resources>

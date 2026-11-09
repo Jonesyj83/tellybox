@@ -584,4 +584,7 @@
     <string name="recording_limit_message">Android pārtrauc ierakstīšanu fonā pēc sešām stundām dienā, tāpēc šis beigsies agrāk.</string>
     <string name="recording_limit_continue">Tomēr ierakstīt</string>
     <string name="backup_pin_not_included">Šajā dublējumā nav PIN koda; pašreizējais PIN kods tiek saglabāts.</string>
+    <string name="ui_backup_saved_in_downloads">Saglabāts Downloads/%1$s. Glabājiet failu privāti: tajā ir atskaņošanas sarakstu pieteikšanās dati un vecāku PIN.</string>
+    <string name="ui_no_backups_in_downloads">Downloads mapē nav dublējumu. Vispirms iekopējiet tur failu.</string>
+    <string name="ui_choose_a_file">Izvēlēties failu…</string>
 </resources>

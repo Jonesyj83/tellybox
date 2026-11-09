@@ -584,4 +584,7 @@
     <string name="recording_limit_message">אנדרואיד מפסיק הקלטה ברקע אחרי שש שעות ביום, כך שזה יסתיים מוקדם.</string>
     <string name="recording_limit_continue">הקלט בכל זאת</string>
     <string name="backup_pin_not_included">הגיבוי הזה אינו כולל קוד PIN; קוד ה-PIN הנוכחי יישמר.</string>
+    <string name="ui_backup_saved_in_downloads">נשמר ב-Downloads/%1$s. שמור את הקובץ פרטי: הוא מכיל פרטי התחברות לפלייליסטים ואת קוד ההורים.</string>
+    <string name="ui_no_backups_in_downloads">אין גיבויים ב-Downloads. העתק קודם קובץ לשם.</string>
+    <string name="ui_choose_a_file">בחר קובץ…</string>
 </resources>

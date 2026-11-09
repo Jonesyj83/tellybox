@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android lopettaa taustatalleennuksen kuuden tunnin jälkeen vuorokaudessa, joten tämä päättyy aikaisin.</string>
     <string name="recording_limit_continue">Tallenna silti</string>
     <string name="backup_pin_not_included">Tämä varmuuskopio ei sisällä PIN-koodia; nykyinen PIN-koodi säilytetään.</string>
+    <string name="ui_backup_saved_in_downloads">Tallennettu kansioon Downloads/%1$s. Pidä tiedosto yksityisenä: se sisältää soittolistojen tunnukset ja lapsilukon PIN-koodin.</string>
+    <string name="ui_no_backups_in_downloads">Ei varmuuskopioita kansiossa Downloads. Kopioi tiedosto sinne ensin.</string>
+    <string name="ui_choose_a_file">Valitse tiedosto…</string>
 </resources>

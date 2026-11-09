@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android beendet Hintergrundaufnahmen nach sechs Stunden pro Tag, daher endet diese Aufnahme früher.</string>
     <string name="recording_limit_continue">Trotzdem aufnehmen</string>
     <string name="backup_pin_not_included">Diese Sicherung enthält keine PIN; die aktuelle PIN bleibt erhalten.</string>
+    <string name="ui_backup_saved_in_downloads">Gespeichert in Downloads/%1$s. Halten Sie die Datei privat: Sie enthält Playlist-Zugangsdaten und die Eltern-PIN.</string>
+    <string name="ui_no_backups_in_downloads">Keine Sicherungen in Downloads. Kopieren Sie zuerst eine Datei dorthin.</string>
+    <string name="ui_choose_a_file">Datei auswählen…</string>
 </resources>

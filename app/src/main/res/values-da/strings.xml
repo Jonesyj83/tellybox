@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android stopper optagelse i baggrunden efter seks timer om dagen, så denne slutter tidligt.</string>
     <string name="recording_limit_continue">Optag alligevel</string>
     <string name="backup_pin_not_included">Denne sikkerhedskopi indeholder ikke en PIN-kode; den nuværende PIN-kode bevares.</string>
+    <string name="ui_backup_saved_in_downloads">Gemt i Downloads/%1$s. Hold filen privat: den indeholder playlisteoplysninger og forældre-PIN.</string>
+    <string name="ui_no_backups_in_downloads">Ingen backup i Downloads. Kopiér en fil derind først.</string>
+    <string name="ui_choose_a_file">Vælg en fil…</string>
 </resources>

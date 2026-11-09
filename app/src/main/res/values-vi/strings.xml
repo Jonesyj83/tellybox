@@ -548,4 +548,7 @@
     <string name="recording_limit_message">Android dừng ghi nền sau sáu giờ mỗi ngày, nên bản ghi này sẽ kết thúc sớm.</string>
     <string name="recording_limit_continue">Vẫn ghi</string>
     <string name="backup_pin_not_included">Bản sao lưu này không bao gồm mã PIN; mã PIN hiện tại sẽ được giữ lại.</string>
+    <string name="ui_backup_saved_in_downloads">Đã lưu vào Downloads/%1$s. Hãy giữ tệp này riêng tư: tệp chứa thông tin đăng nhập danh sách và mã PIN phụ huynh.</string>
+    <string name="ui_no_backups_in_downloads">Không có bản sao lưu trong Downloads. Hãy sao chép một tệp vào đó trước.</string>
+    <string name="ui_choose_a_file">Chọn tệp…</string>
 </resources>

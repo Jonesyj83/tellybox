@@ -602,4 +602,7 @@
     <string name="recording_limit_message">Android zatrzymuje nagrywanie w tle po sześciu godzinach dziennie, więc to zakończy się wcześniej.</string>
     <string name="recording_limit_continue">Nagraj mimo to</string>
     <string name="backup_pin_not_included">Ta kopia zapasowa nie zawiera kodu PIN; bieżący PIN zostanie zachowany.</string>
+    <string name="ui_backup_saved_in_downloads">Zapisano w Downloads/%1$s. Chroń ten plik: zawiera dane logowania list i PIN rodzicielski.</string>
+    <string name="ui_no_backups_in_downloads">Brak kopii zapasowych w Downloads. Najpierw skopiuj tam plik.</string>
+    <string name="ui_choose_a_file">Wybierz plik…</string>
 </resources>

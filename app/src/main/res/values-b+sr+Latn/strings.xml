@@ -584,4 +584,7 @@
     <string name="recording_limit_message">Android prekida snimanje u pozadini posle šest sati dnevno, pa će se ovo završiti ranije.</string>
     <string name="recording_limit_continue">Ipak snimi</string>
     <string name="backup_pin_not_included">PIN nije uključen u ovu rezervnu kopiju; trenutni PIN se zadržava.</string>
+    <string name="ui_backup_saved_in_downloads">Sačuvano u Downloads/%1$s. Čuvajte fajl privatnim: sadrži podatke za prijavu plejlisti i roditeljski PIN.</string>
+    <string name="ui_no_backups_in_downloads">Nema rezervnih kopija u Downloads. Prvo kopirajte fajl tamo.</string>
+    <string name="ui_choose_a_file">Izaberi fajl…</string>
 </resources>

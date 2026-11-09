@@ -638,4 +638,7 @@
     <string name="recording_limit_message">يوقف أندرويد التسجيل في الخلفية بعد ست ساعات في اليوم، لذا سينتهي هذا مبكرًا.</string>
     <string name="recording_limit_continue">سجّل على أي حال</string>
     <string name="backup_pin_not_included">لا تتضمن هذه النسخة الاحتياطية رمز PIN؛ سيُحتفظ بالرمز الحالي.</string>
+    <string name="ui_backup_saved_in_downloads">تم الحفظ في Downloads/%1$s. احتفظ بالملف خاصًا: يحتوي على بيانات اعتماد القوائم ورمز PIN للرقابة الأبوية.</string>
+    <string name="ui_no_backups_in_downloads">لا توجد نسخ احتياطية في Downloads. انسخ ملف نسخة احتياطية إلى هناك أولًا.</string>
+    <string name="ui_choose_a_file">اختر ملفًا…</string>
 </resources>

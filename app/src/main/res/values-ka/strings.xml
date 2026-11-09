@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android ფონურ ჩაწერას დღეში ექვსი საათის შემდეგ წყვეტს, ამიტომ ეს ადრე დასრულდება.</string>
     <string name="recording_limit_continue">მაინც ჩაწერე</string>
     <string name="backup_pin_not_included">ეს სარეზერვო ასლი არ შეიცავს PIN-კოდს; მიმდინარე PIN-კოდი შენარჩუნდება.</string>
+    <string name="ui_backup_saved_in_downloads">შენახულია Downloads/%1$s. შეინახეთ ფაილი დაცულად: მასშია დაკვრის სიების მონაცემები და მშობლის PIN.</string>
+    <string name="ui_no_backups_in_downloads">Downloads-ში სარეზერვო ასლები არ არის. ჯერ ფაილი იქ დააკოპირეთ.</string>
+    <string name="ui_choose_a_file">ფაილის არჩევა…</string>
 </resources>

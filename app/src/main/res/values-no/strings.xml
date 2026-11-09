@@ -566,4 +566,7 @@
     <string name="recording_limit_message">Android stopper opptak i bakgrunnen etter seks timer i døgnet, så denne avsluttes tidlig.</string>
     <string name="recording_limit_continue">Ta opp likevel</string>
     <string name="backup_pin_not_included">Denne sikkerhetskopien inneholder ikke PIN-koden; gjeldende PIN-kode beholdes.</string>
+    <string name="ui_backup_saved_in_downloads">Lagret i Downloads/%1$s. Hold filen privat: den inneholder påloggingsdetaljer for spillelister og foreldre-PIN.</string>
+    <string name="ui_no_backups_in_downloads">Ingen sikkerhetskopier i Downloads. Kopier en fil dit først.</string>
+    <string name="ui_choose_a_file">Velg en fil…</string>
 </resources>
