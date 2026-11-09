@@ -565,4 +565,7 @@
     <string name="recording_limit_title">Hosszabb, mint amit az Android enged</string>
     <string name="recording_limit_message">Az Android napi hat óra után leállítja a háttérfelvételt, így ez korábban véget ér.</string>
     <string name="recording_limit_continue">Felvétel mindenképp</string>
+    <string name="setting_fetch_details">Részletek letöltése az internetről</string>
+    <string name="setting_tmdb_key">TMDb API-kulcs</string>
+    <string name="setting_clear_key">Kulcs törlése</string>
 </resources>

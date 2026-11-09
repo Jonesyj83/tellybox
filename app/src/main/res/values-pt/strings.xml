@@ -565,4 +565,7 @@
     <string name="recording_limit_title">Mais longo do que o Android permite</string>
     <string name="recording_limit_message">O Android para a gravação em segundo plano após seis horas por dia, por isso esta vai terminar antes.</string>
     <string name="recording_limit_continue">Gravar mesmo assim</string>
+    <string name="setting_fetch_details">Obter detalhes da Internet</string>
+    <string name="setting_tmdb_key">Chave API do TMDb</string>
+    <string name="setting_clear_key">Limpar chave</string>
 </resources>

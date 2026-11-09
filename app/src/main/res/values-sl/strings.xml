@@ -601,4 +601,7 @@
     <string name="recording_limit_title">Dlje, kot dovoljuje Android</string>
     <string name="recording_limit_message">Android po šestih urah na dan ustavi snemanje v ozadju, zato se bo to končalo prej.</string>
     <string name="recording_limit_continue">Vseeno posnami</string>
+    <string name="setting_fetch_details">Pridobi podrobnosti iz interneta</string>
+    <string name="setting_tmdb_key">Ključ API TMDb</string>
+    <string name="setting_clear_key">Izbriši ključ</string>
 </resources>

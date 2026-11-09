@@ -118,6 +118,30 @@ class SettingsActivity : SectionActivity() {
         }
 
         return listOf(
+            Row(R.string.setting_fetch_details, onOff(s.fetchInternetDetails)) {
+                lifecycleScope.launch { repo.setFetchInternetDetails(!s.fetchInternetDetails) }
+            },
+            Row(R.string.setting_tmdb_key, onOff(appContainer.catalogueCredentials.key().isNotEmpty())) {
+                val input = android.widget.EditText(this).apply {
+                    setSingleLine()
+                    inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    setText(appContainer.catalogueCredentials.key())
+                    selectAll()
+                }
+                val dialog = AlertDialog.Builder(this).setTitle(R.string.setting_tmdb_key).setView(input)
+                    .setPositiveButton(R.string.ui_save) { _, _ ->
+                        appContainer.catalogueCredentials.setKey(input.text.toString())
+                        render(s)
+                    }.setNeutralButton(R.string.setting_clear_key) { _, _ ->
+                        appContainer.catalogueCredentials.setKey("")
+                        render(s)
+                    }.setNegativeButton(R.string.cancel, null).create()
+                dialog.setOnShowListener {
+                    input.requestFocus()
+                    dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+                }
+                dialog.show()
+            },
             Row(R.string.ui_parental_controls, getString(R.string.ui_pin_blocks_and_unlock_duration)) {
                 startActivity(android.content.Intent(this, com.tellybox.tv.ui.parental.ParentalActivity::class.java))
             },

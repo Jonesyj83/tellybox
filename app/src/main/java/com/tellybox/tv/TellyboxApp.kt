@@ -69,7 +69,8 @@ class AppContainer(app: Application) {
     private val stalkerClients = StalkerClientCache(http)
 
     val playlists = PlaylistRepository(app, database, http, stalkerClients) { parental.configured }
-    val vod = com.tellybox.tv.data.repository.VodRepository(database, http, stalkerClients)
+    val catalogueCredentials = com.tellybox.tv.data.settings.CatalogueCredentials(app)
+    val vod = com.tellybox.tv.data.repository.VodRepository(database, http, stalkerClients, settings, catalogueCredentials)
     val channels = ChannelRepository(database, stalkerClients, parental)
     val epg = EpgRepository(app, database, http, settings)
     val backgroundRefresh = BackgroundRefresh(playlists, epg, settings)

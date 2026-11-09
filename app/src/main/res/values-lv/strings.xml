@@ -583,4 +583,7 @@
     <string name="recording_limit_title">Ilgāk, nekā Android atļauj</string>
     <string name="recording_limit_message">Android pārtrauc ierakstīšanu fonā pēc sešām stundām dienā, tāpēc šis beigsies agrāk.</string>
     <string name="recording_limit_continue">Tomēr ierakstīt</string>
+    <string name="setting_fetch_details">Iegūt informāciju no interneta</string>
+    <string name="setting_tmdb_key">TMDb API atslēga</string>
+    <string name="setting_clear_key">Notīrīt atslēgu</string>
 </resources>

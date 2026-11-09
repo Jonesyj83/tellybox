@@ -565,4 +565,7 @@
     <string name="recording_limit_title">Android\'in izin verdiğinden uzun</string>
     <string name="recording_limit_message">Android arka planda kaydı günde altı saat sonra durdurur, bu yüzden bu kayıt erken bitecek.</string>
     <string name="recording_limit_continue">Yine de kaydet</string>
+    <string name="setting_fetch_details">İnternetten ayrıntıları getir</string>
+    <string name="setting_tmdb_key">TMDb API anahtarı</string>
+    <string name="setting_clear_key">Anahtarı temizle</string>
 </resources>

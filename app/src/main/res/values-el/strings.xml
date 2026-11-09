@@ -565,4 +565,7 @@
     <string name="recording_limit_title">Μεγαλύτερο από όσο επιτρέπει το Android</string>
     <string name="recording_limit_message">Το Android σταματά την εγγραφή στο παρασκήνιο μετά από έξι ώρες την ημέρα, οπότε θα τελειώσει νωρίτερα.</string>
     <string name="recording_limit_continue">Εγγραφή ούτως ή άλλως</string>
+    <string name="setting_fetch_details">Λήψη λεπτομερειών από το διαδίκτυο</string>
+    <string name="setting_tmdb_key">Κλειδί API TMDb</string>
+    <string name="setting_clear_key">Διαγραφή κλειδιού</string>
 </resources>

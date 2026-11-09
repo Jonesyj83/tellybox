@@ -22,6 +22,7 @@ enum class DisplayMode { FIT, FILL, ZOOM, REDUCED }
 
 @kotlinx.serialization.Serializable
 data class AppSettings(
+    val fetchInternetDetails: Boolean = true,
     val showClock: Boolean = true,
     val dimPast: Boolean = true,
     val panelOpacity: Int = 100,
@@ -66,6 +67,7 @@ class SettingsRepository(context: Context) {
     private val store = context.applicationContext.dataStore
 
     private object Keys {
+        val fetchInternetDetails = booleanPreferencesKey("fetch_internet_details")
         val showClock = booleanPreferencesKey("showClock")
         val dimPast = booleanPreferencesKey("dimPast")
         val panelOpacity = intPreferencesKey("panelOpacity")
@@ -96,6 +98,7 @@ class SettingsRepository(context: Context) {
     val settings: Flow<AppSettings> = store.data.map { p ->
         val d = AppSettings()
         AppSettings(
+            fetchInternetDetails = p[Keys.fetchInternetDetails] ?: d.fetchInternetDetails,
             showClock = p[Keys.showClock] ?: d.showClock,
             dimPast = p[Keys.dimPast] ?: d.dimPast,
             panelOpacity = p[Keys.panelOpacity] ?: d.panelOpacity,
@@ -126,6 +129,7 @@ class SettingsRepository(context: Context) {
 
     suspend fun replace(s: AppSettings) = store.edit { p ->
         p.clear()
+        p[Keys.fetchInternetDetails] = s.fetchInternetDetails
         p[Keys.softwareAudioDecoders] = s.softwareAudioDecoders
         p[Keys.audioPassthrough] = s.audioPassthrough
         p[Keys.fullScan] = s.fullScan
@@ -152,6 +156,8 @@ class SettingsRepository(context: Context) {
         p[Keys.timeshift] = s.timeshift.name
         p[Keys.timeshiftBufferMb] = s.timeshiftBufferMb
     }
+
+    suspend fun setFetchInternetDetails(v: Boolean) = store.edit { it[Keys.fetchInternetDetails] = v }
 
     suspend fun setShowClock(v: Boolean) = store.edit { it[Keys.showClock] = v }
 

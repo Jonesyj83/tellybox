@@ -601,4 +601,7 @@
     <string name="recording_limit_title">Ilgiau, nei leidžia Android</string>
     <string name="recording_limit_message">Android sustabdo įrašymą fone po šešių valandų per dieną, todėl šis įrašas baigsis anksčiau.</string>
     <string name="recording_limit_continue">Vis tiek įrašyti</string>
+    <string name="setting_fetch_details">Gauti informaciją iš interneto</string>
+    <string name="setting_tmdb_key">TMDb API raktas</string>
+    <string name="setting_clear_key">Išvalyti raktą</string>
 </resources>

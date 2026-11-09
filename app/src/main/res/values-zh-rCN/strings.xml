@@ -547,4 +547,7 @@
     <string name="recording_limit_title">超过 Android 允许的时长</string>
     <string name="recording_limit_message">Android 每天六小时后会停止后台录制，所以这次录制会提前结束。</string>
     <string name="recording_limit_continue">仍然录制</string>
+    <string name="setting_fetch_details">从互联网获取详情</string>
+    <string name="setting_tmdb_key">TMDb API 密钥</string>
+    <string name="setting_clear_key">清除密钥</string>
 </resources>

@@ -601,4 +601,7 @@
     <string name="recording_limit_title">Дольше, чем разрешает Android</string>
     <string name="recording_limit_message">Android останавливает фоновую запись после шести часов в сутки, поэтому эта запись завершится раньше.</string>
     <string name="recording_limit_continue">Всё равно записать</string>
+    <string name="setting_fetch_details">Загружать сведения из интернета</string>
+    <string name="setting_tmdb_key">Ключ API TMDb</string>
+    <string name="setting_clear_key">Удалить ключ</string>
 </resources>

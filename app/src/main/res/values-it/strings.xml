@@ -565,4 +565,7 @@
     <string name="recording_limit_title">Più lungo di quanto consenta Android</string>
     <string name="recording_limit_message">Android interrompe la registrazione in background dopo sei ore al giorno, quindi questa finirà prima.</string>
     <string name="recording_limit_continue">Registra comunque</string>
+    <string name="setting_fetch_details">Scarica dettagli da Internet</string>
+    <string name="setting_tmdb_key">Chiave API TMDb</string>
+    <string name="setting_clear_key">Cancella chiave</string>
 </resources>
