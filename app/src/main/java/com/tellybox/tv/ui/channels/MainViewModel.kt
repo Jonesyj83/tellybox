@@ -108,4 +108,11 @@ class MainViewModel(private val app: AppContainer) : ViewModel() {
     fun toggleFavorite(channel: ChannelEntity, done: (Boolean) -> Unit) {
         viewModelScope.launch { done(app.channels.toggleFavorite(channel)) }
     }
+
+    fun clearHistory(done: () -> Unit = {}) {
+        viewModelScope.launch {
+            app.channels.clearHistory()
+            done()
+        }
+    }
 }

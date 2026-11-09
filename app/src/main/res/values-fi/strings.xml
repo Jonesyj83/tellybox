@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Tallennus pysähtyi odottamatta: %1$s</string>
     <string name="rec_limit_stopped_early">Pysähtyi aikaisin: Android rajaa taustalataukset 6 tuntiin vuorokaudessa</string>
     <string name="rec_background_denied">Android ei sallinut tallennusta taustalla. Salli herätykset ja muistutukset Tellyboxille järjestelmäasetuksissa.</string>
+    <string name="group_recent_clear">Tyhjennä äskettäin katsotut</string>
 </resources>

@@ -36,6 +36,18 @@ object XtreamMapper {
         )
     }
 
+    /**
+     * Throws [XtreamAuthException] unless the account may be used. Panels keep `auth=1` on an
+     * expired line and only say so in `status`.
+     */
+    fun checkLogin(account: XtreamAccount): XtreamAccount {
+        if (!account.authenticated) throw XtreamAuthException("Login rejected by server")
+        if (account.status.equals("Expired", ignoreCase = true)) {
+            throw XtreamAuthException("This account has expired")
+        }
+        return account
+    }
+
     fun categories(json: JsonElement): List<XtreamCategory> = json.objects().mapNotNull { o ->
         val id = o.str("category_id") ?: return@mapNotNull null
         XtreamCategory(id, o.str("category_name") ?: id, o.str("parent_id")?.takeUnless { it == "0" })

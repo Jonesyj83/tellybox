@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Optagelsen stoppede uventet: %1$s</string>
     <string name="rec_limit_stopped_early">Stoppet tidligt: Android begrænser baggrundsdownloads til 6 timer om dagen</string>
     <string name="rec_background_denied">Android tillod ikke optagelse i baggrunden. Tillad alarmer og påmindelser for Tellybox i systemindstillingerne.</string>
+    <string name="group_recent_clear">Ryd senest sete</string>
 </resources>

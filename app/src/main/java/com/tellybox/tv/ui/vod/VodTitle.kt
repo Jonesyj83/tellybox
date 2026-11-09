@@ -4,9 +4,10 @@ package com.tellybox.tv.ui.vod
 data class VodTitle(val title: String, val year: String?) {
     companion object {
         private val openers = charArrayOf('(', '[')
+        private const val separators = "-–|:"
 
         /**
-         * Finds a trailing year in brackets, after a dash, or just at the end. Written as
+         * Finds a trailing year in brackets, or at the very end after a separator. Written as
          * plain string handling: it runs for every card while scrolling.
          */
         fun parse(name: String, maxYear: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) + 1): VodTitle {
@@ -21,11 +22,14 @@ data class VodTitle(val title: String, val year: String?) {
                 }
                 return VodTitle(trimmed, null)
             }
-            // "Heat - 1995" or "Heat 1995"
+            // "Heat - 1995" or "Heat | 1995". A bare space is not enough: "Wonder Woman 1984"
+            // and "Blade Runner 2049" end in a number that is part of the title.
             if (end >= 4) {
                 val tail = trimmed.substring(end - 4)
-                val before = trimmed.getOrNull(end - 5)
-                if (isYear(tail, maxYear) && (before == null || before == ' ' || before == '-')) {
+                var b = end - 5
+                while (b >= 0 && trimmed[b] == ' ') b--
+                val before = trimmed.getOrNull(b)
+                if (isYear(tail, maxYear) && before != null && before in separators) {
                     val title = clean(trimmed.substring(0, end - 4))
                     if (title.isNotEmpty()) return VodTitle(title, tail)
                 }

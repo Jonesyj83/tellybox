@@ -570,4 +570,5 @@
     <string name="rec_unexpected_stop">Ghi hình dừng đột ngột: %1$s</string>
     <string name="rec_limit_stopped_early">Dừng sớm: Android giới hạn tải xuống nền 6 giờ mỗi ngày</string>
     <string name="rec_background_denied">Android không cho phép ghi hình ở chế độ nền. Hãy cho phép báo thức và nhắc nhở cho Tellybox trong cài đặt hệ thống.</string>
+    <string name="group_recent_clear">Xóa đã xem gần đây</string>
 </resources>

@@ -606,4 +606,5 @@
     <string name="rec_unexpected_stop">ההקלטה נעצרה באופן בלתי צפוי: %1$s</string>
     <string name="rec_limit_stopped_early">נעצר מוקדם: אנדרואיד מגביל הורדות ברקע ל-6 שעות ביום</string>
     <string name="rec_background_denied">אנדרואיד לא אפשר הקלטה ברקע. אשר שעונים ותזכורות ל-Tellybox בהגדרות המערכת.</string>
+    <string name="group_recent_clear">ניקוי נצפו לאחרונה</string>
 </resources>

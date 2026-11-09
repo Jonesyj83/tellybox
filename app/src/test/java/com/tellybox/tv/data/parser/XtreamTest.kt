@@ -1,11 +1,13 @@
 package com.tellybox.tv.data.parser
 
+import com.tellybox.tv.data.parser.xtream.XtreamAuthException
 import com.tellybox.tv.data.parser.xtream.XtreamCredentials
 import com.tellybox.tv.data.parser.xtream.XtreamMapper
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.TimeZone
@@ -20,6 +22,28 @@ class XtreamTest {
         assertEquals("http://line.example.com:8080", c.server)
         assertEquals("bob", c.username)
         assertEquals("s3cr&t", c.password)
+    }
+
+    @Test
+    fun pastedPasswordKeepsLiteralPlus() {
+        val c = XtreamCredentials.from("http://h:8080/get.php?username=bob&password=a+b%2Bc&type=m3u_plus")
+        assertEquals("a+b+c", c.password)
+    }
+
+    @Test
+    fun loginRejectsExpiredAccountEvenWithAuth() {
+        val expired = XtreamMapper.account(json("""{"user_info":{"auth":1,"status":"Expired"}}"""))
+        assertThrows(XtreamAuthException::class.java) { XtreamMapper.checkLogin(expired) }
+        val rejected = XtreamMapper.account(json("""{"user_info":{"auth":0,"status":"Active"}}"""))
+        assertThrows(XtreamAuthException::class.java) { XtreamMapper.checkLogin(rejected) }
+        val active = XtreamMapper.account(json("""{"user_info":{"auth":1,"status":"Active"}}"""))
+        assertEquals(active, XtreamMapper.checkLogin(active))
+    }
+
+    @Test
+    fun errorObjectInsteadOfStreamListMapsToNothing() {
+        assertTrue(XtreamMapper.liveStreams(json("""{"user_info":{"auth":0}}""")).isEmpty())
+        assertTrue(XtreamMapper.liveStreams(json("""[]""")).isEmpty())
     }
 
     @Test

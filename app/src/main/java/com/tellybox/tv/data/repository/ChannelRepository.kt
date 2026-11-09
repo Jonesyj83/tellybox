@@ -32,6 +32,9 @@ class ChannelRepository(
 
     fun observeRecent(): Flow<List<ChannelEntity>> = visible(db.history().observeRecent())
 
+    /** Forgets what has been watched. Favourites and the playlists are left alone. */
+    suspend fun clearHistory() = db.history().clear()
+
     private fun visible(source: Flow<List<ChannelEntity>>) = combine(source, parental.changes) { items, _ -> parental.visible(items, db) }.distinctUntilChanged()
 
     suspend fun get(id: Long): ChannelEntity? = db.channels().get(id)

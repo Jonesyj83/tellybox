@@ -624,4 +624,5 @@
     <string name="rec_unexpected_stop">Nahrávání se neočekávaně zastavilo: %1$s</string>
     <string name="rec_limit_stopped_early">Zastaveno dříve: Android omezuje stahování na pozadí na 6 hodin denně</string>
     <string name="rec_background_denied">Android nepovolil nahrávání na pozadí. Povolte budíky a připomínky pro Tellybox v nastavení systému.</string>
+    <string name="group_recent_clear">Vymazat nedávno sledované</string>
 </resources>

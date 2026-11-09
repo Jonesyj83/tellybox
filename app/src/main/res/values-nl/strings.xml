@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Opname stopte onverwacht: %1$s</string>
     <string name="rec_limit_stopped_early">Eerder gestopt: Android beperkt downloads op de achtergrond tot 6 uur per dag</string>
     <string name="rec_background_denied">Android stond de opname op de achtergrond niet toe. Sta wekkers en herinneringen voor Tellybox toe in de systeeminstellingen.</string>
+    <string name="group_recent_clear">Recent bekeken wissen</string>
 </resources>

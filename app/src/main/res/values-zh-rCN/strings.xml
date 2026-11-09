@@ -570,4 +570,5 @@
     <string name="rec_unexpected_stop">录制意外停止：%1$s</string>
     <string name="rec_limit_stopped_early">提前停止：Android 将后台下载限制为每天 6 小时</string>
     <string name="rec_background_denied">Android 不允许在后台开始录制。请在系统设置中允许 Tellybox 使用闹钟和提醒。</string>
+    <string name="group_recent_clear">清除最近观看</string>
 </resources>

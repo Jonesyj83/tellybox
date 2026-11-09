@@ -14,6 +14,13 @@ class EpgRefreshGuardTest {
         assertThrows(IllegalStateException::class.java) { EpgRefreshGuard.requireReplacement(stats, 1) }
     }
 
+    @Test fun strayAmpersandOrStopLessFeedCanStillReplaceTheGuide() {
+        val stats = XmltvParser.parse("""<tv><channel id="a"/><programme channel="a" start="20261107000000 +0000"><title>Q&A &nbsp;</title></programme><programme channel="a" start="20261107010000 +0000"><title>Next</title></programme></tv>""", object : XmltvListener {})
+        assertNull(stats.error)
+        assertEquals(1, stats.programmes)
+        EpgRefreshGuard.requireReplacement(stats, 1)
+    }
+
     @Test fun emptyOrFilteredImportCannotReplaceExistingGuide() {
         assertThrows(IllegalStateException::class.java) { EpgRefreshGuard.requireReplacement(XmltvStats(1, 0, 0), 0) }
         assertThrows(IllegalStateException::class.java) { EpgRefreshGuard.requireReplacement(XmltvStats(1, 4, 0), 0) }

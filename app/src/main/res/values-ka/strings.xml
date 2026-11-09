@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">ჩაწერა მოულოდნელად შეწყდა: %1$s</string>
     <string name="rec_limit_stopped_early">შეჩერდა ადრე: Android ფონურ ჩამოტვირთვას დღეში 6 საათით ზღუდავს</string>
     <string name="rec_background_denied">Android-მა ფონში ჩაწერა არ დაუშვა. დაუშვით მაღვიძარები და შეხსენებები Tellybox-ისთვის სისტემის პარამეტრებში.</string>
+    <string name="group_recent_clear">ახლახან ნანახის გასუფთავება</string>
 </resources>

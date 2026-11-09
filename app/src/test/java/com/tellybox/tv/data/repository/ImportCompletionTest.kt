@@ -16,6 +16,16 @@ class ImportCompletionTest {
         suspend fun series() = listOf(ChannelEntity(playlistId = 1, channelKey = "series:new", name = "New", streamUrl = "url", kind = ContentKind.SERIES))
     }
 
+    @Test fun emptyStreamListIsAFailedLoadAndPrunesNothing() = runBlocking {
+        assertThrows(IllegalStateException::class.java) { requireLoaded(emptyList<Int>(), "live channels") }
+        assertEquals(listOf(1), requireLoaded(listOf(1), "live channels"))
+        val movies = optionalImport { requireLoaded(emptyList<Int>(), "films") }
+        assertEquals(LoadCompletion.FAILED, movies)
+        val completion = ImportCompletion(mapOf(ContentKind.LIVE to LoadCompletion.FULL,
+            ContentKind.MOVIE to movies, ContentKind.SERIES to LoadCompletion.FULL))
+        assertFalse(completion.canPrune(ContentKind.MOVIE, null))
+    }
+
     @Test fun failedMoviesSurviveWhileNewSeriesImportAndVanishedSeriesDisappear() = runBlocking {
         val client = FakeXtream()
         val incoming = mutableListOf<ChannelEntity>()

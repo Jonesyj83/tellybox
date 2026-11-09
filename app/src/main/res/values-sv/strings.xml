@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Inspelningen stoppade oväntat: %1$s</string>
     <string name="rec_limit_stopped_early">Stoppades tidigt: Android begränsar nedladdningar i bakgrunden till 6 timmar per dag</string>
     <string name="rec_background_denied">Android tillät inte inspelning i bakgrunden. Tillåt larm och påminnelser för Tellybox i systeminställningarna.</string>
+    <string name="group_recent_clear">Rensa senast sedda</string>
 </resources>

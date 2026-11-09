@@ -29,8 +29,6 @@ data class M3uEntry(
     val catchupSource: String? = null,
     val userAgent: String? = null,
     val referrer: String? = null,
-    /** Every attribute found on the #EXTINF line, lower-cased keys. */
-    val attributes: Map<String, String> = emptyMap(),
 )
 
 data class M3uPlaylist(
@@ -70,7 +68,15 @@ object M3uParser {
                     header = parseHeader(line)
                 }
                 line.startsWith("#EXTINF", ignoreCase = true) -> {
-                    pending = parseExtInf(line)
+                    // #EXTVLCOPT / #EXTGRP may come before #EXTINF: keep what they set.
+                    val before = pending
+                    pending = parseExtInf(line).also { p ->
+                        if (before != null) {
+                            if (p.group == null) p.group = before.group
+                            p.userAgent = before.userAgent
+                            p.referrer = before.referrer
+                        }
+                    }
                 }
                 line.startsWith("#EXTGRP:", ignoreCase = true) -> {
                     val p = pending ?: PendingEntry().also { pending = it }
@@ -130,9 +136,14 @@ object M3uParser {
         val meta = if (commaIdx >= 0) body.substring(0, commaIdx) else body
         val title = if (commaIdx >= 0) body.substring(commaIdx + 1).trim() else ""
 
-        val durationToken = meta.trimStart().takeWhile { !it.isWhitespace() }
-        val duration = durationToken.toDoubleOrNull()?.toLong() ?: -1
-        val attrs = parseAttributes(meta.trimStart().drop(durationToken.length))
+        // The duration is optional: only take the first word as one when it is a number,
+        // so `#EXTINF:tvg-id="x",Name` keeps its tvg-id.
+        val firstToken = meta.trimStart().takeWhile { !it.isWhitespace() }
+        val parsedDuration = firstToken.toDoubleOrNull()
+        val duration = parsedDuration?.toLong() ?: -1
+        val attrs = parseAttributes(
+            if (parsedDuration != null) meta.trimStart().drop(firstToken.length) else meta,
+        )
 
         return PendingEntry(
             duration = duration,
@@ -144,19 +155,58 @@ object M3uParser {
 
     /** Index of the first comma that isn't inside a quoted attribute value. */
     private fun findTitleComma(s: String): Int {
+        val strict = findTitleComma(s, strict = true)
+        // Quotes that never close cleanly (e.g. `a="x"b="y",Name`): use the first matching quote.
+        return if (strict >= 0) strict else findTitleComma(s, strict = false)
+    }
+
+    private fun findTitleComma(s: String, strict: Boolean): Int {
         var quote: Char? = null
         for (i in s.indices) {
             val c = s[i]
             when {
-                quote != null -> if (c == quote) quote = null
+                quote != null -> if (c == quote && (!strict || closesQuote(s, i))) quote = null
                 c == '"' || c == '\'' -> {
-                    // Only treat as quote when it opens an attribute value (after '=').
-                    if (i > 0 && s[i - 1] == '=') quote = c
+                    // Only treat as quote when it opens an attribute value (after '=',
+                    // spaces allowed in between).
+                    var j = i - 1
+                    while (j >= 0 && s[j] == ' ') j--
+                    if (j >= 0 && s[j] == '=') quote = c
                 }
                 c == ',' -> return i
             }
         }
         return -1
+    }
+
+    /**
+     * A quote only closes a value when a space, a comma or the end of the line follows it,
+     * and only when what comes after that (spaces skipped) is the end, a comma or the next
+     * `name=`. So `tvg-name="The "Best" Channel"` keeps its inner quotes, and the broken
+     * `a="x"b="y"` with no space still splits into two attributes.
+     */
+    private fun closesQuote(s: String, i: Int): Boolean {
+        val n = s.length
+        var j = i + 1
+        if (j < n && !s[j].isWhitespace() && s[j] != ',' && !s[j].isLetter()) return false
+        while (j < n && s[j].isWhitespace()) j++
+        if (j >= n || s[j] == ',') return true
+        if (!s[j].isLetter()) return false
+        while (j < n && (s[j].isLetterOrDigit() || s[j] == '-' || s[j] == '_')) j++
+        while (j < n && s[j] == ' ') j++
+        return j < n && s[j] == '='
+    }
+
+    /** Closing quote for the value opened at [open], or -1 if it never closes. */
+    private fun findClosingQuote(s: String, open: Int): Int {
+        val q = s[open]
+        var i = s.indexOf(q, open + 1)
+        while (i >= 0) {
+            if (closesQuote(s, i)) return i
+            i = s.indexOf(q, i + 1)
+        }
+        // Nothing closes cleanly (e.g. `a="x"b="y"`): fall back to the first matching quote.
+        return s.indexOf(q, open + 1)
     }
 
     /**
@@ -171,16 +221,19 @@ object M3uParser {
             while (i < n && (s[i].isWhitespace() || s[i] == ',')) i++
             val keyStart = i
             while (i < n && s[i] != '=' && !s[i].isWhitespace()) i++
+            val keyEnd = i
+            // `key = "value"`: spaces are allowed on both sides of '='.
+            while (i < n && s[i] == ' ') i++
             if (i >= n || s[i] != '=') {
                 // bare token with no value, skip it
                 continue
             }
-            val key = s.substring(keyStart, i).lowercase()
+            val key = s.substring(keyStart, keyEnd).lowercase()
             i++ // '='
+            while (i < n && s[i] == ' ') i++
             val value: String
             if (i < n && (s[i] == '"' || s[i] == '\'')) {
-                val q = s[i]
-                val end = s.indexOf(q, i + 1)
+                val end = findClosingQuote(s, i)
                 if (end < 0) {
                     value = s.substring(i + 1)
                     i = n
@@ -198,8 +251,11 @@ object M3uParser {
         return out
     }
 
-    private fun buildEntry(p: PendingEntry, url: String, header: M3uHeader): M3uEntry {
+    private fun buildEntry(p: PendingEntry, line: String, header: M3uHeader): M3uEntry {
         val a = p.attrs
+        // Kodi style: `url|User-Agent=...&Referer=...`
+        val url = line.substringBefore('|').trim()
+        val pipe = pipeHeaders(line.substringAfter('|', ""))
         val tvgName = a["tvg-name"]?.ifEmpty { null }
         val name = p.name ?: tvgName ?: url.substringAfterLast('/').ifEmpty { url }
         return M3uEntry(
@@ -215,9 +271,24 @@ object M3uParser {
             catchupDays = (a["catchup-days"] ?: a["timeshift"] ?: a["tvg-rec"])?.toIntOrNull()
                 ?: header.catchupDays,
             catchupSource = a["catchup-source"]?.ifEmpty { null } ?: header.catchupSource,
-            userAgent = p.userAgent ?: a["http-user-agent"] ?: a["user-agent"],
-            referrer = p.referrer ?: a["http-referrer"] ?: a["http-referer"],
-            attributes = a,
+            userAgent = p.userAgent ?: pipe["user-agent"] ?: a["http-user-agent"] ?: a["user-agent"],
+            referrer = p.referrer ?: pipe["referer"] ?: pipe["referrer"]
+                ?: a["http-referrer"] ?: a["http-referer"],
         )
+    }
+
+    /** Headers after the pipe of a Kodi-style URL: lower-cased names, URL-decoded values. */
+    private fun pipeHeaders(s: String): Map<String, String> {
+        if (s.isBlank()) return emptyMap()
+        val out = HashMap<String, String>()
+        for (part in s.split('&')) {
+            val name = part.substringBefore('=', "").trim().lowercase()
+            val raw = part.substringAfter('=', "").trim()
+            if (name.isEmpty() || raw.isEmpty()) continue
+            out[name] = runCatching {
+                java.net.URLDecoder.decode(raw.replace("+", "%2B"), "UTF-8")
+            }.getOrDefault(raw)
+        }
+        return out
     }
 }

@@ -22,11 +22,7 @@ class XtreamClient(
         service.call(credentials.username, credentials.password, action, params)
 
     /** Checks the login. Throws [XtreamAuthException] if the panel rejects it. */
-    suspend fun authenticate(): XtreamAccount {
-        val account = XtreamMapper.account(call(null))
-        if (!account.authenticated) throw XtreamAuthException("Login rejected by server")
-        return account
-    }
+    suspend fun authenticate(): XtreamAccount = XtreamMapper.checkLogin(XtreamMapper.account(call(null)))
 
     suspend fun liveCategories() = XtreamMapper.categories(call("get_live_categories"))
     suspend fun liveStreams(categoryId: String? = null) =

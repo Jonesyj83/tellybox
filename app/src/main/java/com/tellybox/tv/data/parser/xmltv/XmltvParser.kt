@@ -51,10 +51,14 @@ data class XmltvStats(
 object XmltvParser {
 
     fun parse(input: InputStream, listener: XmltvListener, includeDescriptions: Boolean = true): XmltvStats =
-        run(InputSource(input.decompressIfGzip()), listener, includeDescriptions)
+        run(InputSource(BareAmpersandFilter(input.decompressIfGzip())), listener, includeDescriptions)
 
     fun parse(text: String, listener: XmltvListener, includeDescriptions: Boolean = true): XmltvStats =
-        run(InputSource(StringReader(text)), listener, includeDescriptions)
+        run(
+            InputSource(BareAmpersandFilter(text.byteInputStream(Charsets.UTF_8))).apply { encoding = "UTF-8" },
+            listener,
+            includeDescriptions,
+        )
 
     /** Convenience for tests and small guides. */
     fun parseAll(text: String): Pair<List<XmltvChannel>, List<XmltvProgramme>> {
@@ -198,29 +202,50 @@ object XmltvParser {
                     inProgramme = false
                     val channel = pChannel
                     val start = pStart
-                    // A missing stop is legal XMLTV; treat as unknown and drop, since
-                    // the guide grid can't place it. Bad ranges are dropped too.
-                    val stop = pStop
-                    if (channel.isNullOrEmpty() || start == null || stop == null || stop <= start) {
+                    if (channel.isNullOrEmpty() || start == null) {
                         skipped++
-                    } else {
-                        programmeCount++
-                        listener.onProgramme(
-                            XmltvProgramme(
-                                channelId = channel,
-                                start = start,
-                                stop = stop,
-                                title = pTitle ?: "",
-                                subtitle = pSubtitle,
-                                description = pDesc,
-                                category = pCategory,
-                                iconUrl = pIcon,
-                                episode = pEpisodeOnscreen ?: pEpisodeNs,
-                            ),
-                        )
+                        return
                     }
+                    // A missing stop is legal XMLTV: the programme runs until the channel's
+                    // next one starts, so hold it until that one turns up.
+                    openEnded.remove(channel)?.let { emit(it.copy(stop = start)) }
+                    val programme = XmltvProgramme(
+                        channelId = channel,
+                        start = start,
+                        stop = pStop ?: UNKNOWN_STOP,
+                        title = pTitle ?: "",
+                        subtitle = pSubtitle,
+                        description = pDesc,
+                        category = pCategory,
+                        iconUrl = pIcon,
+                        episode = pEpisodeOnscreen ?: pEpisodeNs,
+                    )
+                    if (pStop == null) openEnded[channel] = programme else emit(programme)
                 }
             }
+        }
+
+        /** Per channel, the last programme seen without a stop time. */
+        private val openEnded = HashMap<String, XmltvProgramme>()
+
+        private fun emit(p: XmltvProgramme) {
+            // Bad ranges can't be placed on the grid.
+            if (p.stop <= p.start) {
+                skipped++
+            } else {
+                programmeCount++
+                listener.onProgramme(p)
+            }
+        }
+
+        override fun endDocument() {
+            // The last programme of a stop-less channel has nothing to end it.
+            skipped += openEnded.size
+            openEnded.clear()
+        }
+
+        private companion object {
+            const val UNKNOWN_STOP = Long.MIN_VALUE
         }
 
         // Recoverable errors: keep going.

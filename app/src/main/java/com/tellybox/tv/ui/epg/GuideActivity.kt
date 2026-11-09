@@ -95,7 +95,9 @@ class GuideActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGrid
         applyChannels(list)
     }
 
-    private suspend fun applyChannels(list: List<com.tellybox.tv.data.db.ChannelEntity>) {
+    private suspend fun applyChannels(all: List<com.tellybox.tv.data.db.ChannelEntity>) {
+        // Rows and the zapping list from playLive must be live channels only.
+        val list = all.liveOnly()
         val visibleIds = list.map { it.id }
         if (visibleIds == lastIds) return
         val previous = lastIds
@@ -107,7 +109,8 @@ class GuideActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGrid
         guide.channels = channels
         // Same guide, updated: keep the highlighted row and the time on screen. A different
         // list (a new filter) should open where it was asked to.
-        val sameList = previous != null && previous.any { it in visibleIds.toSet() }
+        val visibleSet = visibleIds.toSet()
+        val sameList = previous != null && previous.any { it in visibleSet }
         binding.grid.setChannels(channels.map { GuideSupport.guideChannel(it) }, focus, keepPosition = sameList)
         if (!binding.grid.hasFocus()) binding.grid.requestFocus()
     }

@@ -11,7 +11,14 @@ class VodTitleTest {
 
     @Test fun dashedOrTrailingYear() {
         assertEquals(VodTitle("Alien", "1979"), VodTitle.parse("Alien - 1979"))
-        assertEquals(VodTitle("Arrival", "2016"), VodTitle.parse("Arrival 2016"))
+        assertEquals(VodTitle("Alien", "1979"), VodTitle.parse("Alien-1979"))
+        assertEquals(VodTitle("Arrival", "2016"), VodTitle.parse("Arrival | 2016"))
+    }
+
+    @Test fun yearLikeNumberAfterASpaceIsPartOfTheTitle() {
+        assertEquals(VodTitle("Wonder Woman 1984", null), VodTitle.parse("Wonder Woman 1984", maxYear = 2027))
+        assertEquals(VodTitle("Arrival 2016", null), VodTitle.parse("Arrival 2016", maxYear = 2027))
+        assertEquals(VodTitle("Wonder Woman 1984", "2020"), VodTitle.parse("Wonder Woman 1984 (2020)", maxYear = 2027))
     }
 
     @Test fun numbersThatAreNotYearsStayInTheTitle() {

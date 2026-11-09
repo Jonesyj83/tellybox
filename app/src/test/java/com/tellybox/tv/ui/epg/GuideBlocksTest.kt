@@ -24,6 +24,33 @@ class GuideBlocksTest {
     }
 
     @Test
+    fun `right moves past overlapping programmes instead of sticking`() {
+        // A 10:00-11:00 and B 10:30-11:30, as the grid looks them up: first block containing t.
+        val blocks = GuideBlocks.build(listOf(program(0, 60, "A"), program(30, 90, "B")), base, base + 180 * min)
+        fun at(t: Long) = blocks.first { t >= it.start && t < it.stop }
+        val cur = at(base + 15 * min)
+        assertEquals("A", cur.program?.title)
+        val next = at(cur.stop)
+        assertEquals("B", next.program?.title)
+        val landed = at(GuideBlocks.rightFocusTime(cur, next))
+        assertEquals("B", landed.program?.title)
+    }
+
+    @Test
+    fun `guide and zapping lists keep only live channels`() {
+        fun row(id: Long, kind: com.tellybox.tv.data.db.ContentKind) = com.tellybox.tv.data.db.ChannelEntity(
+            id = id, playlistId = 1, channelKey = "$kind:$id", name = "x", streamUrl = "u", kind = kind,
+        )
+        val mixed = listOf(
+            row(1, com.tellybox.tv.data.db.ContentKind.LIVE),
+            row(2, com.tellybox.tv.data.db.ContentKind.SERIES),
+            row(3, com.tellybox.tv.data.db.ContentKind.MOVIE),
+            row(4, com.tellybox.tv.data.db.ContentKind.LIVE),
+        )
+        assertEquals(listOf(1L, 4L), mixed.liveOnly().map { it.id })
+    }
+
+    @Test
     fun `not loaded yet is a blank strip, not no-data`() {
         assertEquals(GuideBlock.Strip.LOADING, GuideBlocks.build(null, base, base + 60 * min).single().strip)
     }

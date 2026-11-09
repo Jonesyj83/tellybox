@@ -143,4 +143,80 @@ class M3uParserTest {
         assertEquals("ok", attrs["tvg-id"])
         assertEquals("http://broken", attrs["tvg-logo"])
     }
+
+    @Test
+    fun extinfWithoutDurationKeepsFirstAttribute() {
+        val e = M3uParser.parse("#EXTINF:tvg-id=\"x\" group-title=\"G\",Name\nhttp://x/1").entries.single()
+        assertEquals("x", e.tvgId)
+        assertEquals("G", e.groupTitle)
+        assertEquals("Name", e.name)
+        assertEquals(-1L, e.duration)
+    }
+
+    @Test
+    fun spacesAroundEqualsKeepAttributeAndTitle() {
+        val text = "#EXTINF:-1 tvg-id = \"n1\" group-title = \"News, Sport\",Channel One\nhttp://x/1"
+        val e = M3uParser.parse(text).entries.single()
+        assertEquals("n1", e.tvgId)
+        assertEquals("News, Sport", e.groupTitle)
+        assertEquals("Channel One", e.name)
+    }
+
+    @Test
+    fun kodiPipeHeadersAreSplitFromUrl() {
+        val text = "#EXTINF:-1,K\nhttp://x/live.m3u8|User-Agent=Some%20Player/2.0&Referer=http://ref.example/"
+        val e = M3uParser.parse(text).entries.single()
+        assertEquals("http://x/live.m3u8", e.url)
+        assertEquals("Some Player/2.0", e.userAgent)
+        assertEquals("http://ref.example/", e.referrer)
+    }
+
+    @Test
+    fun quotesInsideQuotedValueDoNotCutItShort() {
+        val text = "#EXTINF:-1 tvg-name=\"The \"Best\" Channel\" group-title=\"G\",Title\nhttp://x/1"
+        val e = M3uParser.parse(text).entries.single()
+        assertEquals("The \"Best\" Channel", e.tvgName)
+        assertEquals("G", e.groupTitle)
+        assertEquals("Title", e.name)
+    }
+
+    @Test
+    fun quotesWithNoSpaceBetweenAttributesStillParse() {
+        val attrs = M3uParser.parseAttributes("""tvg-id="a"tvg-name="b"""")
+        assertEquals("a", attrs["tvg-id"])
+        assertEquals("b", attrs["tvg-name"])
+        val e = M3uParser.parse("#EXTINF:-1 tvg-logo=\"http://x/a.png\"group-title=\"News, Sport\",Name\nhttp://x/1")
+            .entries.single()
+        assertEquals("http://x/a.png", e.tvgLogo)
+        assertEquals("News, Sport", e.groupTitle)
+        assertEquals("Name", e.name)
+    }
+
+    @Test
+    fun vlcOptsAndExtgrpBeforeExtinfAreKept() {
+        val text = """
+            #EXTM3U
+            #EXTVLCOPT:http-user-agent=Early/1.0
+            #EXTVLCOPT:http-referrer=http://early.example/
+            #EXTGRP:Early Group
+            #EXTINF:-1 tvg-id="e",Early
+            http://x/e
+            #EXTINF:-1,Next
+            http://x/n
+        """.trimIndent()
+        val entries = M3uParser.parse(text).entries
+        assertEquals("Early/1.0", entries[0].userAgent)
+        assertEquals("http://early.example/", entries[0].referrer)
+        assertEquals("Early Group", entries[0].groupTitle)
+        assertEquals("e", entries[0].tvgId)
+        // does not leak into the next entry
+        assertNull(entries[1].userAgent)
+        assertNull(entries[1].groupTitle)
+    }
+
+    @Test
+    fun groupTitleWinsOverEarlierExtgrp() {
+        val text = "#EXTGRP:B\n#EXTINF:-1 group-title=\"A\",X\nhttp://x"
+        assertEquals("A", M3uParser.parse(text).entries.single().groupTitle)
+    }
 }

@@ -62,8 +62,11 @@ data class XtreamCredentials(
             raw.orEmpty().split('&').mapNotNull { pair ->
                 val k = pair.substringBefore('=', "")
                 if (k.isEmpty()) null
-                else URLDecoder.decode(k, "UTF-8") to URLDecoder.decode(pair.substringAfter('='), "UTF-8")
+                else decodePart(k) to decodePart(pair.substringAfter('='))
             }.toMap()
+
+        /** Percent-decoding only: a literal '+' in a pasted password is a '+', not a space. */
+        private fun decodePart(s: String): String = URLDecoder.decode(s.replace("+", "%2B"), "UTF-8")
     }
 }
 

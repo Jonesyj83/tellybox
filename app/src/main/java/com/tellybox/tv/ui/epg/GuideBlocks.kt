@@ -1,8 +1,16 @@
 package com.tellybox.tv.ui.epg
 
+import com.tellybox.tv.data.db.ChannelEntity
+import com.tellybox.tv.data.db.ContentKind
 import com.tellybox.tv.data.db.EpgProgramEntity
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
+
+/**
+ * The rows the guide grid shows and the player zaps through. Search, Favourites and Recent mix
+ * in films and series, which have no guide and would stop zapping dead.
+ */
+fun List<ChannelEntity>.liveOnly(): List<ChannelEntity> = filter { it.kind == ContentKind.LIVE }
 
 /** Turns a channel's programmes into the cells the guide draws, plain JVM so it can be tested. */
 object GuideBlocks {
@@ -21,6 +29,12 @@ object GuideBlocks {
      * a channel that does have data are filled with half-hour placeholders instead, so
      * Left/Right keep stepping through time at a steady pace.
      */
+    /**
+     * Where focus lands when Right moves from [cur] to [next]. Overlapping programmes start
+     * inside [cur], so jumping to [next]'s start alone would pick [cur] again.
+     */
+    fun rightFocusTime(cur: GuideBlock, next: GuideBlock): Long = maxOf(next.start, cur.stop)
+
     fun build(programs: List<EpgProgramEntity>?, from: Long, to: Long): List<GuideBlock> {
         if (programs.isNullOrEmpty()) {
             val strip = if (programs == null) GuideBlock.Strip.LOADING else GuideBlock.Strip.NO_DATA

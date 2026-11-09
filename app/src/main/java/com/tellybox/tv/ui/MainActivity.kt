@@ -36,6 +36,7 @@ import com.tellybox.tv.player.timeshift.TimeshiftUnavailable
 import com.tellybox.tv.player.timeshift.TimeshiftUnsupportedException
 import com.tellybox.tv.ui.channels.FocusTarget
 import com.tellybox.tv.ui.channels.GroupAdapter
+import com.tellybox.tv.ui.channels.GroupRow
 import com.tellybox.tv.ui.channels.GroupSelection
 import com.tellybox.tv.ui.channels.HomeArea
 import com.tellybox.tv.ui.channels.HomeBack
@@ -52,6 +53,7 @@ import com.tellybox.tv.ui.epg.GuideBlock
 import com.tellybox.tv.ui.epg.GuideChannel
 import com.tellybox.tv.ui.epg.GuideGridView
 import com.tellybox.tv.ui.epg.GuideSupport
+import com.tellybox.tv.ui.epg.liveOnly
 import com.tellybox.tv.ui.parental.requestPin
 import com.tellybox.tv.ui.player.PlayerActivity
 import com.tellybox.tv.ui.playlists.AddPlaylistActivity
@@ -109,13 +111,29 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
     }
 
     private val groupAdapter = GroupAdapter(
-        onFocused = { row -> selectSoon(row.selection) },
+        onFocused = { row ->
+            focusedGroup = row
+            selectSoon(row.selection)
+        },
         onClick = { row ->
             viewModel.select(row.selection)
             if (shownSelection != row.selection) focusGridOnUpdate = true
             else if (binding.grid.channels.isNotEmpty()) binding.grid.requestFocus()
         },
+        onLongClick = { row -> if (row.selection == GroupSelection.Recent) askClearHistory() },
     )
+
+    /** The rail row with focus, so the Menu key knows what it is sitting on. */
+    private var focusedGroup: GroupRow? = null
+
+    /** Recently watched is the one list the viewer can empty. */
+    private fun askClearHistory() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.group_recent_clear)
+            .setPositiveButton(R.string.group_recent_clear) { _, _ -> viewModel.clearHistory() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -306,6 +324,13 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
             keepPosition = sameList,
         )
         binding.grid.playingChannelId = preview.previewing
+        // The list changed: if the channel in the preview was deleted (playlist removed or
+        // refreshed without it), stop playing it. Not being in this group is not enough, so ask.
+        preview.previewing?.takeIf { id -> entities.none { it.id == id } }?.let { id ->
+            lifecycleScope.launch {
+                if (appContainer.channels.get(id) == null && preview.previewing == id) stopPreview()
+            }
+        }
         binding.channelsEmpty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
         binding.channelsEmpty.setText(
             if (selection == GroupSelection.Favorites) R.string.empty_favorites else R.string.empty_group,
@@ -393,7 +418,8 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
         showChannelMenu(channel, row, block)
     }
 
-    private fun gridIds() = guide.channels.map { it.id }.toLongArray()
+    /** The list handed to the player and the full guide: live channels only, see [liveOnly]. */
+    private fun gridIds() = guide.channels.liveOnly().map { it.id }.toLongArray()
 
     // ---- preview --------------------------------------------------------------------------
 
@@ -828,6 +854,12 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
             KeyEvent.KEYCODE_GUIDE -> { openGuide(); return true }
             KeyEvent.KEYCODE_MENU -> if (binding.previewTile.hasFocus()) {
                 previewChannel?.let { showChannelMenu(it, null, null) }
+                return true
+            } else if (focusedGroup?.selection == GroupSelection.Recent ||
+                shownSelection == GroupSelection.Recent
+            ) {
+                // Works whether the rail row or the grid has focus.
+                askClearHistory()
                 return true
             }
         }

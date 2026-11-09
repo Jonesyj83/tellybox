@@ -624,4 +624,5 @@
     <string name="rec_unexpected_stop">Įrašymas netikėtai sustojo: %1$s</string>
     <string name="rec_limit_stopped_early">Sustabdyta anksčiau: Android riboja foninius atsisiuntimus iki 6 valandų per dieną</string>
     <string name="rec_background_denied">Android neleido įrašyti fone. Leiskite žadintuvus ir priminimus „Tellybox“ sistemos nustatymuose.</string>
+    <string name="group_recent_clear">Išvalyti neseniai žiūrėtus</string>
 </resources>

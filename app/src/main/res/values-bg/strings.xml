@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Записът спря неочаквано: %1$s</string>
     <string name="rec_limit_stopped_early">Спряно по-рано: Android ограничава фоновото изтегляне до 6 часа на ден</string>
     <string name="rec_background_denied">Android не позволи запис във фонов режим. Разрешете аларми и напомняния за Tellybox в системните настройки.</string>
+    <string name="group_recent_clear">Изчистване на последно гледаните</string>
 </resources>

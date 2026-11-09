@@ -337,7 +337,7 @@ class GuideGridView @JvmOverloads constructor(
                 val cur = focusedBlock ?: return true
                 if (cur.stop >= maxTime) return true
                 val next = blockAt(focusedRow, cur.stop) ?: return true
-                focusTime = next.start
+                focusTime = GuideBlocks.rightFocusTime(cur, next)
                 if (focusTime >= viewStart + visibleMs - SLOT) viewStart = floorSlot(focusTime) - SLOT
             }
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> {

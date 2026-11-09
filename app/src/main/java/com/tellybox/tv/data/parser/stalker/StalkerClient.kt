@@ -75,6 +75,8 @@ class StalkerClient(
 
     private var endpoint: HttpUrl? = null
     private var token: String? = null
+    /** Bumped on every login, so a failed request can tell whether someone already logged in again. */
+    private var session = 0
 
     suspend fun connect() = lock.withLock { ensureSessionLocked(force = true) }
 
@@ -151,12 +153,18 @@ class StalkerClient(
     }
 
     private suspend fun call(type: String, action: String, params: Map<String, String> = emptyMap()): JsonElement? {
-        lock.withLock { ensureSessionLocked(force = false) }
+        val used = lock.withLock {
+            ensureSessionLocked(force = false)
+            session
+        }
         return try {
             request(type, action, params)
         } catch (e: StalkerException) {
-            // Tokens expire without warning; one fresh handshake then give up.
-            lock.withLock { ensureSessionLocked(force = true) }
+            // Tokens expire without warning; one fresh handshake then give up. Concurrent requests
+            // all fail on the same expired token, so only the first logs in again and the rest
+            // reuse its session rather than each forcing a login and clearing the token under
+            // the others.
+            lock.withLock { ensureSessionLocked(force = session == used) }
             request(type, action, params)
         }
     }
@@ -171,6 +179,7 @@ class StalkerClient(
                 val hs = request("stb", "handshake", mapOf("token" to ""), allowNoToken = true)
                 token = (hs as? JsonObject)?.str("token") ?: throw StalkerException("Handshake returned no token")
                 request("stb", "get_profile", profileParams())
+                session++
                 return
             } catch (e: Exception) {
                 lastError = e

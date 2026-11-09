@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">A felvétel váratlanul leállt: %1$s</string>
     <string name="rec_limit_stopped_early">Korábban leállt: az Android napi 6 órára korlátozza a háttérletöltéseket</string>
     <string name="rec_background_denied">Az Android nem engedte a háttérben való felvételt. Engedélyezze az ébresztéseket és emlékeztetőket a Tellyboxnak a rendszerbeállításokban.</string>
+    <string name="group_recent_clear">Nemrég nézett törlése</string>
 </resources>

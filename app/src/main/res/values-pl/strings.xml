@@ -624,4 +624,5 @@
     <string name="rec_unexpected_stop">Nagrywanie zatrzymało się niespodziewanie: %1$s</string>
     <string name="rec_limit_stopped_early">Zatrzymane wcześniej: Android ogranicza pobieranie w tle do 6 godzin dziennie</string>
     <string name="rec_background_denied">Android nie zezwolił na nagrywanie w tle. Zezwól na alarmy i przypomnienia dla Tellybox w ustawieniach systemu.</string>
+    <string name="group_recent_clear">Wyczyść ostatnio oglądane</string>
 </resources>

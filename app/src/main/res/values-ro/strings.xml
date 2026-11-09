@@ -606,4 +606,5 @@
     <string name="rec_unexpected_stop">Înregistrarea s-a oprit neașteptat: %1$s</string>
     <string name="rec_limit_stopped_early">Oprit mai devreme: Android limitează descărcările din fundal la 6 ore pe zi</string>
     <string name="rec_background_denied">Android nu a permis înregistrarea în fundal. Permiteți alarme și memento-uri pentru Tellybox în setările sistemului.</string>
+    <string name="group_recent_clear">Șterge urmăritele recent</string>
 </resources>

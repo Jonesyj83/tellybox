@@ -1,6 +1,9 @@
 package com.tellybox.tv.data.parser.stalker
 
 import com.tellybox.tv.data.repository.StalkerImport
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
@@ -66,6 +69,32 @@ class StalkerResilienceTest {
         // It may not have everything, but it must not come back empty or stay stuck.
         assertTrue("no rows survived an expiring session", result.channels.isNotEmpty())
         assertTrue("handshake was never repeated", p.requests.count { it["action"] == "handshake" } > 1)
+    }
+
+    /** Requests that fail together on one expired token log in once between them, not once each. */
+    @Test
+    fun concurrentRequestsOnAnExpiredTokenLogInOnce() = runBlocking {
+        val expired = java.util.concurrent.atomic.AtomicBoolean(false)
+        val p = FakePortal({ q ->
+            when {
+                q["action"] == "handshake" -> {
+                    expired.set(false)
+                    200 to """{"js":{"token":"s"}}"""
+                }
+                q["action"] == "get_profile" -> 200 to """{"js":{}}"""
+                expired.get() -> 200 to """{"error":"Authorization failed"}"""
+                else -> 200 to """{"js":[{"id":"5","title":"Films","censored":0}]}"""
+            }
+        }).also { servers += it }
+
+        val client = StalkerClient("http://127.0.0.1:${p.port}/portal.php", "00:1A:79:AB:CD:EF", OkHttpClient())
+        client.connect()
+        expired.set(true)
+        val results = withTimeout(30_000) {
+            (1..6).map { async(Dispatchers.IO) { client.vodCategories() } }.awaitAll()
+        }
+        assertTrue(results.all { it.size == 1 })
+        assertEquals(2, p.requests.count { it["action"] == "handshake" })
     }
 
     /** A busy portal earns a retry, not a lost category. */

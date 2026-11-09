@@ -183,7 +183,8 @@ class PlaylistRepository(
 
         val liveCats = client.liveCategories().associateBy { it.id }
         liveCats.values.forEach { groups += ImportedGroup(it.name, ContentKind.LIVE, it.id) }
-        client.liveStreams().forEachIndexed { i, s ->
+        // Empty means the load failed, as for M3U; never treat it as "zero channels" and prune.
+        requireLoaded(client.liveStreams(), "live channels").forEachIndexed { i, s ->
             out += ImportedChannel(
                 groupName = liveCats[s.categoryId]?.name ?: UNGROUPED,
                 kind = ContentKind.LIVE,
@@ -207,7 +208,7 @@ class PlaylistRepository(
         val moviesCompletion = optionalImport {
             val cats = client.vodCategories().associateBy { it.id }
             cats.values.forEach { groups += ImportedGroup(it.name, ContentKind.MOVIE, it.id) }
-            client.vodStreams().forEachIndexed { i, s ->
+            requireLoaded(client.vodStreams(), "films").forEachIndexed { i, s ->
                 out += ImportedChannel(
                     groupName = cats[s.categoryId]?.name ?: UNGROUPED,
                     kind = ContentKind.MOVIE,
@@ -229,7 +230,7 @@ class PlaylistRepository(
         val seriesCompletion = optionalImport {
             val cats = client.seriesCategories().associateBy { it.id }
             cats.values.forEach { groups += ImportedGroup(it.name, ContentKind.SERIES, it.id) }
-            client.series().forEachIndexed { i, s ->
+            requireLoaded(client.series(), "series").forEachIndexed { i, s ->
                 out += ImportedChannel(
                     groupName = cats[s.categoryId]?.name ?: UNGROUPED,
                     kind = ContentKind.SERIES,

@@ -624,4 +624,5 @@
     <string name="rec_unexpected_stop">Запись неожиданно остановилась: %1$s</string>
     <string name="rec_limit_stopped_early">Остановлено раньше: Android ограничивает фоновые загрузки 6 часами в сутки</string>
     <string name="rec_background_denied">Android не разрешил запись в фоне. Разрешите будильники и напоминания для Tellybox в настройках системы.</string>
+    <string name="group_recent_clear">Очистить недавно просмотренные</string>
 </resources>

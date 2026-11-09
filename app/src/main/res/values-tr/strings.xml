@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Kayıt beklenmedik şekilde durdu: %1$s</string>
     <string name="rec_limit_stopped_early">Erken durdu: Android arka plan indirmelerini günde 6 saatle sınırlıyor</string>
     <string name="rec_background_denied">Android arka planda kayda izin vermedi. Sistem ayarlarından Tellybox için alarmlara ve hatırlatıcılara izin verin.</string>
+    <string name="group_recent_clear">Son izlenenleri temizle</string>
 </resources>

@@ -606,4 +606,5 @@
     <string name="rec_unexpected_stop">Ieraksts negaidīti apstājās: %1$s</string>
     <string name="rec_limit_stopped_early">Apturēts agrāk: Android ierobežo fona lejupielādes līdz 6 stundām dienā</string>
     <string name="rec_background_denied">Android neļāva ierakstīt fonā. Atļaujiet modinātājus un atgādinājumus Tellybox sistēmas iestatījumos.</string>
+    <string name="group_recent_clear">Notīrīt nesen skatītos</string>
 </resources>

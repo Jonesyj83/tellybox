@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">La grabación se detuvo inesperadamente: %1$s</string>
     <string name="rec_limit_stopped_early">Detenida antes: Android limita las descargas en segundo plano a 6 horas al día</string>
     <string name="rec_background_denied">Android no permitió grabar en segundo plano. Permite alarmas y recordatorios para Tellybox en los ajustes del sistema.</string>
+    <string name="group_recent_clear">Borrar vistos recientemente</string>
 </resources>

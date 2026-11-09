@@ -606,4 +606,5 @@
     <string name="rec_unexpected_stop">Snimanje se neočekivano zaustavilo: %1$s</string>
     <string name="rec_limit_stopped_early">Zaustavljeno prerano: Android ograničava preuzimanja u pozadini na 6 sati dnevno</string>
     <string name="rec_background_denied">Android nije dopustio snimanje u pozadini. Dopustite alarme i podsjetnike za Tellybox u postavkama sustava.</string>
+    <string name="group_recent_clear">Očisti nedavno gledano</string>
 </resources>

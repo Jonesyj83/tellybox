@@ -86,6 +86,57 @@ class XmltvParserTest {
     }
 
     @Test
+    fun programmesWithoutStopEndWhenTheNextOneStarts() {
+        val (_, programmes) = XmltvParser.parseAll("""
+            <tv>
+              <programme start="20240115180000 +0000" channel="a"><title>A1</title></programme>
+              <programme start="20240115180000 +0000" stop="20240115190000 +0000" channel="b"><title>B1</title></programme>
+              <programme start="20240115183000 +0000" channel="a"><title>A2</title></programme>
+              <programme start="20240115190000 +0000" channel="a"><title>A3</title></programme>
+            </tv>
+        """.trimIndent())
+        val a = programmes.filter { it.channelId == "a" }
+        assertEquals(listOf("A1", "A2"), a.map { it.title })
+        assertEquals(XmltvTime.parse("20240115183000 +0000"), a[0].stop)
+        assertEquals(XmltvTime.parse("20240115190000 +0000"), a[1].stop)
+        assertEquals("B1", programmes.single { it.channelId == "b" }.title)
+    }
+
+    @Test
+    fun bareAmpersandAndNbspDoNotBreakTheGuide() {
+        val xml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <tv>
+              <channel id="a"><display-name>Tom & Jerry TV</display-name></channel>
+              <programme start="20240115180000 +0000" stop="20240115190000 +0000" channel="a">
+                <title>Fish&nbsp;&amp;&nbsp;Chips &#38; more &#x26; R&D</title>
+                <desc><![CDATA[Raw & left alone &amp;]]></desc>
+              </programme>
+            </tv>
+        """.trimIndent()
+        val (channels, programmes) = XmltvParser.parseAll(xml)
+        assertEquals("Tom & Jerry TV", channels.single().displayName)
+        assertEquals("Fish & Chips & more & R&D", programmes.single().title)
+        assertEquals("Raw & left alone &amp;", programmes.single().description)
+
+        val stats = XmltvParser.parse(ByteArrayInputStream(xml.toByteArray()), object : XmltvListener {})
+        assertNull(stats.error)
+        assertEquals(1, stats.programmes)
+    }
+
+    @Test
+    fun ampersandFilterKeepsDeclaredLatin1Encoding() {
+        val xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><tv><channel id=\"a\"><display-name>Café & Bar</display-name></channel></tv>"
+        val (channels, _) = XmltvParser.parseAll(xml)
+        assertEquals("Café & Bar", channels.single().displayName)
+        var name: String? = null
+        XmltvParser.parse(ByteArrayInputStream(xml.toByteArray(Charsets.ISO_8859_1)), object : XmltvListener {
+            override fun onChannel(channel: XmltvChannel) { name = channel.displayName }
+        })
+        assertEquals("Café & Bar", name)
+    }
+
+    @Test
     fun descriptionsCanBeDropped() {
         val list = ArrayList<XmltvProgramme>()
         XmltvParser.parse(sample, object : XmltvListener {

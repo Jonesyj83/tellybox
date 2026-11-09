@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Η εγγραφή σταμάτησε απρόσμενα: %1$s</string>
     <string name="rec_limit_stopped_early">Σταμάτησε νωρίτερα: το Android περιορίζει τις λήψεις στο παρασκήνιο σε 6 ώρες την ημέρα</string>
     <string name="rec_background_denied">Το Android δεν επέτρεψε εγγραφή στο παρασκήνιο. Επιτρέψτε ξυπνητήρια και υπενθυμίσεις για το Tellybox στις ρυθμίσεις συστήματος.</string>
+    <string name="group_recent_clear">Εκκαθάριση πρόσφατων προβολών</string>
 </resources>

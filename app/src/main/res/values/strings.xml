@@ -586,4 +586,5 @@
     <string name="rec_no_duration">This programme has no running time</string>
     <string name="rec_no_archive">This programme has ended and the channel has no catch-up archive</string>
     <string name="rec_archive_expired">This programme is older than the channel\'s %1$d-day archive</string>
+    <string name="group_recent_clear">Clear recently watched</string>
 </resources>

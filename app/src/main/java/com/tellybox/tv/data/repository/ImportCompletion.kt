@@ -31,6 +31,15 @@ internal fun batchedCompletion(
     categories = finished + remaining.associateWith { LoadCompletion.PARTIAL },
 )
 
+/**
+ * A provider list that came back empty (or as an error object, which maps to nothing) is a
+ * failed load, not "the provider has none": treating it as complete would prune every row.
+ */
+internal fun <T> requireLoaded(items: List<T>, what: String): List<T> {
+    if (items.isEmpty()) throw IllegalStateException("No $what came back from the server")
+    return items
+}
+
 internal suspend fun optionalImport(load: suspend () -> Unit): LoadCompletion = try {
     load()
     LoadCompletion.FULL

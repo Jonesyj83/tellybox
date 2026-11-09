@@ -588,4 +588,5 @@
     <string name="rec_unexpected_stop">Aufnahme unerwartet beendet: %1$s</string>
     <string name="rec_limit_stopped_early">Vorzeitig beendet: Android begrenzt Hintergrund-Downloads auf 6 Stunden pro Tag</string>
     <string name="rec_background_denied">Android hat die Aufnahme im Hintergrund nicht erlaubt. Erlauben Sie Wecker und Erinnerungen für Tellybox in den Systemeinstellungen.</string>
+    <string name="group_recent_clear">Zuletzt gesehen löschen</string>
 </resources>

@@ -11,6 +11,8 @@ import com.tellybox.tv.databinding.ItemGroupBinding
 class GroupAdapter(
     private val onFocused: (GroupRow) -> Unit,
     private val onClick: (GroupRow) -> Unit,
+    /** Press and hold, or Menu, on a row that has something worth offering. */
+    private val onLongClick: (GroupRow) -> Unit = {},
 ) : ListAdapter<GroupRow, GroupAdapter.Holder>(Diff) {
 
     var activeSelection: GroupSelection? = null
@@ -50,6 +52,7 @@ class GroupAdapter(
                 ?.let { onFocused(getItem(it)) }
         }
         holder.b.root.setOnClickListener { onClick(row) }
+        holder.b.root.setOnLongClickListener { onLongClick(row); true }
     }
 
     private object Diff : DiffUtil.ItemCallback<GroupRow>() {

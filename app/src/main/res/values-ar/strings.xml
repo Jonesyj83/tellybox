@@ -660,4 +660,5 @@
     <string name="rec_unexpected_stop">توقّف التسجيل بشكل غير متوقع: %1$s</string>
     <string name="rec_limit_stopped_early">توقّف مبكرًا: يحدّ Android من التنزيلات في الخلفية إلى 6 ساعات يوميًا</string>
     <string name="rec_background_denied">لم يسمح Android ببدء التسجيل في الخلفية. اسمح بالمنبهات والتذكيرات لتطبيق Tellybox من إعدادات النظام.</string>
+    <string name="group_recent_clear">مسح المشاهدة مؤخرًا</string>
 </resources>
