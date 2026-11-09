@@ -74,6 +74,10 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(channels: List<ChannelEntity>)
 
+    /** For typing a channel number on the remote. */
+    @Query("SELECT id FROM channels WHERE number = :number LIMIT 1")
+    suspend fun idForNumber(number: Int): Long?
+
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortOrder, id")
     suspend fun getForPlaylist(playlistId: Long): List<ChannelEntity>
 

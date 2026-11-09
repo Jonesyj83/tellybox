@@ -1,6 +1,8 @@
 package com.tellybox.tv.player
 
 import com.tellybox.tv.ui.player.markerFraction
+import com.tellybox.tv.ui.player.settleShown
+import com.tellybox.tv.ui.player.scaleWindow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -65,5 +67,49 @@ class TimeshiftBarGeometryTest {
         assertEquals(0.6667f, markerFraction(window, behindMs = 60_000), 0.001f)
         assertEquals(0.3333f, markerFraction(window, behindMs = 120_000), 0.001f)
         assertEquals(0.8333f, markerFraction(window, behindMs = 30_000), 0.001f)
+    }
+
+    @Test
+    fun `the drawn head eases towards the real one without overshooting`() {
+        var shown = 0L
+        val target = 60_000L
+        val seen = ArrayList<Long>()
+        repeat(30) {
+            shown = settleShown(shown, target)
+            seen += shown
+        }
+        assertTrue("should move towards the target", seen.first() > 0)
+        assertTrue("never past the target", seen.all { it <= target })
+        assertEquals("snaps on target", target, shown)
+    }
+
+    @Test
+    fun `small mismatches snap instead of creeping`() {
+        assertEquals(1_000L, settleShown(currentMs = 900L, targetMs = 1_000L))
+    }
+
+    @Test
+    fun `going live resets the drawn head`() {
+        assertEquals(0L, settleShown(currentMs = 45_000L, targetMs = 0L))
+    }
+
+    @Test
+    fun `the scale snaps to steps so the head moves at a steady speed`() {
+        assertEquals(60_000L, scaleWindow(5_000))
+        assertEquals(60_000L, scaleWindow(60_000))
+        assertEquals(120_000L, scaleWindow(60_001))
+        assertEquals(120_000L, scaleWindow(119_000))
+        assertEquals(300_000L, scaleWindow(200_000))
+    }
+
+    @Test
+    fun `a two second tick moves the same distance either side of a step`() {
+        // 100s of buffer: window 120s. 118s of buffer: still 120s, so equal pixels per second.
+        val windowA = scaleWindow(100_000)
+        val windowB = scaleWindow(118_000)
+        assertEquals(windowA, windowB)
+        val a = markerFraction(windowA, behindMs = 2_000) - markerFraction(windowA, behindMs = 0)
+        val b = markerFraction(windowB, behindMs = 2_000) - markerFraction(windowB, behindMs = 0)
+        assertEquals(a, b, 0.00001f)
     }
 }

@@ -26,6 +26,37 @@ internal fun markerFraction(windowMs: Long, behindMs: Long): Float {
     return (held.toDouble() / windowMs.toDouble()).toFloat().coerceIn(0f, 1f)
 }
 
+/**
+ * The span the bar is drawn against, in whole steps.
+ *
+ * Scaling to the exact buffer meant the scale changed on every tick, so the head sped up while
+ * the buffer filled and slowed again later — which reads as the bar jumping about even when the
+ * picture isn't. Snapping to a step keeps pixels-per-second constant for minutes at a time.
+ */
+internal fun scaleWindow(spanMs: Long): Long {
+    val steps = longArrayOf(60_000, 120_000, 300_000, 600_000, 900_000, 1_200_000, 1_800_000)
+    for (step in steps) if (spanMs <= step) return step
+    return steps.last()
+}
+
+/**
+ * Eases the drawn position towards the real one.
+ *
+ * The buffer's live edge advances when a flush lands, not every frame, so drawing the raw
+ * number makes the head hop: it sits still, then jumps a second, then sits again. Easing it
+ * removes the hop without adding lag anyone can see.
+ */
+internal fun settleShown(currentMs: Long, targetMs: Long, factor: Double = 0.35): Long {
+    if (targetMs <= 0L) return 0L
+    if (currentMs <= 0L) return targetMs
+    val diff = targetMs - currentMs
+    // Small differences are jitter and get eased; a real seek or a pause snaps, because easing
+    // a jump just replays it slowly.
+    if (kotlin.math.abs(diff) <= 250L) return targetMs
+    if (kotlin.math.abs(diff) > 2_000L) return targetMs
+    return currentMs + (diff * factor).toLong()
+}
+
 class TimeshiftBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
     private val focusRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {

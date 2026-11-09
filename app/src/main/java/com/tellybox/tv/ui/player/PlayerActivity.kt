@@ -99,12 +99,33 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     /** True only when the viewer paused on purpose, not when the stream stalled. */
     private var userPaused = false
+
+    /** What the bar currently draws, eased towards the real position so it doesn't hop. */
+    private var shownBehindMs = 0L
+
+    /**
+     * How far behind the buffer's live edge the picture starts on a fresh connection. HLS keeps
+     * a few segments in hand, so a viewer watching "live" is already thirty-odd seconds back in
+     * buffer terms. Measured once per connection and subtracted, so live reads as live and a
+     * pause counts from the moment it was pressed.
+     */
+    private var liveOffsetMs = 0L
+    private var offsetKnown = false
+
+    /**
+     * Where the picture sat behind live when it was last paused or resumed, and when that was.
+     * A paused picture falls behind by exactly one second per second, so the bar can be driven
+     * from the clock instead of the buffer's chunky byte counts — which is why it stopped
+     * moving unevenly.
+     */
+    private var behindAnchorMs = 0L
+    private var behindAnchorAt = 0L
     /** The banner and its buttons are one overlay: they appear and disappear together. */
     private val hideBanner = Runnable {
         // A picture the viewer paused keeps its banner, so it's clear where in the buffer it
         // is. A stalled stream is a different thing: testing playWhenReady alone meant a dead
         // connection pinned the banner on screen and Back looked broken.
-        if (timeshiftShown() && userPaused) return@Runnable
+        if (timeshiftShown() && userPaused && binding.errorBox.visibility != View.VISIBLE) return@Runnable
         val focusInBanner = binding.banner.hasFocus()
         binding.banner.visibility = View.GONE
         binding.recordButton.visibility = View.GONE
@@ -249,8 +270,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             if (player?.timeshift == null) return
             // Paused on purpose means the picture is ready but not running. A stalled stream
             // keeps playWhenReady true while it buffers, so it can't pin the banner on screen.
-            userPaused = !playWhenReady &&
-                player?.exo?.playbackState == androidx.media3.common.Player.STATE_READY
+            userPaused = !playWhenReady
+            anchorBehind()
             // Paused from anywhere (the remote, a phone, Bluetooth): the picture falls behind live.
             if (!playWhenReady) behindLive = true
             current?.let { if (binding.banner.visibility == View.VISIBLE || !playWhenReady) refreshBanner() }
@@ -774,17 +795,43 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
      * The bar and its label, redrawn on a short tick while it's on screen. Without this it only
      * moved when the banner refreshed, which read as jumping about rather than flowing.
      */
+
+    /** How far behind the buffer's live edge the picture is right now, startup delay removed. */
+    private fun measuredBehind(): Long {
+        val p = player ?: return 0L
+        val window = p.timeshift?.window() ?: return 0L
+        val raw = (window.liveMs - p.timeshiftPosition()).coerceAtLeast(0)
+        if (!offsetKnown && raw > 1_000) {
+            liveOffsetMs = raw
+            offsetKnown = true
+        }
+        return (raw - liveOffsetMs).coerceAtLeast(0)
+    }
+
+    private fun anchorBehind() {
+        behindAnchorMs = measuredBehind()
+        behindAnchorAt = SystemClock.elapsedRealtime()
+    }
+
     private fun updateTimeshiftBar() {
         val p = player ?: return
         val session = p.timeshift ?: return
         val window = session.window()
         val pending = pendingSeekMs
         val behind = behindLive || pending != null
-        val behindMs = if (behind) (window.liveMs - (pending ?: p.timeshiftPosition())).coerceAtLeast(0) else 0L
+        val rawBehind = when {
+            pending != null -> ((window.liveMs - pending) - liveOffsetMs).coerceAtLeast(0)
+            behindLive -> behindAnchorMs +
+                if (userPaused) SystemClock.elapsedRealtime() - behindAnchorAt else 0L
+            else -> 0L
+        }
+        // Scrubbing follows the finger exactly; ordinary playback is eased so the head doesn't
+        // hop each time a flushed chunk moves the live edge.
+        val behindMs = if (pending != null) rawBehind else settleShown(shownBehindMs, rawBehind).also { shownBehindMs = it }
         // Scale to what is actually in the buffer, not what it could hold. Against the capacity
         // a two-minute buffer only filled the last sliver of the bar, so a skip of thirty seconds
         // moved the marker a few pixels and the buffered edge twitched as each chunk arrived.
-        binding.timeshiftBar.set(window.spanMs, window.spanMs, behindMs, scrubbing = pending != null)
+        binding.timeshiftBar.set(scaleWindow(window.spanMs), window.spanMs, behindMs, scrubbing = pending != null)
         binding.tsPosition.text = if (behind) getString(R.string.timeshift_behind, TimeshiftText.duration(behindMs))
             else getString(R.string.timeshift_at_live)
     }
@@ -869,11 +916,16 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (target >= session.window().liveMs - LIVE_EDGE_MS) return goLive()
         behindLive = true
         p.playBuffer(session.offsetFor(target))
+        // The head follows this seek from the clock from now on.
+        behindAnchorMs = (session.window().liveMs - target - liveOffsetMs).coerceAtLeast(0)
+        behindAnchorAt = SystemClock.elapsedRealtime()
         refreshBanner()
     }
 
     private fun goLive() {
         userPaused = false
+        behindAnchorMs = 0
+        behindAnchorAt = SystemClock.elapsedRealtime()
         lifecycleScope.launch { returnToLive() }
     }
 
@@ -886,6 +938,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val session = p.timeshift ?: return
         val ch = current ?: return
         userPaused = false
+        liveOffsetMs = 0L
+        offsetKnown = false
         pendingSeekMs = null
         handler.removeCallbacks(commitSeek)
         val url = try {
@@ -1010,6 +1064,44 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
      * Up and down inside the timeshift controls move between the scrub line and the buttons.
      * Returns true when the key belonged to the controls and must not zap.
      */
+
+    /**
+     * Up from the scrub controls moves to the buttons in the corner, and Down comes back.
+     * Before this the only way to reach Record and Sleep was to press Left or Right until
+     * focus fell out of the overlay, which isn't how a D-pad should behave.
+     */
+    private fun overlayVerticalNav(keyCode: Int): Boolean {
+        if (binding.banner.visibility != View.VISIBLE) return false
+        val focus = currentFocus ?: return false
+        val corner = listOf(binding.recordButton, binding.sleepButton)
+            .firstOrNull { it.visibility == View.VISIBLE } ?: return false
+        val inCorner = corner === focus
+        val inControls = focus === binding.timeshiftBar || isInside(focus, binding.timeshiftControls)
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                if (!inControls) false else { corner.requestFocus(); true }
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                if (!inCorner) false else {
+                    val target = if (binding.timeshiftPanel.visibility == View.VISIBLE) binding.timeshiftBar
+                        else binding.playerView
+                    target.requestFocus()
+                    true
+                }
+            }
+            else -> false
+        }
+    }
+
+    private fun isInside(view: View, group: ViewGroup): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent === group) return true
+            parent = parent.parent
+        }
+        return false
+    }
+
     private fun timeshiftGroupNav(keyCode: Int): Boolean {
         if (binding.timeshiftPanel.visibility != View.VISIBLE) return false
         val up = keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_CHANNEL_UP
@@ -1046,9 +1138,40 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         super.onBackPressed()
     }
 
+    /** Digits typed on the remote build a channel number; OK or a pause in typing tunes to it. */
+    private val typedNumber = StringBuilder()
+    private val numberCommit = Runnable { commitTypedNumber() }
+
+    private fun digitOf(keyCode: Int): Int? = when (keyCode) {
+        in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> keyCode - KeyEvent.KEYCODE_0
+        in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9 -> keyCode - KeyEvent.KEYCODE_NUMPAD_0
+        else -> null
+    }
+
+    private fun handleDigit(keyCode: Int): Boolean {
+        val digit = digitOf(keyCode) ?: return false
+        typedNumber.append(digit)
+        binding.banner.visibility = View.VISIBLE
+        binding.bannerNumber.text = typedNumber.toString()
+        handler.removeCallbacks(numberCommit)
+        handler.postDelayed(numberCommit, 1_500)
+        return true
+    }
+
+    private fun commitTypedNumber() {
+        val wanted = typedNumber.toString().toIntOrNull() ?: return
+        typedNumber.setLength(0)
+        lifecycleScope.launch {
+            val id = appContainer.database.channels().idForNumber(wanted) ?: return@launch
+            channelIds.indexOf(id).takeIf { it >= 0 }?.let { loadChannel(it) }
+        }
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (binding.errorBox.visibility != View.VISIBLE && handleDigit(keyCode)) return true
         // The scrub line and the buttons below it are one control group. This has to happen
         // before the zapping handler, or down here changes channel instead of moving focus.
+        if (overlayVerticalNav(keyCode)) return true
         if (timeshiftGroupNav(keyCode)) return true
         if (binding.errorBox.visibility == View.VISIBLE &&
             (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
