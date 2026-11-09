@@ -41,6 +41,8 @@ responsible for having the right to watch what is on it.
 - HLS, DASH, MPEG-TS and RTMP through Media3/ExoPlayer
 - Audio track, subtitle and display mode pickers, plus an audio passthrough option for
   surround sound setups
+- Pause and rewind live TV with a scrubbable bar and a jump back to live. The buffer lives on
+  the device and you choose how much of it to keep in Settings
 
 **Guide**
 - XMLTV import, plain or gzipped, streamed in so a 200 MB guide doesn't run the box out of
@@ -55,7 +57,8 @@ responsible for having the right to watch what is on it.
 - Future programmes are refused rather than failing silently
 
 **Movies and series**
-- Posters, categories, seasons and episodes from Xtream panels and M3U VOD entries
+- Posters, categories, seasons and episodes from Xtream panels, Stalker portals and M3U VOD
+  entries
 - Resume where you left off
 
 ![Movies and series](docs/screenshots/movies.jpg)
@@ -88,7 +91,15 @@ responsible for having the right to watch what is on it.
 - PIN lock, with channels and whole groups blocked
 
 **Backup**
-- Export playlists, favourites, blocked channels and settings to one file, and restore it
+- Export playlists, guide assignments, favourites, watch history, blocked channels, settings
+  and the parental PIN to one file, and restore it
+- The file goes straight to Downloads with the date in the name, and restoring is all or
+  nothing: a bad file is refused before anything changes
+
+**Languages**
+- 32 languages, picked in Settings and applied without a restart
+- I only speak English, so the rest were done with a translator. If a phrase reads wrong in
+  your language, send a corrected `strings.xml` and it will go in
 
 **Escape hatch**
 - Send any stream to another player (VLC, MX Player) when ExoPlayer struggles with it
