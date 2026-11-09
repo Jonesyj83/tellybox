@@ -12,30 +12,14 @@ class VodRepository(
     private val db: TellyboxDatabase,
     private val http: OkHttpClient,
     private val stalkerClients: StalkerClientCache,
-    private val settings: com.tellybox.tv.data.settings.SettingsRepository,
-    private val credentials: com.tellybox.tv.data.settings.CatalogueCredentials,
 ) {
-    private val catalogue = com.tellybox.tv.data.metadata.CatalogueService(http)
     private val mutex = Mutex()
     private val cache = mutableMapOf<String, Pair<Long, VodDetails>>()
 
     suspend fun details(channel: ChannelEntity): VodDetails = mutex.withLock {
         val playlist = db.playlists().get(channel.playlistId) ?: error("Playlist removed")
         if (playlist.type == PlaylistType.STALKER && channel.kind == ContentKind.MOVIE) return@withLock storedDetails(channel)
-        if (playlist.type == PlaylistType.M3U) {
-            val stored = db.channels().get(channel.id) ?: channel
-            if (!stored.plot.isNullOrBlank()) return@withLock storedDetails(stored)
-            try {
-                val metadata = catalogue.fetch(stored, settings.get().fetchInternetDetails, credentials.key())
-                if (metadata != null && !metadata.plot.isNullOrBlank()) {
-                    val enriched = metadata.applyTo(stored)
-                    db.channels().saveCatalogue(enriched.id, enriched.plot, enriched.year, enriched.cast,
-                        enriched.director, enriched.genre, enriched.country, enriched.durationMinutes, enriched.rating, enriched.logoUrl)
-                    return@withLock storedDetails(enriched)
-                }
-            } catch (e: CancellationException) { throw e } catch (_: Exception) { /* Keep the playlist details. */ }
-            return@withLock storedDetails(stored)
-        }
+        if (playlist.type != PlaylistType.XTREAM && playlist.type != PlaylistType.STALKER) return@withLock VodDetails()
         val key = "${playlist.id}:${playlist.lastUpdated}:${playlist.hashCode()}:${channel.channelKey}"
         cache[key]?.takeIf { System.currentTimeMillis() - it.first < 30 * 60_000 }?.let { return@withLock it.second }
         val result = if (playlist.type == PlaylistType.STALKER) stalkerSeries(playlist, channel) else xtream(playlist, channel)

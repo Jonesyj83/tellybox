@@ -565,7 +565,4 @@
     <string name="recording_limit_title">Pidempi kuin Android sallii</string>
     <string name="recording_limit_message">Android lopettaa taustatalleennuksen kuuden tunnin jälkeen vuorokaudessa, joten tämä päättyy aikaisin.</string>
     <string name="recording_limit_continue">Tallenna silti</string>
-    <string name="setting_fetch_details">Hae tiedot internetistä</string>
-    <string name="setting_tmdb_key">TMDb API-avain</string>
-    <string name="setting_clear_key">Tyhjennä avain</string>
 </resources>

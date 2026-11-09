@@ -565,7 +565,4 @@
     <string name="recording_limit_title">Plus long qu\'Android ne le permet</string>
     <string name="recording_limit_message">Android arrête l\'enregistrement en arrière-plan au bout de six heures par jour, donc celui-ci s\'arrêtera avant la fin.</string>
     <string name="recording_limit_continue">Enregistrer quand même</string>
-    <string name="setting_fetch_details">Charger les détails depuis Internet</string>
-    <string name="setting_tmdb_key">Clé API TMDb</string>
-    <string name="setting_clear_key">Effacer la clé</string>
 </resources>

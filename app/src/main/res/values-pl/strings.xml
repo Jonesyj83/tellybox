@@ -601,7 +601,4 @@
     <string name="recording_limit_title">Dłużej, niż pozwala Android</string>
     <string name="recording_limit_message">Android zatrzymuje nagrywanie w tle po sześciu godzinach dziennie, więc to zakończy się wcześniej.</string>
     <string name="recording_limit_continue">Nagraj mimo to</string>
-    <string name="setting_fetch_details">Pobieraj szczegóły z internetu</string>
-    <string name="setting_tmdb_key">Klucz API TMDb</string>
-    <string name="setting_clear_key">Usuń klucz</string>
 </resources>

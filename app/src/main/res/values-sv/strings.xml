@@ -565,7 +565,4 @@
     <string name="recording_limit_title">Längre än Android tillåter</string>
     <string name="recording_limit_message">Android stoppar bakgrundsinspelning efter sex timmar per dag, så den här avslutas tidigt.</string>
     <string name="recording_limit_continue">Spela in ändå</string>
-    <string name="setting_fetch_details">Hämta detaljer från internet</string>
-    <string name="setting_tmdb_key">TMDb API-nyckel</string>
-    <string name="setting_clear_key">Rensa nyckel</string>
 </resources>

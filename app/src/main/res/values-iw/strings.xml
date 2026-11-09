@@ -583,7 +583,4 @@
     <string name="recording_limit_title">ארוך ממה שאנדרואיד מאפשר</string>
     <string name="recording_limit_message">אנדרואיד מפסיק הקלטה ברקע אחרי שש שעות ביום, כך שזה יסתיים מוקדם.</string>
     <string name="recording_limit_continue">הקלט בכל זאת</string>
-    <string name="setting_fetch_details">אחזור פרטים מהאינטרנט</string>
-    <string name="setting_tmdb_key">מפתח API של TMDb</string>
-    <string name="setting_clear_key">ניקוי המפתח</string>
 </resources>

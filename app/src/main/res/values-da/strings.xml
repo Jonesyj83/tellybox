@@ -565,7 +565,4 @@
     <string name="recording_limit_title">Længere end Android tillader</string>
     <string name="recording_limit_message">Android stopper optagelse i baggrunden efter seks timer om dagen, så denne slutter tidligt.</string>
     <string name="recording_limit_continue">Optag alligevel</string>
-    <string name="setting_fetch_details">Hent oplysninger fra internettet</string>
-    <string name="setting_tmdb_key">TMDb API-nøgle</string>
-    <string name="setting_clear_key">Ryd nøgle</string>
 </resources>

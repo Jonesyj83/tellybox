@@ -583,7 +583,4 @@
     <string name="recording_limit_title">Дуже него што Android дозвољава</string>
     <string name="recording_limit_message">Android прекида снимање у позадини после шест сати дневно, па ће се ово завршити раније.</string>
     <string name="recording_limit_continue">Ипак сними</string>
-    <string name="setting_fetch_details">Преузми детаље са интернета</string>
-    <string name="setting_tmdb_key">TMDb API кључ</string>
-    <string name="setting_clear_key">Обриши кључ</string>
 </resources>

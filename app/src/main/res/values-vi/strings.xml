@@ -547,7 +547,4 @@
     <string name="recording_limit_title">Dài hơn mức Android cho phép</string>
     <string name="recording_limit_message">Android dừng ghi nền sau sáu giờ mỗi ngày, nên bản ghi này sẽ kết thúc sớm.</string>
     <string name="recording_limit_continue">Vẫn ghi</string>
-    <string name="setting_fetch_details">Lấy thông tin từ internet</string>
-    <string name="setting_tmdb_key">Khóa API TMDb</string>
-    <string name="setting_clear_key">Xóa khóa</string>
 </resources>

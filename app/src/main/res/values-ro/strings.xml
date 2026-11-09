@@ -583,7 +583,4 @@
     <string name="recording_limit_title">Mai lung decât permite Android</string>
     <string name="recording_limit_message">Android oprește înregistrarea din fundal după șase ore pe zi, așa că aceasta se va termina mai devreme.</string>
     <string name="recording_limit_continue">Înregistrează totuși</string>
-    <string name="setting_fetch_details">Descarcă detalii de pe internet</string>
-    <string name="setting_tmdb_key">Cheie API TMDb</string>
-    <string name="setting_clear_key">Șterge cheia</string>
 </resources>

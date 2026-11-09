@@ -637,7 +637,4 @@
     <string name="recording_limit_title">أطول مما يسمح به أندرويد</string>
     <string name="recording_limit_message">يوقف أندرويد التسجيل في الخلفية بعد ست ساعات في اليوم، لذا سينتهي هذا مبكرًا.</string>
     <string name="recording_limit_continue">سجّل على أي حال</string>
-    <string name="setting_fetch_details">جلب التفاصيل من الإنترنت</string>
-    <string name="setting_tmdb_key">مفتاح واجهة TMDb</string>
-    <string name="setting_clear_key">مسح المفتاح</string>
 </resources>

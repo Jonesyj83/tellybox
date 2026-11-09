@@ -565,7 +565,4 @@
     <string name="recording_limit_title">უფრო გრძელი, ვიდრე Android იძლევა საშუალებას</string>
     <string name="recording_limit_message">Android ფონურ ჩაწერას დღეში ექვსი საათის შემდეგ წყვეტს, ამიტომ ეს ადრე დასრულდება.</string>
     <string name="recording_limit_continue">მაინც ჩაწერე</string>
-    <string name="setting_fetch_details">დეტალების მიღება ინტერნეტიდან</string>
-    <string name="setting_tmdb_key">TMDb API გასაღები</string>
-    <string name="setting_clear_key">გასაღების წაშლა</string>
 </resources>

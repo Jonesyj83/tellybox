@@ -601,7 +601,4 @@
     <string name="recording_limit_title">Dlhšie, než Android dovoľuje</string>
     <string name="recording_limit_message">Android po šiestich hodinách denne zastaví nahrávanie na pozadí, takže to skončí skôr.</string>
     <string name="recording_limit_continue">Napriek tomu nahrať</string>
-    <string name="setting_fetch_details">Načítať podrobnosti z internetu</string>
-    <string name="setting_tmdb_key">Kľúč API TMDb</string>
-    <string name="setting_clear_key">Vymazať kľúč</string>
 </resources>

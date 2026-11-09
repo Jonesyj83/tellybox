@@ -565,7 +565,4 @@
     <string name="recording_limit_title">Länger, als Android erlaubt</string>
     <string name="recording_limit_message">Android beendet Hintergrundaufnahmen nach sechs Stunden pro Tag, daher endet diese Aufnahme früher.</string>
     <string name="recording_limit_continue">Trotzdem aufnehmen</string>
-    <string name="setting_fetch_details">Details aus dem Internet laden</string>
-    <string name="setting_tmdb_key">TMDb-API-Schlüssel</string>
-    <string name="setting_clear_key">Schlüssel löschen</string>
 </resources>

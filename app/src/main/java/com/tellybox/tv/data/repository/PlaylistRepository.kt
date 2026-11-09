@@ -266,7 +266,6 @@ class PlaylistRepository(
         // Keep the user's hidden/ordering choices for groups that still exist.
         db.withTransaction {
             val previous = db.groups().getForPlaylist(playlistId).associateBy { it.kind to it.name }
-            val isM3u = db.playlists().get(playlistId)?.type == PlaylistType.M3U
             val oldChannels = db.channels().getForPlaylist(playlistId).associateBy { it.channelKey }
             val nextGroupOrder = (previous.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
             val nextChannelOrder = (oldChannels.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
@@ -296,14 +295,7 @@ class PlaylistRepository(
                 ic.withGroupId(idByKey).copy(
                     channelKey = key,
                     number = ic.channel.number ?: position,
-                ).withLocalChoices(oldChannels[key], nextChannelOrder + position).let { incoming ->
-                    val old = oldChannels[key]
-                    if (isM3u && old != null && old.name == incoming.name && old.kind == incoming.kind) {
-                        incoming.copy(plot = old.plot, year = old.year, cast = old.cast, director = old.director,
-                            genre = old.genre, country = old.country, durationMinutes = old.durationMinutes,
-                            rating = old.rating, logoUrl = incoming.logoUrl ?: old.logoUrl)
-                    } else incoming
-                }
+                ).withLocalChoices(oldChannels[key], nextChannelOrder + position)
             }
             val channelPlan = planChannelRefresh(oldChannels.values.toList(), incomingChannels)
             channelPlan.upserts.chunked(INSERT_CHUNK).forEach { db.channels().insertAll(it) }

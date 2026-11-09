@@ -74,9 +74,6 @@ interface ChannelGroupDao {
 
 @Dao
 interface ChannelDao {
-    @Query("UPDATE channels SET plot = :plot, year = :year, cast = :cast, director = :director, genre = :genre, country = :country, durationMinutes = :minutes, rating = :rating, logoUrl = :image WHERE id = :id")
-    suspend fun saveCatalogue(id: Long, plot: String?, year: String?, cast: String?, director: String?, genre: String?, country: String?, minutes: Int?, rating: Double?, image: String?)
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(channels: List<ChannelEntity>)
 

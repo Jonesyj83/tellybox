@@ -565,7 +565,4 @@
     <string name="recording_limit_title">Langer dan Android toestaat</string>
     <string name="recording_limit_message">Android stopt achtergrondopname na zes uur per dag, dus deze stopt eerder.</string>
     <string name="recording_limit_continue">Toch opnemen</string>
-    <string name="setting_fetch_details">Details ophalen van internet</string>
-    <string name="setting_tmdb_key">TMDb API-sleutel</string>
-    <string name="setting_clear_key">Sleutel wissen</string>
 </resources>

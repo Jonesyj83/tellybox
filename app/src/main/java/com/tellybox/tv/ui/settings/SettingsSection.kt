@@ -11,8 +11,6 @@ internal enum class SettingsSection(
 ) {
     GENERAL(R.string.settings_section_general, R.string.settings_summary_general,
         R.string.setting_language,
-        R.string.setting_fetch_details,
-        R.string.setting_tmdb_key,
         R.string.ui_channel_name_cleanup,
         R.string.setting_resume_last_channel,
         R.string.setting_multiview_warning),
