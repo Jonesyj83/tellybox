@@ -472,10 +472,10 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
     private suspend fun attachPlayer(): Player? {
         previewPlayer?.let { return it }
         val cached = appContainer.settings.current()
-        return startWith(cached ?: appContainer.settings.get())
+        return attachWith(cached ?: appContainer.settings.get())
     }
 
-    private fun startWith(settings: com.tellybox.tv.data.settings.AppSettings): Player? {
+    private fun attachWith(settings: com.tellybox.tv.data.settings.AppSettings): Player? {
         if (isFinishing || isDestroyed || !lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return null
         val config = settings.playerConfig
         val p = appContainer.playback.acquire(config, this)
