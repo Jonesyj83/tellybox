@@ -26,9 +26,14 @@ class TellyboxApp : Application() {
         registerActivityLifecycleCallbacks(container.foreground)
         com.tellybox.tv.schedule.Notifications.ensureChannels(this)
         // Alarms are lost on force-stop; put back anything still pending.
+        container.settings.prime(container.appScope)
         container.appScope.launch {
             container.recordings.restore()
             container.reminders.restore()
+        }
+        // A timeshift buffer left behind by a run that was killed is no use to anyone now.
+        container.appScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            com.tellybox.tv.player.timeshift.TimeshiftFiles.sweep(com.tellybox.tv.player.timeshift.TimeshiftStorage.dir(this@TellyboxApp))
         }
         // Follows the guide refresh interval setting, including later changes to it.
         container.appScope.launch {
@@ -63,8 +68,8 @@ class AppContainer(app: Application) {
     val http = createHttpClient()
     private val stalkerClients = StalkerClientCache(http)
 
-    val playlists = PlaylistRepository(app, database, http, stalkerClients)
-    val vod = com.tellybox.tv.data.repository.VodRepository(database, http)
+    val playlists = PlaylistRepository(app, database, http, stalkerClients) { parental.configured }
+    val vod = com.tellybox.tv.data.repository.VodRepository(database, http, stalkerClients)
     val channels = ChannelRepository(database, stalkerClients, parental)
     val epg = EpgRepository(app, database, http, settings)
     val backgroundRefresh = BackgroundRefresh(playlists, epg, settings)
@@ -74,6 +79,7 @@ class AppContainer(app: Application) {
     val playback = com.tellybox.tv.player.Playback(app, http)
     val sleep = com.tellybox.tv.player.SleepSchedule(playback)
     val lastChannel = com.tellybox.tv.data.settings.LastChannelStore(app)
+    val timeshift = com.tellybox.tv.player.timeshift.TimeshiftSessions(app, settings, channels)
 }
 
 val android.content.Context.appContainer: AppContainer

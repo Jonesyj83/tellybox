@@ -45,6 +45,9 @@ interface ChannelGroupDao {
     @Query("SELECT * FROM channel_groups WHERE playlistId = :playlistId")
     suspend fun getForPlaylist(playlistId: Long): List<ChannelGroupEntity>
 
+    @Query("DELETE FROM channel_groups WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
+
     @Query("DELETE FROM channel_groups WHERE playlistId = :playlistId")
     suspend fun deleteForPlaylist(playlistId: Long)
 
@@ -74,11 +77,21 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(channels: List<ChannelEntity>)
 
+    /**
+     * For typing a channel number on the remote. Scoped to the list on screen, otherwise a
+     * number that exists in another playlist can match first and nothing tunes.
+     */
+    @Query("SELECT id FROM channels WHERE number = :number AND id IN (:ids) ORDER BY sortOrder, id LIMIT 1")
+    suspend fun idForNumber(number: Int, ids: List<Long>): Long?
+
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortOrder, id")
     suspend fun getForPlaylist(playlistId: Long): List<ChannelEntity>
 
     @Query("UPDATE channels SET sortOrder = :position WHERE id = :id")
     suspend fun setOrder(id: Long, position: Int)
+
+    @Query("DELETE FROM channels WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
 
     @Query("DELETE FROM channels WHERE playlistId = :playlistId")
     suspend fun deleteForPlaylist(playlistId: Long)
@@ -126,6 +139,9 @@ interface ChannelDao {
     @Query("SELECT * FROM channels WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Long>): List<ChannelEntity>
 
+    @Query("SELECT * FROM channels WHERE id IN (:ids) ORDER BY sortOrder, id")
+    fun observeByIds(ids: List<Long>): Flow<List<ChannelEntity>>
+
     @Query("SELECT COUNT(*) FROM channels WHERE playlistId = :playlistId")
     suspend fun countForPlaylist(playlistId: Long): Int
 
@@ -134,6 +150,10 @@ interface ChannelDao {
 
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId AND channelKey = :channelKey")
     suspend fun findByKey(playlistId: Long, channelKey: String): ChannelEntity?
+
+    /** Returns how many rows changed; zero for titles that have no row (series episodes). */
+    @Query("UPDATE channels SET resolvedUrl = :url WHERE playlistId = :playlistId AND channelKey = :channelKey")
+    suspend fun setResolvedUrl(playlistId: Long, channelKey: String, url: String?): Int
 }
 
 @Dao
@@ -161,6 +181,9 @@ interface EpgDao {
 
     @Query("SELECT * FROM epg_sources ORDER BY priority, id")
     fun observeSources(): Flow<List<EpgSourceEntity>>
+
+    @Query("SELECT * FROM epg_sources ORDER BY priority, id")
+    suspend fun all(): List<EpgSourceEntity>
 
     @Query("SELECT * FROM epg_sources WHERE enabled = 1 ORDER BY priority, id")
     suspend fun getEnabledSources(): List<EpgSourceEntity>
@@ -262,6 +285,9 @@ interface EpgDao {
 interface FavoriteDao {
     @Query("SELECT * FROM favorites ORDER BY sortOrder, addedAt")
     fun observeAll(): Flow<List<FavoriteEntity>>
+
+    @Query("SELECT * FROM favorites ORDER BY sortOrder, addedAt")
+    suspend fun all(): List<FavoriteEntity>
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE playlistId = :playlistId AND channelKey = :key)")
     suspend fun isFavorite(playlistId: Long, key: String): Boolean

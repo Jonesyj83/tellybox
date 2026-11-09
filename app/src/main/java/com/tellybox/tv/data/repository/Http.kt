@@ -46,14 +46,14 @@ suspend fun <T> openSource(
                 .apply { if (!userAgent.isNullOrBlank()) header("User-Agent", userAgent) }
                 .build()
             http.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) throw IOException("Server returned HTTP ${resp.code}")
-                val body = resp.body ?: throw IOException("Empty response")
+                if (!resp.isSuccessful) throw IOException(context.getString(com.tellybox.tv.R.string.http_error_code, resp.code))
+                val body = resp.body ?: throw IOException(context.getString(com.tellybox.tv.R.string.http_empty_response))
                 body.byteStream().use(block)
             }
         }
         trimmed.startsWith("content://", true) || trimmed.startsWith("file://", true) -> {
             val stream = context.contentResolver.openInputStream(Uri.parse(trimmed))
-                ?: throw IOException("Can't open $trimmed")
+                ?: throw IOException(context.getString(com.tellybox.tv.R.string.source_open_failed, trimmed))
             stream.use(block)
         }
         else -> File(trimmed).inputStream().use(block)

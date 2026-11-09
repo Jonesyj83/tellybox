@@ -24,7 +24,7 @@ responsible for having the right to watch what is on it.
 
 1. Grab the APK from the [releases page](https://github.com/Jonesyj83/tellybox/releases/latest).
 2. Get it onto the TV. Easiest is the Downloader app on the TV: open it, type the download
-   link, install. Or from a computer with `adb install -r Tellybox-0.2.0.apk`.
+   link, install. Or from a computer with `adb install -r Tellybox-0.3.0.apk`.
 3. Allow installs from unknown sources when the TV asks. Android TV blocks sideloading by
    default, this is the normal prompt for any app that didn't come from the Play Store.
 4. Open Tellybox, choose **Add playlist**, and paste your link.

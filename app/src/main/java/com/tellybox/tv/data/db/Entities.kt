@@ -106,6 +106,20 @@ data class ChannelEntity(
     val sortOrder: Int = 0,
     val hidden: Boolean = false,
     val addedAt: Long = System.currentTimeMillis(),
+    /** Title details for sources that list them with the title (Stalker); others fetch on demand. */
+    val plot: String? = null,
+    val year: String? = null,
+    val cast: String? = null,
+    val director: String? = null,
+    val genre: String? = null,
+    val country: String? = null,
+    val durationMinutes: Int? = null,
+    val rating: Double? = null,
+    /**
+     * Last stream link resolved from a `stalker://` [streamUrl], so a second play doesn't
+     * ask the portal again. It can expire; the player re-resolves once when it fails.
+     */
+    val resolvedUrl: String? = null,
 )
 
 @Entity(
@@ -244,7 +258,7 @@ enum class RecordingSource { LIVE, CATCHUP }
 
 /**
  * A scheduled, running or finished recording. Channels are referenced by (playlistId,
- * channelKey) because channel row ids change every time a playlist is refreshed.
+ * channelKey) so they remain identifiable even if the channel is removed and later reimported.
  */
 @Entity(tableName = "recordings", indices = [Index("status"), Index("startAt")])
 data class RecordingEntity(

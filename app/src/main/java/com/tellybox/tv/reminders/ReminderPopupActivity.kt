@@ -55,7 +55,7 @@ class ReminderPopupActivity : AppCompatActivity() {
         window.setLayout((600 * resources.displayMetrics.density).toInt(), WindowManager.LayoutParams.WRAP_CONTENT)
         setFinishOnTouchOutside(false)
 
-        NotificationManagerCompat.from(this).cancel(ReminderReceiver.NOTIFICATION_BASE + intent.getLongExtra(EXTRA_ID, 0).toInt())
+        NotificationManagerCompat.from(this).cancel("reminder", intent.getLongExtra(EXTRA_ID, 0).toInt())
 
         val start = intent.getLongExtra(EXTRA_START, 0)
         val minutes = ((start - System.currentTimeMillis() + 30_000) / 60_000).toInt()

@@ -36,21 +36,21 @@
             android:textSize="9sp" />
     </LinearLayout>
     <TextView android:id="@+id/railLive" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_live" android:text="Live" android:contentDescription="Live TV" />
+        android:drawableTop="@drawable/ic_menu_live" android:text="@string/rail_live" android:contentDescription="@string/rail_desc_live_tv" />
     <TextView android:id="@+id/railMovies" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_movies" android:text="Movies" android:contentDescription="Movies and Series" />
+        android:drawableTop="@drawable/ic_menu_movies" android:text="@string/rail_movies" android:contentDescription="@string/rail_desc_movies_and_series" />
     <TextView android:id="@+id/railRecordings" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_recordings" android:text="Rec" android:contentDescription="Recordings" />
+        android:drawableTop="@drawable/ic_menu_recordings" android:text="@string/rail_recordings" android:contentDescription="@string/recordings_title" />
     <TextView android:id="@+id/railReminders" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_reminders" android:text="Remind" android:contentDescription="Reminders" />
+        android:drawableTop="@drawable/ic_menu_reminders" android:text="@string/rail_reminders" android:contentDescription="@string/reminders_title" />
     <TextView android:id="@+id/railSearch" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_search" android:text="Search" android:contentDescription="Search" />
+        android:drawableTop="@drawable/ic_menu_search" android:text="@string/rail_search" android:contentDescription="@string/action_search" />
     <TextView android:id="@+id/railMultiview" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_multiview" android:text="Multi" android:contentDescription="Multiview" />
+        android:drawableTop="@drawable/ic_menu_multiview" android:text="@string/rail_multiview" android:contentDescription="@string/multiview" />
     <TextView android:id="@+id/railPlaylists" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_playlists" android:text="Lists" android:contentDescription="Playlists" />
+        android:drawableTop="@drawable/ic_menu_playlists" android:text="@string/rail_playlists" android:contentDescription="@string/playlists_title" />
 
     <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="1" />
     <TextView android:id="@+id/railSettings" style="@style/Rail.Item"
-        android:drawableTop="@drawable/ic_menu_settings" android:text="Setup" android:contentDescription="Settings" />
+        android:drawableTop="@drawable/ic_menu_settings" android:text="@string/rail_settings" android:contentDescription="@string/settings_title" />
 </LinearLayout>

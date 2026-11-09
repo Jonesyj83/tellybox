@@ -2,6 +2,7 @@ package com.tellybox.tv.data.backup
 
 import com.tellybox.tv.data.db.*
 import com.tellybox.tv.data.settings.AppSettings
+import com.tellybox.tv.data.parental.ParentalConfiguration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -15,13 +16,15 @@ data class BackupState(
     val history: List<WatchHistoryEntity>,
     val blocks: Set<String>,
     val settings: AppSettings,
+    val parental: ParentalConfiguration? = null,
 )
 
 object BackupCodec {
     private val json = Json { encodeDefaults = true; prettyPrint = true }
     fun encode(state: BackupState): String = json.encodeToString(state)
     fun decode(text: String): BackupState = json.decodeFromString<BackupState>(text).also { state ->
-        require(state.version == 1) { "Unsupported backup version: ${state.version}" }
+        require(state.version in 1..2) { "Unsupported backup version: ${state.version}" }
+        require(state.parental == null || state.parental.valid()) { "Invalid parental configuration" }
         val ids = state.playlists.map { it.id }.toSet()
         require(ids.size == state.playlists.size && ids.all { it > 0 }) { "Invalid playlist IDs" }
         require(state.guides.all { it.playlistId == null || it.playlistId in ids } &&

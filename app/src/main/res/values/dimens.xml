@@ -4,7 +4,6 @@
     <dimen name="overscan_h">0dp</dimen>
     <dimen name="overscan_v">14dp</dimen>
     <dimen name="overscan_end">10dp</dimen>
-    <dimen name="row_height">30dp</dimen>
     <dimen name="corner">6dp</dimen>
     <dimen name="panel_corner">8dp</dimen>
 
@@ -12,6 +11,5 @@
     <dimen name="rail_width">44dp</dimen>
     <dimen name="category_width">220dp</dimen>
     <dimen name="category_gap">12dp</dimen>
-    <dimen name="category_row">28dp</dimen>
     <dimen name="list_row">36dp</dimen>
 </resources>

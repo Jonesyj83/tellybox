@@ -14,3 +14,17 @@ fun RefreshSummary.describe(context: Context): String {
     }
     return parts.joinToString(", ")
 }
+
+/** Each count chooses its own plural; translators control summary order. */
+fun playlistSummary(context: Context, channels: Int, groups: Int, guideAttached: Boolean): String = context.getString(
+    R.string.playlist_summary,
+    context.resources.getQuantityString(R.plurals.count_channels, channels, channels),
+    context.resources.getQuantityString(R.plurals.count_groups, groups, groups),
+    context.getString(if (guideAttached) R.string.playlist_guide_attached else R.string.playlist_no_guide),
+)
+
+fun Context.contentKindLabel(kind: com.tellybox.tv.data.db.ContentKind): String = getString(when (kind) {
+    com.tellybox.tv.data.db.ContentKind.LIVE -> R.string.rail_live
+    com.tellybox.tv.data.db.ContentKind.MOVIE -> R.string.vod_movies
+    com.tellybox.tv.data.db.ContentKind.SERIES -> R.string.vod_series
+})

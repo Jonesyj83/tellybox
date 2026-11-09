@@ -1,9 +1,16 @@
 package com.tellybox.tv.ui.vod
 
+import com.tellybox.tv.R
 import com.tellybox.tv.ui.parental.requestPin
 import android.os.Bundle
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
+import android.view.View
+import android.view.ViewGroup
+import android.view.KeyEvent
+import androidx.core.view.doOnNextLayout
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.tellybox.tv.data.parser.xtream.XtreamEpisode
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,16 +25,60 @@ import kotlinx.coroutines.launch
 class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
     private var historyJob: kotlinx.coroutines.Job? = null
     private var loadJob: kotlinx.coroutines.Job? = null
-    private lateinit var content: LinearLayout
+    private lateinit var episodes: RecyclerView
+    private var loaded = false
+    private var selectedSeason: Int? = null
+    private var focusedEpisode: Long? = null
+    private fun view(id: Int): View = findViewById(id)
+    private fun text(id: Int, value: String?) {
+        findViewById<TextView>(id).apply {
+            text = value
+            visibility = if (value.isNullOrBlank()) View.GONE else View.VISIBLE
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(48, 24, 48, 24) }
-        setContentView(ScrollView(this).apply { addView(content) })
+        setContentView(R.layout.activity_vod_detail)
+        selectedSeason = savedInstanceState?.getInt("season", -1)?.takeIf { it != -1 }
+        focusedEpisode = savedInstanceState?.getLong("episode", -1)?.takeIf { it != -1L }
+        episodes = findViewById(R.id.episodes)
+        episodes.layoutManager = LinearLayoutManager(this)
+        view(R.id.retry).setOnClickListener { load() }
+        view(R.id.artwork).setOnKeyListener { _, key, event ->
+            if (key == KeyEvent.KEYCODE_DPAD_RIGHT && event.action == KeyEvent.ACTION_DOWN) {
+                if (episodes.visibility == View.VISIBLE && episodes.adapter?.itemCount != 0) focusEpisode()
+                else if (view(R.id.actions).visibility == View.VISIBLE) view(R.id.watch).requestFocus()
+                else if (view(R.id.retry).visibility == View.VISIBLE) view(R.id.retry).requestFocus()
+                true
+            } else false
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        selectedSeason?.let { outState.putInt("season", it) }
+        focusedEpisode?.let { outState.putLong("episode", it) }
+        super.onSaveInstanceState(outState)
     }
 
     override fun onResume() {
         super.onResume()
-        load()
+        if (!loaded) load()
+        else lifecycleScope.launch {
+            val channel = appContainer.channels.get(intent.getLongExtra("channel_id", -1))
+            if (channel == null || !appContainer.parental.allowed(channel, appContainer.database)) load()
+        }
+    }
+
+    private fun focusEpisode() {
+        val adapter = episodes.adapter as? EpisodeAdapter ?: return
+        val position = adapter.items.indexOfFirst { it.id == focusedEpisode }.coerceAtLeast(0)
+        if (adapter.items.isEmpty()) return
+        episodes.doOnNextLayout {
+            episodes.findViewHolderForAdapterPosition(position)?.itemView?.requestFocus()
+        }
+        episodes.scrollToPosition(position)
+        episodes.requestLayout()
     }
 
     override fun onParentalUnlock() { load() }
@@ -35,76 +86,103 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
     private fun load() {
         historyJob?.cancel()
         loadJob?.cancel()
-        content.removeAllViews()
-        text("Loading…")
+        loaded = false
+        text(R.id.status, getString(R.string.common_loading))
+        listOf(R.id.actions, R.id.retry, R.id.seasonScroll, R.id.episodes).forEach { view(it).visibility = View.GONE }
+        listOf(R.id.title, R.id.metadata, R.id.genre, R.id.plot, R.id.credits, R.id.artworkFallback).forEach { text(it, null) }
+        findViewById<ImageView>(R.id.poster).load(null)
         loadJob = lifecycleScope.launch {
             val channel = appContainer.channels.get(intent.getLongExtra("channel_id", -1))
-            content.removeAllViews()
-            if (channel == null) { text("Title no longer available"); return@launch }
+            if (channel == null) { text(R.id.status, getString(R.string.vod_title_unavailable)); return@launch }
             if (appContainer.parental.allScreens && !appContainer.parental.unlocked) return@launch
             if (!appContainer.parental.allowed(channel, appContainer.database)) {
                 requestPin(cancel = { finish() }) { load() }
                 return@launch
             }
-            text(channel.name, 16f)
-            content.addView(ImageView(this@VodDetailActivity).apply { load(channel.logoUrl); scaleType = ImageView.ScaleType.FIT_START }, LinearLayout.LayoutParams(200, 260))
+            text(R.id.title, channel.name)
+            text(R.id.artworkFallback, channel.name)
+            view(R.id.artwork).contentDescription = channel.name
+            findViewById<ImageView>(R.id.backdrop).apply {
+                if (channel.logoUrl.isNullOrBlank()) visibility = View.GONE
+                else load(channel.logoUrl)
+            }
+            findViewById<ImageView>(R.id.poster).load(channel.logoUrl) {
+                listener(onSuccess = { _, _ -> view(R.id.artworkFallback).visibility = View.GONE },
+                    onError = { _, _ -> view(R.id.artworkFallback).visibility = View.VISIBLE })
+            }
             if (channel.kind != ContentKind.SERIES) playbackButtons(channel, null)
             try {
                 val details = appContainer.vod.details(channel)
-                listOf(details.year, details.duration, details.plot, details.cast?.let { "Cast: $it" }, details.director?.let { "Director: $it" })
-                    .filterNot { it.isNullOrBlank() }.forEach { text(it!!) }
+                text(R.id.status, null)
+                text(R.id.metadata, listOfNotNull(details.year, details.duration,
+                    details.rating?.let { getString(R.string.vod_rating, it) }, details.country)
+                    .filter { it.isNotBlank() }.joinToString(" · "))
+                text(R.id.genre, details.genre)
+                text(R.id.plot, details.plot)
+                text(R.id.credits, listOfNotNull(
+                    details.cast?.let { getString(R.string.vod_cast, it) },
+                    details.director?.let { getString(R.string.vod_director, it) }).joinToString(" · "))
+                loaded = true
                 if (channel.kind == ContentKind.SERIES) {
-                    if (details.episodes.isEmpty()) text("No episodes available")
-                    val episodes = LinearLayout(this@VodDetailActivity).apply { orientation = LinearLayout.VERTICAL }
-                    val seasons = LinearLayout(this@VodDetailActivity)
-                    content.addView(HorizontalScrollView(this@VodDetailActivity).apply { addView(seasons) })
-                    content.addView(episodes)
-                    fun season(number: Int) {
-                        episodes.removeAllViews()
-                        details.episodes.filter { it.season == number }.forEach { episode ->
-                            episodes.addView(Button(this@VodDetailActivity).apply {
-                                text = "${episode.episodeNum ?: ""}. ${episode.title}"
-                                setOnClickListener {
-                                    lifecycleScope.launch {
-                                        try {
-                                            val playable = appContainer.vod.episode(channel, episode.id)
-                                            val position = appContainer.database.history().get(playable.playlistId, playable.channelKey)?.positionMs ?: 0
-                                            androidx.appcompat.app.AlertDialog.Builder(this@VodDetailActivity)
-                                                .setTitle(episode.title)
-                                                .setMessage(listOfNotNull(episode.plot, episode.durationSecs?.let { "${it / 60} min" }).joinToString("\n"))
-                                                .setPositiveButton(if (position > 0) "Resume" else "Play") { _, _ -> play(channel, episode.id, false) }
-                                                .setNeutralButton("Play from beginning") { _, _ -> play(channel, episode.id, true) }
-                                                .setNegativeButton("Cancel", null).show()
-                                        } catch (e: CancellationException) { throw e }
-                                        catch (e: Exception) { Toast.makeText(this@VodDetailActivity, "Unable to open episode", Toast.LENGTH_LONG).show() }
-                                    }
-                                }
-                            })
+                    if (details.episodes.isEmpty()) text(R.id.status, getString(R.string.vod_no_episodes))
+                    else {
+                        val seasons = findViewById<LinearLayout>(R.id.seasons)
+                        seasons.removeAllViews()
+                        view(R.id.seasonScroll).visibility = View.VISIBLE
+                        episodes.visibility = View.VISIBLE
+                        val numbers = details.episodes.map { it.season }.distinct()
+                        fun season(number: Int, focus: Boolean) {
+                            selectedSeason = number
+                            for (index in 0 until seasons.childCount) {
+                                seasons.getChildAt(index).isActivated = seasons.getChildAt(index).tag == number
+                            }
+                            episodes.adapter = EpisodeAdapter(channel, details.episodes.filter { it.season == number })
+                            if (focus) focusEpisode()
                         }
+                        numbers.forEach { number ->
+                            val button = layoutInflater.inflate(R.layout.item_vod_season, seasons, false) as Button
+                            button.id = View.generateViewId()
+                            button.tag = number
+                            button.text = getString(R.string.vod_season, number)
+                            button.nextFocusLeftId = if (seasons.childCount == 0) R.id.artwork else seasons.getChildAt(seasons.childCount - 1).id
+                            if (seasons.childCount > 0) seasons.getChildAt(seasons.childCount - 1).nextFocusRightId = button.id
+                            button.setOnClickListener { season(number, true) }
+                            button.setOnKeyListener { _, key, event ->
+                                if (event.action == KeyEvent.ACTION_DOWN &&
+                                    (key == KeyEvent.KEYCODE_DPAD_DOWN ||
+                                        key == KeyEvent.KEYCODE_DPAD_RIGHT && number == numbers.last())) {
+                                    season(number, true)
+                                    true
+                                } else false
+                            }
+                            seasons.addView(button)
+                        }
+                        season(selectedSeason?.takeIf { it in numbers } ?: numbers.first(), true)
                     }
-                    details.episodes.map { it.season }.distinct().forEach { number ->
-                        seasons.addView(Button(this@VodDetailActivity).apply { text = "Season $number"; setOnClickListener { season(number) } })
-                    }
-                    details.episodes.firstOrNull()?.let { season(it.season) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { text("Details unavailable. Check your connection and try again."); button("Retry") { load() } }
+            catch (e: Exception) {
+                text(R.id.status, getString(R.string.vod_details_failed))
+                view(R.id.retry).visibility = View.VISIBLE
+                if (channel.kind == ContentKind.SERIES) view(R.id.retry).requestFocus()
+            }
         }
     }
 
     private fun playbackButtons(channel: ChannelEntity, episode: Long?) {
-        val resume = Button(this).apply { text = "Play"; setOnClickListener { play(channel, episode, false) } }
-        val beginning = Button(this).apply {
-            text = "Play from beginning"; visibility = android.view.View.GONE
-            setOnClickListener { play(channel, episode, true) }
-        }
-        content.addView(resume)
-        content.addView(beginning)
+        val resume = findViewById<Button>(R.id.watch)
+        val beginning = findViewById<Button>(R.id.beginning)
+        view(R.id.actions).visibility = View.VISIBLE
+        resume.setOnClickListener { play(channel, episode, false) }
+        beginning.setOnClickListener { play(channel, episode, true) }
+        resume.nextFocusLeftId = R.id.artwork
+        resume.requestFocus()
         historyJob = lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.database.history().observe(channel.playlistId, channel.channelKey).collect { history ->
                     val position = history?.positionMs ?: 0
-                    resume.text = if (position > 0) "Resume (${position / 60_000} min)" else "Play"
+                    resume.text = if (position > 0) getString(R.string.vod_resume, resources.getQuantityString(R.plurals.minutes, (position / 60_000).toInt(), (position / 60_000).toInt())) else getString(R.string.recording_play)
+                    if (position <= 0 && beginning.hasFocus()) resume.requestFocus()
                     beginning.visibility = if (position > 0) android.view.View.VISIBLE else android.view.View.GONE
                 }
             }
@@ -115,6 +193,55 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
         startActivity(PlayerActivity.intent(this, channel.id, longArrayOf(channel.id), 0)
             .putExtra("episode_id", episode ?: -1L).putExtra("from_beginning", beginning))
     }
-    private fun text(value: String, size: Float = 12f) { content.addView(TextView(this).apply { text = value; textSize = size; setPadding(0, 8, 0, 8) }) }
-    private fun button(label: String, click: () -> Unit) { content.addView(Button(this).apply { text = label; setOnClickListener { click() } }) }
+    private inner class EpisodeAdapter(val channel: ChannelEntity, val items: List<XtreamEpisode>) : RecyclerView.Adapter<EpisodeHolder>() {
+        init { setHasStableIds(true) }
+        override fun getItemId(position: Int) = items[position].id
+        override fun getItemCount() = items.size
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            EpisodeHolder(layoutInflater.inflate(R.layout.item_row, parent, false))
+        override fun onBindViewHolder(holder: EpisodeHolder, position: Int) {
+            val episode = items[position]
+            holder.itemView.findViewById<TextView>(R.id.choiceTitle).text =
+                listOfNotNull(episode.episodeNum?.toString(), episode.title).joinToString(". ")
+            holder.itemView.findViewById<TextView>(R.id.choiceDesc).text = episode.durationSecs?.let {
+                resources.getQuantityString(R.plurals.minutes, it / 60, it / 60)
+            }
+            holder.itemView.nextFocusLeftId = R.id.artwork
+            holder.itemView.setOnFocusChangeListener { _, focused -> if (focused) focusedEpisode = episode.id }
+            holder.itemView.setOnKeyListener { _, key, event ->
+                if (key == KeyEvent.KEYCODE_DPAD_RIGHT && event.action == KeyEvent.ACTION_DOWN ||
+                    key == KeyEvent.KEYCODE_DPAD_UP && position == 0 && event.action == KeyEvent.ACTION_DOWN) {
+                    val seasons = findViewById<LinearLayout>(R.id.seasons)
+                    val index = (0 until seasons.childCount).firstOrNull {
+                        seasons.getChildAt(it).tag == selectedSeason
+                    } ?: 0
+                    seasons.getChildAt(index)?.requestFocus()
+                    true
+                } else key == KeyEvent.KEYCODE_DPAD_DOWN && position == items.lastIndex
+            }
+            holder.itemView.setOnClickListener { openEpisode(channel, episode) }
+        }
+    }
+
+    private class EpisodeHolder(view: View) : RecyclerView.ViewHolder(view)
+
+    private fun openEpisode(channel: ChannelEntity, episode: XtreamEpisode) {
+        lifecycleScope.launch {
+            try {
+                val playable = appContainer.vod.episode(channel, episode.id)
+                val position = appContainer.database.history().get(playable.playlistId, playable.channelKey)?.positionMs ?: 0
+                androidx.appcompat.app.AlertDialog.Builder(this@VodDetailActivity)
+                    .setTitle(episode.title)
+                    .setMessage(listOfNotNull(episode.plot, episode.durationSecs?.let {
+                        resources.getQuantityString(R.plurals.minutes, it / 60, it / 60)
+                    }).joinToString("\n"))
+                    .setPositiveButton(if (position > 0) getString(R.string.vod_continue) else getString(R.string.recording_play)) { _, _ -> play(channel, episode.id, false) }
+                    .setNeutralButton(getString(R.string.vod_from_start)) { _, _ -> play(channel, episode.id, true) }
+                    .setNegativeButton(getString(R.string.cancel), null).show()
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                Toast.makeText(this@VodDetailActivity, getString(R.string.vod_episode_failed), Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 }

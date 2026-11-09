@@ -23,8 +23,7 @@ class RecordingAlarmReceiver : BroadcastReceiver() {
                     val dao = c.database.recordings()
                     dao.get(id)?.takeIf { it.status == RecordingStatus.SCHEDULED }?.let {
                         dao.update(it.copy(status = RecordingStatus.FAILED,
-                            error = "Android didn't allow the recording to start in the background. " +
-                                "Allow \"Alarms & reminders\" for Tellybox in the system settings."))
+                            error = context.getString(com.tellybox.tv.R.string.rec_background_denied)))
                     }
                 } finally {
                     pending.finish()

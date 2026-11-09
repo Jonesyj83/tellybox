@@ -59,28 +59,57 @@ class GuideActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGrid
         guide = GuideSupport(this, binding.grid)
 
         lifecycleScope.launch {
-            var lastIds: List<Long>? = null
+            // Reload when parental settings change, and again whenever the channels themselves
+            // change: a playlist refresh while the guide is open used to leave it showing rows
+            // that no longer existed.
             appContainer.parental.changes.collect {
-                val ids = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST)
-                channels = if (ids != null && ids.isNotEmpty()) {
-                    appContainer.channels.getByIds(ids)
-                } else {
-                    appContainer.channels.observeAll().first()
-                }
-                val visibleIds = channels.map { it.id }
-                if (visibleIds == lastIds) return@collect
-                lastIds = visibleIds
-                binding.empty.visibility = if (channels.isEmpty()) View.VISIBLE else View.GONE
-                val tokens = appContainer.settings.get().channelNameTokens
-                channels = channels.map { it.copy(name = com.tellybox.tv.data.settings.ChannelNames.display(it.name, tokens)) }
-                guide.channels = channels
-                binding.grid.setChannels(
-                    channels.map { GuideSupport.guideChannel(it) },
-                    intent.getLongExtra(EXTRA_FOCUS_ID, -1),
-                )
-                if (!binding.grid.hasFocus()) binding.grid.requestFocus()
+                loadChannels()
             }
         }
+        lifecycleScope.launch {
+            val explicit = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST)
+            if (explicit != null && explicit.isNotEmpty()) {
+                // Opened from a filtered list: follow those rows, so an edit or refresh shows up.
+                appContainer.channels.observeByIds(explicit.toList()).collect { list ->
+                    applyChannels(list)
+                }
+            } else {
+                appContainer.channels.observeAll().collect { list ->
+                    applyChannels(list)
+                }
+            }
+        }
+    }
+
+
+    private var lastIds: List<Long>? = null
+
+    /** Where focus should land: what the viewer is on now, else what the screen was opened for. */
+    private fun keepFocusId(): Long =
+        binding.grid.focusedChannel?.id ?: intent.getLongExtra(EXTRA_FOCUS_ID, -1)
+
+    private suspend fun loadChannels() {
+        val ids = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST)
+        val list = if (ids != null && ids.isNotEmpty()) appContainer.channels.getByIds(ids)
+            else appContainer.channels.observeAll().first()
+        applyChannels(list)
+    }
+
+    private suspend fun applyChannels(list: List<com.tellybox.tv.data.db.ChannelEntity>) {
+        val visibleIds = list.map { it.id }
+        if (visibleIds == lastIds) return
+        val previous = lastIds
+        val focus = keepFocusId()
+        lastIds = visibleIds
+        binding.empty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+        val tokens = appContainer.settings.get().channelNameTokens
+        channels = list.map { it.copy(name = com.tellybox.tv.data.settings.ChannelNames.display(it.name, tokens)) }
+        guide.channels = channels
+        // Same guide, updated: keep the highlighted row and the time on screen. A different
+        // list (a new filter) should open where it was asked to.
+        val sameList = previous != null && previous.any { it in visibleIds.toSet() }
+        binding.grid.setChannels(channels.map { GuideSupport.guideChannel(it) }, focus, keepPosition = sameList)
+        if (!binding.grid.hasFocus()) binding.grid.requestFocus()
     }
 
     override fun onStart() {

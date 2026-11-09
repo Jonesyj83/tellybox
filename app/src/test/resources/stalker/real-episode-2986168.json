@@ -1,0 +1,32 @@
+{
+ "js": {
+  "total_items": "1",
+  "max_page_items": 14,
+  "selected_item": 0,
+  "cur_page": 0,
+  "data": [
+   {
+    "id": "3373954",
+    "video_id": "273000",
+    "series_id": "2986168",
+    "file_type": "video",
+    "protocol": "custom",
+    "url": "http://95.173.206.33/CF5A68754DSTZZZ16867aca861412a969c0fab07aace7b1b77f8cea69932b3af725823be039039b687bdb42bcc6f88c2bea6063d73a75ec651e764725f810d1d2bc3bd0841af0a8e901cc5ee716d702dff9662dc30de342d49bc2c3ff29b6a5f7ac8/index.m3u8",
+    "file_name": "",
+    "languages": "a:1:{i:0;s:2:\"en\";}",
+    "quality": "6",
+    "volume_level": "0",
+    "accessed": "1",
+    "status": "1",
+    "date_add": "2026-08-10 05:26:29",
+    "date_modify": "2026-08-10 05:26:29",
+    "tmp_link_type": "flussonic",
+    "for_rent": 0,
+    "name": "English / Excellent quality (1080)",
+    "is_file": true,
+    "cmd": "http://95.173.206.33/CF5A68754DSTZZZ16867aca861412a969c0fab07aace7b1b77f8cea69932b3af725823be039039b687bdb42bcc6f88c2bea6063d73a75ec651e764725f810d1d2bc3bd0841af0a8e901cc5ee716d702dff9662dc30de342d49bc2c3ff29b6a5f7ac8/index.m3u8"
+   }
+  ]
+ },
+ "text": "generated in: 0.032s; query counter: 13; cache hits: 0; cache miss: 0; php errors: 0; sql errors: 0;"
+}

@@ -1,0 +1,923 @@
+{
+ "js": [
+  {
+   "id": "*",
+   "title": "All",
+   "alias": "*",
+   "censored": 0
+  },
+  {
+   "id": "168",
+   "title": "ENGLISH | UPCOMING MOVIES",
+   "alias": "ENGLISH__UPCOMING_MOVIES_TRAILERS",
+   "censored": 0
+  },
+  {
+   "id": "133",
+   "title": "ENGLISH | LATEST CAM",
+   "alias": "ENGLISH__MOVIES_CAM",
+   "censored": 0
+  },
+  {
+   "id": "5",
+   "title": "ENGLISH | LATEST MOVIES 4K UHD",
+   "alias": "ENGLISH___LATEST_COLLECTION",
+   "censored": 0
+  },
+  {
+   "id": "160",
+   "title": "ENGLISH | NETFLIX MOVIES",
+   "alias": "ENGLISH__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "162",
+   "title": "ENGLISH | AMAZON MOVIES",
+   "alias": "ENGLISH__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "268",
+   "title": "ENGLISH | ALL TIME FAV MOVIES",
+   "alias": "ENGLISH__ALL_TIME_FAV_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "7",
+   "title": "ENGLISH | COLLECTION MOVIES",
+   "alias": "ENGLISH___COLLECTION_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "42",
+   "title": "ENGLISH | SERIES",
+   "alias": "ENGLISH___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "251",
+   "title": "ENGLISH | NETFLIX SERIES",
+   "alias": "ENGLISH__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "252",
+   "title": "ENGLISH | AMAZON SERIES",
+   "alias": "ENGLISH__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "122",
+   "title": "ENGLISH | ANIME",
+   "alias": "ENGLISH___ANIME",
+   "censored": 0
+  },
+  {
+   "id": "86",
+   "title": "ENGLISH | STANDUP COMEDY",
+   "alias": "ENGLISH___STANDUP_COMEDY",
+   "censored": 0
+  },
+  {
+   "id": "89",
+   "title": "ENGLISH | DOCUMENTARY",
+   "alias": "ENGLISH__DOCUMENTARY",
+   "censored": 0
+  },
+  {
+   "id": "177",
+   "title": "ENGLISH | KOREAN SERIES",
+   "alias": "ENGLISH__K-DRAMA",
+   "censored": 0
+  },
+  {
+   "id": "180",
+   "title": "ENGLISH | ARABIC SUB",
+   "alias": "ENGLISHARABICSUB",
+   "censored": 0
+  },
+  {
+   "id": "21",
+   "title": "ENGLISH | KIDS MOVIES",
+   "alias": "KIDS",
+   "censored": 0
+  },
+  {
+   "id": "106",
+   "title": "ENGLISH | KIDS SERIES",
+   "alias": "ENGLISH__KIDS_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "159",
+   "title": "ENGLISH | KIDS RHYMES",
+   "alias": "ENGLISH__KIDS_RHYMES",
+   "censored": 0
+  },
+  {
+   "id": "184",
+   "title": "ENGLISH | MUSIC ALBUMS",
+   "alias": "ENGLISH__MUSIC_ALBUMS",
+   "censored": 0
+  },
+  {
+   "id": "167",
+   "title": "HINDI | UPCOMING MOVIES",
+   "alias": "HINDI__UPCOMING_MOVIES_TRAILERS",
+   "censored": 0
+  },
+  {
+   "id": "131",
+   "title": "HINDI | LATEST CAM",
+   "alias": "HINDI__MOVIES_CAM",
+   "censored": 0
+  },
+  {
+   "id": "19",
+   "title": "HINDI | LATEST MOVIES 4K UHD",
+   "alias": "HINDI_LATEST",
+   "censored": 0
+  },
+  {
+   "id": "165",
+   "title": "HINDI | NETFLIX MOVIES",
+   "alias": "HINDI__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "166",
+   "title": "HINDI | AMAZON MOVIES",
+   "alias": "HINDI__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "269",
+   "title": "HINDI | ALL TIME FAV MOVIES",
+   "alias": "HINDI__ALL_TIME_FAV_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "17",
+   "title": "HINDI | OLD COLLECTION",
+   "alias": "HINDI_COLLECTION",
+   "censored": 0
+  },
+  {
+   "id": "123",
+   "title": "HINDI | ENGLISH SUBTITLE MOVIES",
+   "alias": "HINDI__ENGLISH_SUBTITLE_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "18",
+   "title": "HINDI | ENGLISH DUBB MOVIES",
+   "alias": "HINDI_DUBBED_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "105",
+   "title": "HINDI | SOUTH DUBB MOVIES",
+   "alias": "SOUTH__HINDI_DUBBED_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "43",
+   "title": "HINDI | TV SERIALS",
+   "alias": "HINDI___TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "33",
+   "title": "HINDI | WEB SERIES",
+   "alias": "HINDI___WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "253",
+   "title": "HINDI | NETFLIX SERIES",
+   "alias": "HINDI__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "254",
+   "title": "HINDI | AMAZON SERIES",
+   "alias": "HINDI__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "96",
+   "title": "HINDI | WEB SERIES (18+)",
+   "alias": "HINDI___WEB_SERIES__18__",
+   "censored": 1
+  },
+  {
+   "id": "124",
+   "title": "HINDI | DUBB ANIME",
+   "alias": "HINDI___DUBBED_ANIME",
+   "censored": 0
+  },
+  {
+   "id": "31",
+   "title": "HINDI | DUBB SERIES",
+   "alias": "HINDI___DUBBED_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "84",
+   "title": "HINDI | STANDUP COMEDY",
+   "alias": "HINDI__STANDUP_COMEDY",
+   "censored": 0
+  },
+  {
+   "id": "154",
+   "title": "HINDI | RELIGIOUS",
+   "alias": "HINDI__RELIGIOUS",
+   "censored": 0
+  },
+  {
+   "id": "178",
+   "title": "HINDI | KOREAN DRAMA",
+   "alias": "HINDI__K-DRAMA",
+   "censored": 0
+  },
+  {
+   "id": "87",
+   "title": "HINDI | KIDS COLLECTION",
+   "alias": "HINDI__KIDS",
+   "censored": 0
+  },
+  {
+   "id": "175",
+   "title": "HINDI | KIDS RHYMES",
+   "alias": "HINDI__KIDS_RHYMES",
+   "censored": 0
+  },
+  {
+   "id": "186",
+   "title": "HINDI | MUSIC ALBUMS",
+   "alias": "HINDI__MUSIC_ALBUMS",
+   "censored": 0
+  },
+  {
+   "id": "40",
+   "title": "URDU | MOVIES",
+   "alias": "PAKISTAN___URDU_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "8",
+   "title": "URDU | TV SERIALS",
+   "alias": "PAKISTANI_TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "146",
+   "title": "URDU | POLITICAL SHOWS",
+   "alias": "PAKISTANI__POLITICAL_SHOWS",
+   "censored": 0
+  },
+  {
+   "id": "95",
+   "title": "URDU | ISLAMIC KIDS COLLECTION",
+   "alias": "ISLAMIC___KIDS_COLLECTION",
+   "censored": 0
+  },
+  {
+   "id": "41",
+   "title": "URDU | RELIGIOUS ISLAM",
+   "alias": "ISLAM___QURAN_PAK",
+   "censored": 0
+  },
+  {
+   "id": "185",
+   "title": "URDU | MUSIC ALBUMS",
+   "alias": "URDU__MUSIC_ALBUMS",
+   "censored": 0
+  },
+  {
+   "id": "172",
+   "title": "PUNJABI | UPCOMING MOVIES TRAILERS",
+   "alias": "PUNJABI__UPCOMING_MOVIES_TRAILERS",
+   "censored": 0
+  },
+  {
+   "id": "132",
+   "title": "PUNJABI | LATEST MOVIES CAM",
+   "alias": "PUNJABI__MOVIES_CAM",
+   "censored": 0
+  },
+  {
+   "id": "109",
+   "title": "PUNJABI | LATEST MOVIES 4K UHD",
+   "alias": "PUNJABI__LATEST_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "169",
+   "title": "PUNJABI | NETFLIX MOVIES",
+   "alias": "PUNJABI__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "170",
+   "title": "PUNJABI | AMAZON MOVIES",
+   "alias": "PUNJABI__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "171",
+   "title": "PUNJABI | CHAUPAL",
+   "alias": "PUNJABI__CHAUPAL",
+   "censored": 0
+  },
+  {
+   "id": "24",
+   "title": "PUNJABI | OLD COLLECTION",
+   "alias": "PUNJABI_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "39",
+   "title": "PUNJABI | STAGE DRAMAS",
+   "alias": "PAKISTAN___STAGE_DRAMA",
+   "censored": 0
+  },
+  {
+   "id": "72",
+   "title": "PUNJABI | SERIES",
+   "alias": "PUNJABI___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "255",
+   "title": "PUNJABI | NETFLIX SERIES",
+   "alias": "PUNJABI__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "256",
+   "title": "PUNJABI | AMAZON SERIES",
+   "alias": "PUNJABI__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "90",
+   "title": "PUNJABI | TV SERIALS",
+   "alias": "PUNJABI___TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "112",
+   "title": "PUNJABI | KIDS SERIES",
+   "alias": "PUNJABI___KIDS_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "183",
+   "title": "PUNJABI | MUSIC ALBUMS",
+   "alias": "PUNJABI__MUSIC_ALBUMS",
+   "censored": 0
+  },
+  {
+   "id": "113",
+   "title": "PUNJABI | RELIGIOUS SIKH",
+   "alias": "RELIGIOUS___PUNJABI",
+   "censored": 0
+  },
+  {
+   "id": "134",
+   "title": "BANGALI | MOVIES CAM",
+   "alias": "BANGALI__MOVIES_CAM",
+   "censored": 0
+  },
+  {
+   "id": "15",
+   "title": "BANGALI | MOVIES",
+   "alias": "BANGALI_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "60",
+   "title": "BANGALI | TV SERIALS",
+   "alias": "BANGALI___TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "66",
+   "title": "BANGALI | WEB SERIES",
+   "alias": "BANGALI___WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "58",
+   "title": "BANGALI | NATOK",
+   "alias": "BANGLA___NATOK",
+   "censored": 0
+  },
+  {
+   "id": "23",
+   "title": "MARATHI | MOVIES",
+   "alias": "MARATHI_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "12",
+   "title": "MARATHI | TV SERIALS",
+   "alias": "MARATHI_TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "97",
+   "title": "MARATHI | WEB SERIES",
+   "alias": "MARATHI__WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "16",
+   "title": "GUJARATI | MOVIES",
+   "alias": "GUJRATI_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "83",
+   "title": "GUJARATI | TV SERIALS",
+   "alias": "GUJARATI___TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "98",
+   "title": "GUJARATI | WEB SERIES",
+   "alias": "GUJARATI__WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "59",
+   "title": "GUJARATI | NATOK",
+   "alias": "GUJARATI___NATOK",
+   "censored": 0
+  },
+  {
+   "id": "108",
+   "title": "KANNADA | LATEST MOVIES 4K UHD",
+   "alias": "KANNADA__LATEST_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "206",
+   "title": "KANNADA | NETFLIX MOVIES",
+   "alias": "KANNADA__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "210",
+   "title": "KANNADA | AMAZON MOVIES",
+   "alias": "KANNADA__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "20",
+   "title": "KANNADA | OLD COLLECTION",
+   "alias": "KANNADA_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "244",
+   "title": "KANNADA | DUBB MOVIES",
+   "alias": "KANNADA__DUBB_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "10",
+   "title": "KANNADA | TV SERIALS",
+   "alias": "KANNADA_TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "257",
+   "title": "KANNADA | NETFLIX SERIES",
+   "alias": "KANNADA__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "258",
+   "title": "KANNADA | AMAZON SERIES",
+   "alias": "KANNADA__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "67",
+   "title": "KANNADA | WEB SERIES",
+   "alias": "KANNADA___WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "110",
+   "title": "MALAYALAM | LATEST MOVIES 4K UHD",
+   "alias": "MALAYALAM__LATEST_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "207",
+   "title": "MALAYALAM | NETFLIX MOVIES",
+   "alias": "MALAYALAM__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "213",
+   "title": "MALAYALAM | AMAZON MOVIES",
+   "alias": "MALAYALAM__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "22",
+   "title": "MALAYALAM | OLD COLLECTION",
+   "alias": "MALAYALAM_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "243",
+   "title": "MALAYALAM | DUBB MOVIES",
+   "alias": "MALAYALAM__DUBB_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "11",
+   "title": "MALAYALAM | TV SERIALS",
+   "alias": "MALAYALAM_TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "259",
+   "title": "MALAYALAM | NETFLIX SERIES",
+   "alias": "MALAYALAM__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "260",
+   "title": "MALAYALAM | AMAZON SERIES",
+   "alias": "MALAYALAM__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "68",
+   "title": "MALAYALAM | WEB SERIES",
+   "alias": "MALAYALAM___WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "136",
+   "title": "TELUGU | MOVIES CAM",
+   "alias": "TELUGU__MOVIES_CAM",
+   "censored": 0
+  },
+  {
+   "id": "107",
+   "title": "TELUGU | LATEST MOVIES 4K UHD",
+   "alias": "TELUGU__LATEST_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "208",
+   "title": "TELUGU | NETFLIX MOVIES",
+   "alias": "TELUGU__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "211",
+   "title": "TELUGU | AMAZON MOVIES",
+   "alias": "TELUGU__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "26",
+   "title": "TELUGU | OLD COLLECTION",
+   "alias": "TELUGU_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "145",
+   "title": "TELUGU | DUBB MOVIES",
+   "alias": "TELUGU__DUBBED_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "13",
+   "title": "TELUGU | TV SERIALS",
+   "alias": "TELUGU_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "261",
+   "title": "TELUGU | NETFLIX SERIES",
+   "alias": "TELUGU__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "262",
+   "title": "TELUGU | AMAZON SERIES",
+   "alias": "TELUGU__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "70",
+   "title": "TELUGU | WEB SERIES",
+   "alias": "TELUGU___WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "94",
+   "title": "TELUGU | KIDS COLLECTION",
+   "alias": "TELUGU__KIDS_COLLECTION",
+   "censored": 0
+  },
+  {
+   "id": "135",
+   "title": "TAMIL | MOVIES CAM",
+   "alias": "TAMIL__MOVIES_CAM",
+   "censored": 0
+  },
+  {
+   "id": "111",
+   "title": "TAMIL | LATEST MOVIES 4K UHD",
+   "alias": "TAMIL__LATEST_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "209",
+   "title": "TAMIL | NETFLIX MOVIES",
+   "alias": "TAMIL__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "212",
+   "title": "TAMIL | AMAZON MOVIES",
+   "alias": "TAMIL__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "25",
+   "title": "TAMIL | OLD COLLECTION",
+   "alias": "TAMIL_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "144",
+   "title": "TAMIL | DUBB MOVIES",
+   "alias": "TAMIL__Dubbed_Movies",
+   "censored": 0
+  },
+  {
+   "id": "14",
+   "title": "TAMIL | TV SERIALS",
+   "alias": "TAMIL_TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "263",
+   "title": "TAMIL | NETFLIX SERIES",
+   "alias": "TAMIL__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "264",
+   "title": "TAMIL | AMAZON SERIES",
+   "alias": "TAMIL__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "69",
+   "title": "TAMIL | WEB SERIES",
+   "alias": "TAMIL___WEB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "88",
+   "title": "TAMIL | KIDS COLLECTION",
+   "alias": "TAMIL__KIDS_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "155",
+   "title": "SINHALA | TV SERIALS",
+   "alias": "SINHALA__TV_SERIALS",
+   "censored": 0
+  },
+  {
+   "id": "27",
+   "title": "BHOJPURI | MOVIES",
+   "alias": "BHOJPURI_MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "50",
+   "title": "TURKISH | MOVIES",
+   "alias": "TURKISH___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "65",
+   "title": "TURKISH | SERIES",
+   "alias": "TURKISH___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "32",
+   "title": "TURKISH | ENG-URDU SUB SERIES",
+   "alias": "TURKISH___ENG_SUB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "34",
+   "title": "TURKISH | URDU DUB SERIES",
+   "alias": "TURKISH___URDU_DUB_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "44",
+   "title": "ARABIC | MOVIES",
+   "alias": "ARABIC___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "61",
+   "title": "ARABIC | SERIES",
+   "alias": "ARABIC___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "45",
+   "title": "FRENCH | MOVIES",
+   "alias": "FRENCH___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "57",
+   "title": "FRENCH | SERIES",
+   "alias": "FRENCH___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "73",
+   "title": "ADULT | GENERAL",
+   "alias": "ADULTS",
+   "censored": 1
+  },
+  {
+   "id": "114",
+   "title": "ADULT | HINDI",
+   "alias": "ADULT__INTERNATIONAL",
+   "censored": 1
+  },
+  {
+   "id": "118",
+   "title": "ADULT | INTERNATIONAL",
+   "alias": "ADULTS__INTERNATIONAL",
+   "censored": 1
+  },
+  {
+   "id": "116",
+   "title": "ADULT | SOFTCORE",
+   "alias": "ADULT__SOFTCORE",
+   "censored": 1
+  },
+  {
+   "id": "143",
+   "title": "ADULT | VINTAGE",
+   "alias": "ADULT___VINTAGE",
+   "censored": 1
+  },
+  {
+   "id": "148",
+   "title": "ADULT | LGBTQ",
+   "alias": "ADULT__LGBTQ",
+   "censored": 1
+  },
+  {
+   "id": "149",
+   "title": "ADULT | CELEBRITY",
+   "alias": "ADULT__CELEBRITY",
+   "censored": 1
+  },
+  {
+   "id": "153",
+   "title": "ADULT | SERIES",
+   "alias": "ADULT___SERIES",
+   "censored": 1
+  },
+  {
+   "id": "91",
+   "title": "GERMAN | MOVIES",
+   "alias": "GERMAN___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "92",
+   "title": "GERMAN | SERIES",
+   "alias": "GERMAN___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "49",
+   "title": "SPANISH | MOVIES",
+   "alias": "SPANISH___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "63",
+   "title": "SPANISH | SERIES",
+   "alias": "SPANISH___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "48",
+   "title": "PORTUGAL | MOVIES",
+   "alias": "PORTUGAL___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "74",
+   "title": "PORTUGAL | SERIES",
+   "alias": "PORTUGAL___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "46",
+   "title": "ITALIAN | MOVIES",
+   "alias": "ITALIAN___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "62",
+   "title": "ITALIAN | SERIES",
+   "alias": "ITALIAN___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "47",
+   "title": "POLISH | MOVIES",
+   "alias": "POLISH___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "64",
+   "title": "POLISH | SERIES",
+   "alias": "POLISH___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "101",
+   "title": "KOREAN | MOVIES",
+   "alias": "KOREAN___MOVIES",
+   "censored": 0
+  },
+  {
+   "id": "76",
+   "title": "KOREAN | SERIES",
+   "alias": "KOREAN___SERIES",
+   "censored": 0
+  },
+  {
+   "id": "161",
+   "title": "OTHERS | NETFLIX MOVIES",
+   "alias": "MIX__NETFLIX_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "265",
+   "title": "OTHERS | NETFLIX SERIES",
+   "alias": "OTHERS__NETFLIX_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "163",
+   "title": "OTHERS | AMAZON MOVIES",
+   "alias": "MIX__AMAZON_TRENDING",
+   "censored": 0
+  },
+  {
+   "id": "266",
+   "title": "OTHERS | AMAZON SERIES",
+   "alias": "OTHERS__AMAZON_SERIES",
+   "censored": 0
+  },
+  {
+   "id": "75",
+   "title": "SPORTS | EVENTS",
+   "alias": "SPORTING_EVENTS",
+   "censored": 0
+  },
+  {
+   "id": "157",
+   "title": "SPORTS | CRICKET EVENTS",
+   "alias": "CRICKET_SPORTING_EVENTS",
+   "censored": 0
+  },
+  {
+   "id": "248",
+   "title": "SPORTS | FIFA WORLD CUP",
+   "alias": "SPORTS__FIFA_WORLD_CUP",
+   "censored": 0
+  }
+ ],
+ "text": "generated in: 0.046s; query counter: 11; cache hits: 0; cache miss: 0; php errors: 0; sql errors: 0;"
+}

@@ -55,18 +55,17 @@ class ReminderReceiver : BroadcastReceiver() {
         val n = NotificationCompat.Builder(context, Notifications.CHANNEL_REMINDER)
             .setSmallIcon(R.drawable.ic_stat_tellybox)
             .setContentTitle(title)
-            .setContentText("Starting soon on $channel")
+            .setContentText(context.getString(com.tellybox.tv.R.string.reminder_starting_soon, channel))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(pi)
             .setFullScreenIntent(pi, true)
             .setAutoCancel(true)
             .build()
-        try { NotificationManagerCompat.from(context).notify(NOTIFICATION_BASE + id.toInt(), n) } catch (_: SecurityException) { }
+        try { NotificationManagerCompat.from(context).notify("reminder", id.toInt(), n) } catch (_: SecurityException) { }
     }
 
     companion object {
         const val EXTRA_ID = "reminder_id"
-        const val NOTIFICATION_BASE = 6000
     }
 }

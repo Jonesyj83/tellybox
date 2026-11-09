@@ -45,25 +45,25 @@ class GroupManagementActivity : com.tellybox.tv.ui.parental.ProtectedActivity() 
             val channels = selected?.let { group -> db.channels().getForPlaylist(playlistId).filter { it.groupId == group.id } }
             val tokens = appContainer.settings.get().channelNameTokens
             hint.text = when {
-                movingId != null -> "Move: press Up / Down. OK or Back finishes."
+                movingId != null -> getString(R.string.playlist_move_hint)
                 selected != null && channels.isNullOrEmpty() -> "${selected.name} — " + getString(R.string.group_channels_empty)
-                selected != null -> "${selected.name} — select a channel to reorder"
+                selected != null -> getString(R.string.playlist_reorder_prompt, selected.name)
                 groups.isEmpty() -> getString(R.string.groups_empty)
-                else -> "Select a group to hide, show, or reorder"
+                else -> getString(R.string.playlist_groups_hint)
             }
             list.removeAllViews()
             if (selected != null) {
                 list.addView(Button(this@GroupManagementActivity).apply {
                     setBackgroundResource(R.drawable.bg_focusable)
                     isAllCaps = false
-                    text = "Back to groups"
+                    text = getString(R.string.playlist_back_to_groups)
                     setOnClickListener { val id = groupId; groupId = null; movingId = null; render(id) }
                 })
             }
             val ids = channels?.map { it.id } ?: groups.map { it.id }
             ids.forEachIndexed { index, id ->
                 val group = if (channels == null) groups[index] else null
-                val label = channels?.get(index)?.let { com.tellybox.tv.data.settings.ChannelNames.display(it.name, tokens) } ?: "${group!!.name} (${group.kind.name.lowercase()})${if (group.hidden) " · Hidden" else ""}"
+                val label = channels?.get(index)?.let { com.tellybox.tv.data.settings.ChannelNames.display(it.name, tokens) } ?: getString(R.string.named_kind, group!!.name, contentKindLabel(group.kind)).let { label -> if (group.hidden) getString(R.string.hidden_name, label) else label }
                 val button = Button(this@GroupManagementActivity).apply {
                     setBackgroundResource(R.drawable.bg_focusable)
                     isAllCaps = false
@@ -105,7 +105,7 @@ class GroupManagementActivity : com.tellybox.tv.ui.parental.ProtectedActivity() 
 
     private fun actions(group: ChannelGroupEntity) {
         AlertDialog.Builder(this).setTitle(group.name)
-            .setItems(arrayOf(if (group.hidden) "Show group" else "Hide group", "Move group", "Reorder channels")) { _, which ->
+            .setItems(arrayOf(if (group.hidden) getString(R.string.playlist_show_group) else getString(R.string.playlist_hide_group), getString(R.string.playlist_move_group), getString(R.string.playlist_reorder))) { _, which ->
                 when (which) {
                     0 -> lifecycleScope.launch { db.groups().setHidden(group.id, !group.hidden); render(group.id) }
                     1 -> { movingId = group.id; render(group.id) }

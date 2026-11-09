@@ -1,0 +1,187 @@
+{
+ "js": {
+  "total_items": "8",
+  "max_page_items": 14,
+  "selected_item": 0,
+  "cur_page": 0,
+  "data": [
+   {
+    "id": "2986168",
+    "season_id": "144224",
+    "series_number": "8",
+    "series_name": "2026-08-10",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-08-10 05:26:12",
+    "date_modify": "2026-08-10 05:26:39",
+    "name": "Episode 8. 2026-08-10",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2979688",
+    "season_id": "144224",
+    "series_number": "7",
+    "series_name": "2026-08-03",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-08-03 05:05:50",
+    "date_modify": "2026-08-03 05:06:05",
+    "name": "Episode 7. 2026-08-03",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2974082",
+    "season_id": "144224",
+    "series_number": "6",
+    "series_name": "2026-07-27",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-07-27 05:07:59",
+    "date_modify": "2026-07-27 05:09:08",
+    "name": "Episode 6. 2026-07-27",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2967825",
+    "season_id": "144224",
+    "series_number": "5",
+    "series_name": "2026-07-20",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-07-20 07:51:35",
+    "date_modify": "2026-07-20 07:52:07",
+    "name": "Episode 5. 2026-07-20",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2961998",
+    "season_id": "144224",
+    "series_number": "4",
+    "series_name": "2026-07-13",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-07-13 07:54:05",
+    "date_modify": "2026-07-13 07:54:55",
+    "name": "Episode 4. 2026-07-13",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2956908",
+    "season_id": "144224",
+    "series_number": "3",
+    "series_name": "2026-07-06",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-07-06 08:26:39",
+    "date_modify": "2026-07-06 08:29:07",
+    "name": "Episode 3. 2026-07-06",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2950179",
+    "season_id": "144224",
+    "series_number": "2",
+    "series_name": "2026-06-29",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-06-29 11:26:22",
+    "date_modify": "2026-06-29 11:26:22",
+    "name": "Episode 2. 2026-06-29",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   },
+   {
+    "id": "2944135",
+    "season_id": "144224",
+    "series_number": "1",
+    "series_name": "2026-06-21",
+    "series_original_name": "",
+    "series_files": "1",
+    "date_add": "2026-06-21 22:13:56",
+    "date_modify": "2026-06-21 22:13:56",
+    "name": "Episode 1. 2026-06-21",
+    "is_episode": true,
+    "series": [
+     "8",
+     "7",
+     "6",
+     "5",
+     "4",
+     "3",
+     "2",
+     "1"
+    ]
+   }
+  ]
+ },
+ "text": "generated in: 0.029s; query counter: 5; cache hits: 0; cache miss: 0; php errors: 0; sql errors: 0;"
+}

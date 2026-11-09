@@ -102,6 +102,9 @@
         <item name="android:paddingStart">10dp</item>
         <item name="android:paddingEnd">10dp</item>
         <item name="android:focusable">true</item>
+        <!-- Translated labels can run longer than the English; cut at the end, never mid-word. -->
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
     </style>
 
     <style name="Button.TV.Small">

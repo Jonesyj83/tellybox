@@ -10,6 +10,7 @@ import com.tellybox.tv.appContainer
 import com.tellybox.tv.data.catchup.CatchupUrls
 import com.tellybox.tv.data.db.ChannelEntity
 import com.tellybox.tv.data.db.EpgProgramEntity
+import com.tellybox.tv.ui.recording.confirmLongRecording
 import com.tellybox.tv.data.db.RecordingSource
 import com.tellybox.tv.data.db.RecordingStatus
 import com.tellybox.tv.ui.player.PlayerActivity
@@ -162,6 +163,10 @@ class GuideSupport(private val activity: AppCompatActivity, private val grid: Gu
     private fun toast(text: String) = Toast.makeText(activity, text, Toast.LENGTH_LONG).show()
 
     private fun record(channel: ChannelEntity, program: EpgProgramEntity) {
+        activity.confirmLongRecording(program.stop - program.start) { schedule(channel, program) }
+    }
+
+    private fun schedule(channel: ChannelEntity, program: EpgProgramEntity) {
         activity.lifecycleScope.launch {
             val result = activity.appContainer.recordings.scheduleProgram(channel, channel.name, program.title, program.start, program.stop)
             toast(result.fold(

@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
+import com.tellybox.tv.data.settings.AppSettings
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.PlaybackException
@@ -56,7 +57,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Several live channels at once, beside the shared rail. Opening it explains that every screen
@@ -94,6 +94,8 @@ class MultiviewActivity : SectionActivity() {
     private var plan: SlotPlan? = null
     /** The screen being chosen in the picker. */
     private var targetSlot = 0
+    private var started = false
+    private var startJob: Job? = null
     /** Picked channels by id, for names and the connection check before tiles exist. */
     private val chosen = HashMap<Long, ChannelEntity>()
     private var audioTile = 0
@@ -165,7 +167,16 @@ class MultiviewActivity : SectionActivity() {
 
     override fun onStart() {
         super.onStart()
-        val settings = runBlocking { appContainer.settings.get() }
+        started = true
+        val cached = appContainer.settings.current()
+        if (cached != null) startWith(cached) else startJob = lifecycleScope.launch { startWith(appContainer.settings.get()) }
+    }
+
+    /** Everything onStart needs, once the settings are known. */
+    private fun startWith(settings: AppSettings) {
+        // Settings can arrive after the viewer has already backed out; starting the tiles then
+        // would leave decoders running against the provider with nothing on screen.
+        if (isFinishing || isDestroyed || !started) return
         nameTokens = settings.channelNameTokens
         // No tunneling (one tunnel per device), no audio focus fights between tiles, HD at most
         // so two or more decoders keep up, and a modest buffer to keep memory in check.
@@ -182,6 +193,9 @@ class MultiviewActivity : SectionActivity() {
     }
 
     override fun onStop() {
+        started = false
+        startJob?.cancel()
+        startJob = null
         ticker.removeCallbacks(checkStalls)
         tiles.forEach { stopTile(it) }
         super.onStop()

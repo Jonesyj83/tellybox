@@ -1,0 +1,47 @@
+{
+ "js": {
+  "total_items": "3",
+  "max_page_items": 14,
+  "selected_item": 0,
+  "cur_page": 0,
+  "data": [
+   {
+    "id": "144224",
+    "video_id": "273000",
+    "season_number": "3",
+    "season_name": "",
+    "season_original_name": null,
+    "season_series": "8",
+    "date_add": "2026-06-21 22:13:56",
+    "date_modify": "2026-06-21 22:13:56",
+    "name": "Season 3",
+    "is_season": true
+   },
+   {
+    "id": "158164",
+    "video_id": "273000",
+    "season_number": "2",
+    "season_name": "",
+    "season_original_name": null,
+    "season_series": "8",
+    "date_add": "2026-10-31 14:07:12",
+    "date_modify": "2026-10-31 14:07:12",
+    "name": "Season 2",
+    "is_season": true
+   },
+   {
+    "id": "137774",
+    "video_id": "273000",
+    "season_number": "1",
+    "season_name": "",
+    "season_original_name": null,
+    "season_series": "10",
+    "date_add": "2026-02-21 16:21:51",
+    "date_modify": "2026-02-21 16:21:51",
+    "name": "Season 1",
+    "is_season": true
+   }
+  ]
+ },
+ "text": "generated in: 0.028s; query counter: 5; cache hits: 0; cache miss: 0; php errors: 0; sql errors: 0;"
+}

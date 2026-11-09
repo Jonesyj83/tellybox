@@ -10,8 +10,11 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.tellybox.tv.player.BufferSize
 import com.tellybox.tv.player.PlayerConfig
+import com.tellybox.tv.player.timeshift.TimeshiftMode
+import com.tellybox.tv.player.timeshift.TimeshiftStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
 
 /** How the video fills the screen. */
@@ -49,6 +52,10 @@ data class AppSettings(
     val multiviewConnectionWarning: Boolean = true,
     /** On app start, play the last watched channel in the home preview. */
     val resumeLastChannel: Boolean = true,
+    /** Pause and rewind live channels from a buffer on this device. */
+    val timeshift: TimeshiftMode = TimeshiftMode.OFF,
+    /** Upper limit for that buffer; it is also held to a share of free space. */
+    val timeshiftBufferMb: Int = TimeshiftStorage.DEFAULT_SIZE_MB,
 ) {
     val playerConfig get() = PlayerConfig(buffer, softwareDecoders, tunneling, audioPassthrough = audioPassthrough, preferSoftwareAudioDecoders = softwareAudioDecoders)
 }
@@ -82,6 +89,8 @@ class SettingsRepository(context: Context) {
         val previewFollowsFocus = booleanPreferencesKey("preview_follows_focus")
         val multiviewConnectionWarning = booleanPreferencesKey("multiview_connection_warning")
         val resumeLastChannel = booleanPreferencesKey("resume_last_channel")
+        val timeshift = stringPreferencesKey("timeshift")
+        val timeshiftBufferMb = intPreferencesKey("timeshift_buffer_mb")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -110,6 +119,8 @@ class SettingsRepository(context: Context) {
             previewFollowsFocus = p[Keys.previewFollowsFocus] ?: d.previewFollowsFocus,
             multiviewConnectionWarning = p[Keys.multiviewConnectionWarning] ?: d.multiviewConnectionWarning,
             resumeLastChannel = p[Keys.resumeLastChannel] ?: d.resumeLastChannel,
+            timeshift = p[Keys.timeshift]?.let { runCatching { TimeshiftMode.valueOf(it) }.getOrNull() } ?: d.timeshift,
+            timeshiftBufferMb = p[Keys.timeshiftBufferMb]?.takeIf { it in TimeshiftStorage.SIZES_MB } ?: d.timeshiftBufferMb,
         )
     }
 
@@ -138,6 +149,8 @@ class SettingsRepository(context: Context) {
         p[Keys.previewFollowsFocus] = s.previewFollowsFocus
         p[Keys.multiviewConnectionWarning] = s.multiviewConnectionWarning
         p[Keys.resumeLastChannel] = s.resumeLastChannel
+        p[Keys.timeshift] = s.timeshift.name
+        p[Keys.timeshiftBufferMb] = s.timeshiftBufferMb
     }
 
     suspend fun setShowClock(v: Boolean) = store.edit { it[Keys.showClock] = v }
@@ -152,7 +165,21 @@ class SettingsRepository(context: Context) {
 
     suspend fun setSoftwareAudioDecoders(v: Boolean) = store.edit { it[Keys.softwareAudioDecoders] = v }
 
-    suspend fun get(): AppSettings = settings.first()
+    /**
+     * Last known settings, kept current by [prime]. Screens that need config before the first
+     * frame can read this instead of blocking the main thread on a DataStore round trip.
+     */
+    @Volatile
+    private var cached: AppSettings? = null
+
+    fun current(): AppSettings? = cached
+
+    suspend fun get(): AppSettings = settings.first().also { cached = it }
+
+    /** Keeps [current] in step with the store. Started once, from the application. */
+    fun prime(scope: kotlinx.coroutines.CoroutineScope) {
+        scope.launch { settings.collect { cached = it } }
+    }
 
     suspend fun setChannelNameTokens(v: String) = store.edit { it[Keys.channelNameTokens] = v }
 
@@ -172,4 +199,6 @@ class SettingsRepository(context: Context) {
     suspend fun setPreviewFollowsFocus(v: Boolean) = store.edit { it[Keys.previewFollowsFocus] = v }
     suspend fun setMultiviewConnectionWarning(v: Boolean) = store.edit { it[Keys.multiviewConnectionWarning] = v }
     suspend fun setResumeLastChannel(v: Boolean) = store.edit { it[Keys.resumeLastChannel] = v }
+    suspend fun setTimeshift(v: TimeshiftMode) = store.edit { it[Keys.timeshift] = v.name }
+    suspend fun setTimeshiftBufferMb(v: Int) = store.edit { it[Keys.timeshiftBufferMb] = v }
 }

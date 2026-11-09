@@ -39,7 +39,7 @@ class RecordingPlanTest {
         val none = RecordingPlan.forProgram(now - 90 * min, now - 30 * min, now, 0, 0, 0)
         assertTrue(none is RecordingPlan.Plan.Refused)
         val tooOld = RecordingPlan.forProgram(now - 3 * 24 * 60 * min, now - 3 * 24 * 60 * min + 30 * min, now, 0, 0, 1)
-        assertTrue((tooOld as RecordingPlan.Plan.Refused).reason.contains("1-day"))
+        assertEquals(RecordingPlan.Refusal.ARCHIVE_EXPIRED, (tooOld as RecordingPlan.Plan.Refused).reason)
     }
 
     @Test

@@ -5,9 +5,12 @@ import com.tellybox.tv.data.db.ContentKind
 import com.tellybox.tv.data.db.FavoriteEntity
 import com.tellybox.tv.data.db.GroupWithCount
 import com.tellybox.tv.data.db.TellyboxDatabase
+import com.tellybox.tv.data.db.PlaylistEntity
 import com.tellybox.tv.data.db.PlaylistType
+import com.tellybox.tv.data.parser.stalker.StalkerVodRef
 import com.tellybox.tv.data.db.WatchHistoryEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -32,6 +35,10 @@ class ChannelRepository(
     private fun visible(source: Flow<List<ChannelEntity>>) = combine(source, parental.changes) { items, _ -> parental.visible(items, db) }.distinctUntilChanged()
 
     suspend fun get(id: Long): ChannelEntity? = db.channels().get(id)
+
+    /** Follows a specific set of rows, for a guide opened from a filtered list. */
+    fun observeByIds(ids: List<Long>): kotlinx.coroutines.flow.Flow<List<ChannelEntity>> =
+        db.channels().observeByIds(ids).map { parental.visible(it, db) }
 
     /** Looks up channels by id, keeping the order of [ids] and skipping any that are gone. */
     suspend fun getByIds(ids: LongArray): List<ChannelEntity> {
@@ -79,9 +86,38 @@ class ChannelRepository(
     suspend fun resolveStreamUrl(channel: ChannelEntity): String {
         val playlist = db.playlists().get(channel.playlistId) ?: return channel.streamUrl
         return when (playlist.type) {
-            PlaylistType.STALKER -> stalkerClients.get(playlist).createLink(channel.streamUrl)
+            PlaylistType.STALKER -> if (StalkerVodRef.isMarker(channel.streamUrl)) resolveStalkerVod(playlist, channel, fresh = false)
+                else stalkerClients.get(playlist).createLink(channel.streamUrl)
             else -> channel.streamUrl
         }
+    }
+
+    /** True for titles whose link comes from the portal on play and can go stale. */
+    fun canReResolve(channel: ChannelEntity) = StalkerVodRef.isMarker(channel.streamUrl)
+
+    /** Asks the portal again, ignoring the cached link; for when that link stopped working. */
+    suspend fun reResolveStreamUrl(channel: ChannelEntity): String {
+        val playlist = requireNotNull(db.playlists().get(channel.playlistId)) { "Playlist removed" }
+        return resolveStalkerVod(playlist, channel, fresh = true)
+    }
+
+    /** Episodes have no row of their own, so their links are only remembered for this run. */
+    private val episodeLinks = object : LinkedHashMap<String, String>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 200
+    }
+
+    private suspend fun resolveStalkerVod(playlist: PlaylistEntity, channel: ChannelEntity, fresh: Boolean): String {
+        val ref = StalkerVodRef.parse(channel.streamUrl) ?: error("Not a portal title")
+        val memoryKey = "${playlist.id}|${ref.marker}"
+        if (!fresh) {
+            channel.resolvedUrl?.let { return it }
+            synchronized(episodeLinks) { episodeLinks[memoryKey] }?.let { return it }
+        }
+        val url = stalkerClients.get(playlist).resolve(ref)
+        if (db.channels().setResolvedUrl(channel.playlistId, channel.channelKey, url) == 0) {
+            synchronized(episodeLinks) { episodeLinks[memoryKey] = url }
+        }
+        return url
     }
 
     suspend fun resolveCatchupUrl(channel: ChannelEntity, start: Long, stop: Long): String {

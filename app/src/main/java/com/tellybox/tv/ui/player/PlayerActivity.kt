@@ -1,6 +1,7 @@
 package com.tellybox.tv.ui.player
 
 import com.tellybox.tv.ui.parental.requestPin
+import com.tellybox.tv.ui.recording.confirmLongRecording
 import android.content.Context
 import android.content.Intent
 import android.app.PictureInPictureParams
@@ -41,11 +42,17 @@ import com.tellybox.tv.data.db.ChannelEntity
 import com.tellybox.tv.data.db.ContentKind
 import com.tellybox.tv.databinding.ActivityPlayerBinding
 import com.tellybox.tv.player.Player
+import com.tellybox.tv.player.timeshift.TimeshiftMode
+import com.tellybox.tv.player.timeshift.TimeshiftSession
+import com.tellybox.tv.player.timeshift.TimeshiftSessions
+import com.tellybox.tv.player.timeshift.TimeshiftUnavailable
+import com.tellybox.tv.player.timeshift.TimeshiftUnsupportedException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 @OptIn(UnstableApi::class)
@@ -60,6 +67,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var current: ChannelEntity? = null
     private var lastUrl: String? = null
     private var triedHls = false
+    /** Portal VOD links expire; a failing one is asked for again, once per title. */
+    private var reResolved = false
     private var loadJob: Job? = null
     private var watchStartedAt = 0L
     private val catchup get() = intent.hasExtra(EXTRA_ARCHIVE_START)
@@ -69,13 +78,67 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private val fileMode get() = intent.hasExtra(EXTRA_FILE)
     private var archivePosition = 0L
 
+    private var timeshiftMode = TimeshiftMode.OFF
+    /** Why the channel on screen isn't timeshifted although timeshift is on. */
+    private var timeshiftNote: TimeshiftUnavailable? = null
+    /** The picture has been paused or rewound since it was last at the live edge. */
+    private var behindLive = false
+    private var menuHeld = false
+    /** Steps get bigger while the scrub keys are hammered, so a long jump is a few presses. */
+    private var scrubStepMs = 0L
+    private var lastScrubAt = 0L
+    private val menuLongPress = Runnable {
+        menuHeld = true
+        showOptions()
+    }
+    /** Where repeated rewind and skip presses have got to, before playback is moved there. */
+    private var pendingSeekMs: Long? = null
+    private var userAgent: String? = null
+
     private val handler = Handler(Looper.getMainLooper())
+
+    /** True only when the viewer paused on purpose, not when the stream stalled. */
+    private var userPaused = false
+
+    /** What the bar currently draws, eased towards the real position so it doesn't hop. */
+    private var shownBehindMs = 0L
+
+    /**
+     * How far behind the buffer's live edge the picture starts on a fresh connection. HLS keeps
+     * a few segments in hand, so a viewer watching "live" is already thirty-odd seconds back in
+     * buffer terms. Measured once per connection and subtracted, so live reads as live and a
+     * pause counts from the moment it was pressed.
+     */
+    private var liveOffsetMs = 0L
+    private var offsetKnown = false
+
+    /**
+     * Where the picture sat behind live when it was last paused or resumed, and when that was.
+     * A paused picture falls behind by exactly one second per second, so the bar can be driven
+     * from the clock instead of the buffer's chunky byte counts.
+     */
+    private var behindAnchorMs = 0L
+    private var behindAnchorAt = 0L
     /** The banner and its buttons are one overlay: they appear and disappear together. */
     private val hideBanner = Runnable {
+        // A picture the viewer paused keeps its banner, so it's clear where in the buffer it
+        // is. A stalled stream is a different thing: testing playWhenReady alone meant a dead
+        // connection pinned the banner on screen and Back looked broken.
+        if (timeshiftShown() && userPaused && binding.errorBox.visibility != View.VISIBLE) return@Runnable
+        val focusInBanner = binding.banner.hasFocus()
         binding.banner.visibility = View.GONE
         binding.recordButton.visibility = View.GONE
         binding.sleepButton.visibility = View.GONE
+        if (focusInBanner) binding.playerView.requestFocus()
     }
+    private val timeshiftTick = object : Runnable {
+        override fun run() {
+            if (binding.banner.visibility != View.VISIBLE || !timeshiftShown()) return
+            updateTimeshiftUi()
+            handler.postDelayed(this, 500)
+        }
+    }
+    private val commitSeek = Runnable { commitPendingSeek() }
 
     private var nameTokens = ""
     private fun displayName(channel: com.tellybox.tv.data.db.ChannelEntity) =
@@ -86,7 +149,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.channelOverlay.layoutManager = LinearLayoutManager(this)
         archivePosition = savedInstanceState?.getLong("archive_position") ?: 0L
         val requested = intent.getLongExtra(EXTRA_CHANNEL_ID, -1)
         channelIds = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST) ?: longArrayOf(requested)
@@ -94,6 +156,10 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             ?: intent.getIntExtra(EXTRA_POSITION, channelIds.indexOf(requested)).coerceIn(0, (channelIds.size - 1).coerceAtLeast(0))
         binding.recordButton.setOnClickListener { instantRecord() }
         binding.sleepButton.setOnClickListener { showSleep() }
+        binding.tsPause.setOnClickListener { togglePause() }
+        binding.tsRewind.setOnClickListener { nudge(-SKIP_MS) }
+        binding.tsSkip.setOnClickListener { nudge(SKIP_MS) }
+        binding.tsLive.setOnClickListener { goLive() }
         appContainer.sleep.addListener(this)
         updateSleep()
     }
@@ -173,6 +239,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             if (opened) {
                 if (catchup || channel.kind != ContentKind.LIVE) archivePosition = player?.exo?.currentPosition ?: archivePosition
                 recordWatch()
+                // The other app needs the provider connection the buffer is holding.
+                player?.endTimeshift()
                 player?.exo?.stop()
             }
         }
@@ -197,6 +265,16 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         }
         override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) = updatePip()
         override fun onIsPlayingChanged(isPlaying: Boolean) = updatePip()
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            if (player?.timeshift == null) return
+            // Paused on purpose means the picture is ready but not running. A stalled stream
+            // keeps playWhenReady true while it buffers, so it can't pin the banner on screen.
+            userPaused = !playWhenReady
+            anchorBehind()
+            // Paused from anywhere (the remote, a phone, Bluetooth): the picture falls behind live.
+            if (!playWhenReady) behindLive = true
+            current?.let { if (binding.banner.visibility == View.VISIBLE || !playWhenReady) refreshBanner() }
+        }
     }
     private var backgroundPlayback = true
 
@@ -223,9 +301,20 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     override fun onStart() {
         super.onStart()
-        val settings = runBlocking { appContainer.settings.get() }
+        started = true
+        val cached = appContainer.settings.current()
+        if (cached != null) startWith(cached)
+        else startJob = lifecycleScope.launch { startWith(appContainer.settings.get()) }
+    }
+
+    private var started = false
+    private var startJob: Job? = null
+
+    private fun startWith(settings: com.tellybox.tv.data.settings.AppSettings) {
+        if (isFinishing || isDestroyed || !started) return
         nameTokens = settings.channelNameTokens
         backgroundPlayback = settings.backgroundPlayback
+        timeshiftMode = settings.timeshift
         applyDisplayMode(settings.displayMode)
         val playback = appContainer.playback
         val p = playback.acquire(settings.playerConfig, this)
@@ -244,7 +333,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         loadChannel(index, resume)
         protectionJob = lifecycleScope.launch {
             appContainer.parental.changes.collect {
-                binding.channelOverlay.visibility = View.GONE
                 val ch = current
                 if (ch != null && (!appContainer.parental.allowed(ch, appContainer.database) ||
                     (appContainer.parental.allScreens && !appContainer.parental.unlocked))) loadChannel(index)
@@ -256,6 +344,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         // Before the home screen starts again, so it can pick the player straight back up.
         if (isFinishing && returnToPreview && player != null) {
             recordWatch()
+            // The preview buffers too, so a healthy buffer at the live edge goes back with the
+            // player and nothing reconnects. Behind live, the preview picks up live again.
+            val session = player?.timeshift
+            if (session != null && session.unavailable == null && !behindLive && pendingSeekMs == null &&
+                player?.exo?.playWhenReady == true) {
+                session.onUnavailable = null
+            } else {
+                leaveTimeshift()
+            }
             appContainer.playback.handBack(this)
         }
         super.onPause()
@@ -263,6 +360,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     /** The home preview (or another screen) took the player over, e.g. while this was in picture-in-picture. */
     override fun onPlaybackTaken() {
+        leaveTimeshift()
         player?.exo?.removeListener(listener)
         binding.playerView.player = null
         player = null
@@ -272,7 +370,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     private var protectionJob: Job? = null
     override fun onStop() {
+        started = false
+        startJob?.cancel()
         mainHandler.removeCallbacks(watchdog)
+        handler.removeCallbacks(timeshiftTick)
+        handler.removeCallbacks(commitSeek)
+        pendingSeekMs = null
         if (catchup || fileMode) archivePosition = player?.exo?.currentPosition ?: archivePosition
         recordWatch()
         loadJob?.cancel()
@@ -326,7 +429,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (isInPictureInPictureMode) {
             handler.removeCallbacks(hideBanner)
             binding.banner.visibility = View.GONE
-            binding.channelOverlay.visibility = View.GONE
             binding.playerView.hideController()
             binding.playerView.useController = false
         } else {
@@ -342,10 +444,15 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (fileMode) return playFile(resume)
         if (channelIds.isEmpty()) return finish()
         recordWatch()
-        if (!resume) player?.exo?.stop()
+        if (!resume) {
+            // The old channel's buffer goes with it.
+            player?.endTimeshift()
+            player?.exo?.stop()
+        }
+        pendingSeekMs = null
+        handler.removeCallbacks(commitSeek)
         lastUrl = null
         binding.banner.visibility = View.GONE
-        binding.channelOverlay.visibility = View.GONE
         current = null
         index = i
         binding.errorBox.visibility = View.GONE
@@ -365,10 +472,11 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 val episode = intent.getLongExtra("episode_id", -1)
                 if (episode >= 0) container.vod.episode(stored, episode) else stored
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { showError("Unable to open episode"); return@launch }
+            catch (e: Exception) { showError(getString(R.string.vod_episode_failed)); return@launch }
             current = channel
             updateButtons()
             triedHls = false
+            reResolved = false
             showBanner(channel, null)
 
             val isVod = channel.kind != ContentKind.LIVE
@@ -379,21 +487,43 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             )
 
             if (resume) {
-                lastUrl = player?.exo?.currentMediaItem?.localConfiguration?.uri?.toString()
+                // Picked up from the home preview, picture-in-picture or the background. A buffer
+                // the player already holds is this channel's (the playback key matched), so it is
+                // adopted as it is: the picture carries on without being prepared again.
+                val session = player?.timeshift?.takeIf { !it.isClosed }
+                lastUrl = session?.url ?: player?.exo?.currentMediaItem?.localConfiguration?.uri?.toString()
+                userAgent = container.channels.userAgentFor(channel)
+                if (session != null) {
+                    watchTimeshift(session)
+                    timeshiftNote = session.unavailable
+                }
                 if (player?.exo?.isPlaying == true) watchStartedAt = SystemClock.elapsedRealtime()
+                // Nothing buffering yet (the stream was playing straight from the provider):
+                // the buffer has to start somewhere, and that costs one reconnect.
+                val url = lastUrl
+                if (session == null && url != null && timeshiftMode != TimeshiftMode.OFF && !isVod &&
+                    intent.getLongExtra("episode_id", -1) < 0) {
+                    openTimeshift(channel, url)?.let { player?.playTimeshift(it, channel.name) }
+                }
             } else try {
                 val url = if (catchup) container.channels.resolveCatchupUrl(channel,
                     intent.getLongExtra(EXTRA_ARCHIVE_START, 0), intent.getLongExtra(EXTRA_ARCHIVE_STOP, 0))
                 else container.channels.resolveStreamUrl(channel)
                 lastUrl = url
-                player?.play(url, channel.name, container.channels.userAgentFor(channel), channel.referrer)
+                userAgent = container.channels.userAgentFor(channel)
+                timeshiftNote = null
+                behindLive = false
+                val session = if (timeshiftMode != TimeshiftMode.OFF && !isVod && intent.getLongExtra("episode_id", -1) < 0)
+                    openTimeshift(channel, url) else null
+                if (session != null) player?.playTimeshift(session, channel.name)
+                else player?.play(url, channel.name, userAgent, channel.referrer)
                 container.playback.key = playbackKey(i)
                 container.playback.liveChannelId =
                     channel.id.takeIf { !catchup && !isVod && intent.getLongExtra("episode_id", -1) < 0 }
                 if (container.playback.liveChannelId != null) container.lastChannel.save(channel)
-                val resume = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
+                val startAt = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
                     container.database.history().get(channel.playlistId, channel.channelKey)?.positionMs ?: 0L else 0L
-                if (resume > 0) player?.exo?.seekTo(resume)
+                if (startAt > 0) player?.exo?.seekTo(startAt)
                 intent.removeExtra("from_beginning")
             } catch (e: CancellationException) {
                 throw e
@@ -404,6 +534,50 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             val now = container.epg.currentProgram(channel.id.toString())
             if (current?.id == channel.id) showBanner(channel, if (catchup) intent.getStringExtra(EXTRA_ARCHIVE_TITLE) else now?.title)
         }
+    }
+
+    /**
+     * Starts buffering [channel] if it can be, or notes why not. Catch-up, VOD, files and
+     * multiview never get here; only a live MPEG-TS stream over HTTP can be buffered.
+     */
+    private suspend fun openTimeshift(channel: ChannelEntity, url: String): TimeshiftSession? {
+        if (catchup || fileMode || channel.kind != ContentKind.LIVE) return null
+        val p = player ?: return null
+        return when (val result = appContainer.timeshift.open(p, channel, url, userAgent) { player === p }) {
+            is TimeshiftSessions.Result.Unavailable -> {
+                timeshiftNote = result.reason
+                null
+            }
+            TimeshiftSessions.Result.NotLive -> null
+            is TimeshiftSessions.Result.Opened -> {
+                watchTimeshift(result.session)
+                result.session
+            }
+        }
+    }
+
+    private fun watchTimeshift(session: TimeshiftSession) {
+        session.onUnavailable = { reason ->
+            handler.post {
+                if (player?.timeshift === session) {
+                    timeshiftNote = reason
+                    behindLive = false
+                    refreshBanner()
+                }
+            }
+        }
+    }
+
+    /**
+     * Leaving the player while another screen carries on with the channel: the buffer is
+     * deleted and the stream continues straight from the provider.
+     */
+    private fun leaveTimeshift() {
+        val p = player ?: return
+        if (p.timeshift == null) return
+        val url = p.timeshift?.url ?: lastUrl
+        val ch = current
+        if (url != null && ch != null) p.play(url, ch.name, userAgent, ch.referrer) else p.endTimeshift()
     }
 
     private fun playFile(resume: Boolean) {
@@ -446,16 +620,24 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             }
             AlertDialog.Builder(this@PlayerActivity).setTitle(R.string.instant_record_title)
                 .setItems(options.map { it.first }.toTypedArray()) { _, which ->
-                    lifecycleScope.launch {
-                        val title = program?.title ?: displayName(channel)
-                        val result = c.recordings.recordNow(channel, displayName(channel), title, options[which].second)
-                        val msg = result.fold(
-                            { getString(R.string.recording_started, title) },
-                            { getString(R.string.recording_failed_to_schedule, it.message) },
-                        )
-                        android.widget.Toast.makeText(this@PlayerActivity, msg, android.widget.Toast.LENGTH_LONG).show()
-                    }
+                    confirmLongRecording(options[which].second) { recordFor(channel, program, options[which].second) }
                 }.show()
+        }
+    }
+
+    private fun recordFor(
+        channel: com.tellybox.tv.data.db.ChannelEntity,
+        program: com.tellybox.tv.data.db.EpgProgramEntity?,
+        durationMs: Long,
+    ) {
+        lifecycleScope.launch {
+            val title = program?.title ?: displayName(channel)
+            val result = appContainer.recordings.recordNow(channel, displayName(channel), title, durationMs)
+            val message = result.fold(
+                { getString(R.string.recording_started, title) },
+                { getString(R.string.recording_failed_to_schedule, it.message) },
+            )
+            android.widget.Toast.makeText(this@PlayerActivity, message, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -476,12 +658,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             return
         }
         reconnects++
-        val keep = if (catchup || fileMode) archivePosition else 0L
+        val keep = com.tellybox.tv.player.resumeAt(catchup || fileMode, player?.exo?.currentPosition, archivePosition)
         binding.errorDetail.text = getString(R.string.player_reconnecting, reconnects, MAX_RECONNECTS)
         binding.errorBox.visibility = View.VISIBLE
         lifecycleScope.launch {
             delay(RECONNECT_DELAY_MS * reconnects)
             if (isFinishing || isDestroyed) return@launch
+            // Timeshifted: keep the buffer and reconnect it, with a fresh URL in case the old one expired.
+            if (player?.timeshift != null) return@launch returnToLive()
             player?.play(url, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer, forceHls = triedHls)
             if (keep > 0) player?.exo?.seekTo(keep)
         }
@@ -490,6 +674,44 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun handleError(error: PlaybackException) {
         val url = lastUrl
         val ch = current
+        val session = player?.timeshift
+        if (session != null && url != null && ch != null) {
+            val unsupported = session.unavailable == TimeshiftUnavailable.UnsupportedStream ||
+                generateSequence<Throwable>(error) { it.cause }.any { it is TimeshiftUnsupportedException }
+            if (unsupported) {
+                // Not something the buffer can hold; play it the ordinary way, which also tries HLS.
+                timeshiftNote = TimeshiftUnavailable.UnsupportedStream
+                player?.play(url, ch.name, userAgent, ch.referrer)
+                refreshBanner()
+                return
+            }
+            if (session.isTs) {
+                if (reconnects < MAX_RECONNECTS) reconnect() else showError(describe(error))
+                return
+            }
+            // The stream hasn't shown what it is yet: handled like any other below.
+            timeshiftNote = TimeshiftUnavailable.UnsupportedStream
+        }
+        // A portal title's cached link may simply have expired: ask the portal for a new one.
+        if (!reResolved && ch != null && !catchup && !fileMode && appContainer.channels.canReResolve(ch)) {
+            reResolved = true
+            val position = player?.exo?.currentPosition ?: 0L
+            lifecycleScope.launch {
+                val fresh = try {
+                    appContainer.channels.reResolveStreamUrl(ch)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    showError(describe(error))
+                    return@launch
+                }
+                if (current !== ch) return@launch
+                lastUrl = fresh
+                player?.play(fresh, ch.name, appContainer.channels.userAgentFor(ch), ch.referrer)
+                if (position > 0) player?.exo?.seekTo(position)
+            }
+            return
+        }
         // Extensionless URLs are often HLS underneath; give that one more go before giving up.
         if (!triedHls && url != null && ch != null && Player.guessMimeType(url) == null) {
             triedHls = true
@@ -531,6 +753,243 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         }
         handler.removeCallbacks(hideBanner)
         handler.postDelayed(hideBanner, BANNER_MS)
+        startBarTick()
+        startTimeshiftTicks()
+    }
+
+    /** Brings the banner back as it is, without reloading the logo, e.g. on a pause. */
+    private fun refreshBanner() {
+        if (current == null || inPip()) return
+        binding.banner.visibility = View.VISIBLE
+        binding.sleepButton.visibility = View.VISIBLE
+        if (!catchup && !fileMode && current?.kind == ContentKind.LIVE) binding.recordButton.visibility = View.VISIBLE
+        handler.removeCallbacks(hideBanner)
+        handler.postDelayed(hideBanner, BANNER_MS)
+        startTimeshiftTicks()
+    }
+
+    private fun startTimeshiftTicks() {
+        updateTimeshiftUi()
+        handler.removeCallbacks(timeshiftTick)
+        if (timeshiftShown()) handler.postDelayed(timeshiftTick, 500)
+    }
+
+    /** Timeshift controls are offered: a live channel playing from a buffer that is still being kept. */
+    private fun timeshiftShown(): Boolean {
+        val session = player?.timeshift ?: return false
+        return session.unavailable == null && !inPip()
+    }
+
+    private fun updateTimeshiftUi() {
+        val live = !catchup && !fileMode && current?.kind == ContentKind.LIVE
+        val note = timeshiftNote?.takeIf { live && timeshiftMode != TimeshiftMode.OFF }
+        binding.timeshiftNote.text = note?.let { getString(R.string.timeshift_banner_off, TimeshiftText.reason(this, it)) }.orEmpty()
+        binding.timeshiftNote.visibility = if (note != null) View.VISIBLE else View.GONE
+
+        val p = player
+        val session = p?.timeshift
+        if (p == null || session == null || !timeshiftShown()) {
+            if (binding.timeshiftControls.hasFocus()) binding.playerView.requestFocus()
+            binding.timeshiftPanel.visibility = View.GONE
+            return
+        }
+        binding.timeshiftPanel.visibility = View.VISIBLE
+        val full = timeshiftMode == TimeshiftMode.FULL
+        binding.tsRewind.visibility = if (full) View.VISIBLE else View.GONE
+        binding.tsSkip.visibility = if (full) View.VISIBLE else View.GONE
+        binding.tsPause.setText(if (p.exo.playWhenReady) R.string.action_ts_pause else R.string.action_ts_play)
+
+        val behind = behindLive || pendingSeekMs != null
+        updateTimeshiftBar()
+
+        // Already live: nothing to go back to.
+        val liveFocused = binding.tsLive.hasFocus()
+        binding.tsLive.isEnabled = behind
+        binding.tsLive.isFocusable = behind
+        binding.tsLive.alpha = if (behind) 1f else 0.4f
+        if (liveFocused && !behind) binding.tsPause.requestFocus()
+    }
+
+    /** How far behind the buffer's live edge the picture is right now, startup delay removed. */
+    private fun measuredBehind(): Long {
+        val p = player ?: return 0L
+        val window = p.timeshift?.window() ?: return 0L
+        val raw = (window.liveMs - p.timeshiftPosition()).coerceAtLeast(0)
+        if (!offsetKnown && raw > 1_000) {
+            liveOffsetMs = raw
+            offsetKnown = true
+        }
+        return (raw - liveOffsetMs).coerceAtLeast(0)
+    }
+
+    private fun anchorBehind() {
+        behindAnchorMs = measuredBehind()
+        behindAnchorAt = SystemClock.elapsedRealtime()
+    }
+
+    private fun updateTimeshiftBar() {
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        val window = session.window()
+        val pending = pendingSeekMs
+        val behind = behindLive || pending != null
+        val rawBehind = when {
+            pending != null -> ((window.liveMs - pending) - liveOffsetMs).coerceAtLeast(0)
+            behindLive -> behindAnchorMs +
+                if (userPaused) SystemClock.elapsedRealtime() - behindAnchorAt else 0L
+            else -> 0L
+        }
+        // Scrubbing follows the finger exactly; ordinary playback is eased so the head doesn't
+        // hop each time a flushed chunk moves the live edge.
+        val behindMs = if (pending != null) rawBehind else settleShown(shownBehindMs, rawBehind).also { shownBehindMs = it }
+        // Scale to what is actually in the buffer, not what it could hold. Against the capacity
+        // a two-minute buffer only filled the last sliver of the bar, so a skip of thirty seconds
+        // moved the marker a few pixels and the buffered edge twitched as each chunk arrived.
+        binding.timeshiftBar.set(scaleWindow(window.spanMs), window.spanMs, behindMs, scrubbing = pending != null)
+        binding.tsPosition.text = if (behind) getString(R.string.timeshift_behind, TimeshiftText.duration(behindMs))
+            else getString(R.string.timeshift_at_live)
+    }
+
+    private val barTick = object : Runnable {
+        override fun run() {
+            if (binding.timeshiftPanel.visibility != View.VISIBLE) return
+            updateTimeshiftBar()
+            handler.postDelayed(this, BAR_TICK_MS)
+        }
+    }
+
+    private fun startBarTick() {
+        handler.removeCallbacks(barTick)
+        handler.postDelayed(barTick, BAR_TICK_MS)
+    }
+
+    private fun togglePause() {
+        val exo = player?.exo ?: return
+        if (player?.timeshift == null) return
+        if (exo.playWhenReady) exo.pause() else exo.play()
+        refreshBanner()
+    }
+
+    /** OK and Menu toggle the overlay. */
+    private fun toggleControls() {
+        if (binding.banner.visibility == View.VISIBLE) {
+            hideBanner.run()
+        } else {
+            showControls()
+        }
+    }
+
+    private fun showControls() {
+        refreshBanner()
+        if (timeshiftMode == TimeshiftMode.FULL && binding.timeshiftPanel.visibility == View.VISIBLE) {
+            binding.timeshiftBar.requestFocus()
+        } else {
+            binding.playerView.requestFocus()
+        }
+    }
+
+    /** Left and right on the bar, accelerating the longer it is held down. */
+    private fun scrub(direction: Int): Boolean {
+        if (timeshiftMode != TimeshiftMode.FULL || !timeshiftShown()) return false
+        val now = SystemClock.elapsedRealtime()
+        val quick = now - lastScrubAt < 400
+        lastScrubAt = now
+        scrubStepMs = when {
+            !quick -> 10_000L
+            scrubStepMs < 30_000L -> 30_000L
+            scrubStepMs < 60_000L -> 60_000L
+            else -> 120_000L
+        }
+        nudge(direction * scrubStepMs)
+        return true
+    }
+
+    private fun nudge(deltaMs: Long) {
+        if (timeshiftMode != TimeshiftMode.FULL || !timeshiftShown()) return
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        if (deltaMs > 0 && !behindLive && pendingSeekMs == null) return
+        val window = session.window()
+        val from = pendingSeekMs ?: p.timeshiftPosition()
+        pendingSeekMs = (from + deltaMs).coerceIn(window.oldestMs, maxOf(window.oldestMs, window.liveMs))
+        handler.removeCallbacks(commitSeek)
+        handler.postDelayed(commitSeek, SEEK_SETTLE_MS)
+        refreshBanner()
+    }
+
+    private fun commitPendingSeek() {
+        val target = pendingSeekMs ?: return
+        pendingSeekMs = null
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        if (target >= session.window().liveMs - LIVE_EDGE_MS) return goLive()
+        behindLive = true
+        p.playBuffer(session.offsetFor(target))
+        // The head follows this seek from the clock from now on.
+        behindAnchorMs = (session.window().liveMs - target - liveOffsetMs).coerceAtLeast(0)
+        behindAnchorAt = SystemClock.elapsedRealtime()
+        refreshBanner()
+    }
+
+    private fun goLive() {
+        userPaused = false
+        behindAnchorMs = 0
+        behindAnchorAt = SystemClock.elapsedRealtime()
+        lifecycleScope.launch { returnToLive() }
+    }
+
+    /**
+     * Back to the live edge on a new connection. The URL is resolved again first: a token in
+     * the old one may have expired while the viewer was watching from the buffer.
+     */
+    private suspend fun returnToLive() {
+        val p = player ?: return
+        val session = p.timeshift ?: return
+        val ch = current ?: return
+        userPaused = false
+        liveOffsetMs = 0L
+        offsetKnown = false
+        pendingSeekMs = null
+        handler.removeCallbacks(commitSeek)
+        val url = try {
+            appContainer.channels.resolveStreamUrl(ch)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            session.url
+        }
+        lastUrl = url
+        val offset = withContext(Dispatchers.IO) { session.restart(url) }
+        if (player !== p || p.timeshift !== session) return
+        behindLive = false
+        p.playBuffer(offset)
+        p.exo.play()
+        refreshBanner()
+    }
+
+    /** Remote keys for timeshift. True when the key was used. */
+    private fun timeshiftKey(keyCode: Int): Boolean {
+        val exo = player?.exo ?: return false
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> togglePause()
+            KeyEvent.KEYCODE_MEDIA_PLAY -> { exo.play(); refreshBanner() }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> { exo.pause(); refreshBanner() }
+            KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD -> nudge(-SKIP_MS)
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD -> nudge(SKIP_MS)
+            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                // On the bar the arrows scrub; anywhere else the first press just brings the
+                // controls up with the bar in focus.
+                if (binding.timeshiftBar.hasFocus()) {
+                    scrub(if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) -1 else 1)
+                    return true
+                }
+                val focus = currentFocus
+                if (binding.timeshiftControls.hasFocus() || (focus != null && focus !== binding.playerView)) return false
+                showControls()
+            }
+            else -> return false
+        }
+        return true
     }
 
     private fun recordWatch() {
@@ -555,6 +1014,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var okLongPressed = false
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // Anything pressed while the banner is up counts as using it, so the banner stays until the
+        // viewer stops, including while navigating to Sleep and Record.
+        if (event.action == KeyEvent.ACTION_DOWN && binding.banner.visibility == View.VISIBLE) {
+            handler.removeCallbacks(hideBanner)
+            handler.postDelayed(hideBanner, BANNER_MS)
+        }
         // Remotes here have no Menu key, so holding OK opens the player menu. A short press
         // is only known on release; it then goes through as a normal press (channel list,
         // retry, the focused button, the playback controls).
@@ -584,30 +1049,148 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 }
             }
         }
-        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
-            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showOptions()
+        if (event.keyCode in MENU_KEYS) {
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    if (event.repeatCount == 0) {
+                        menuHeld = false
+                        handler.postDelayed(menuLongPress, LONG_PRESS_MS)
+                    }
+                }
+                KeyEvent.ACTION_UP -> {
+                    handler.removeCallbacks(menuLongPress)
+                    // A tap is the everyday gesture: show the controls and put the cursor on the
+                    // scrub line. Holding still gets the old options list.
+                    if (!menuHeld) showControls()
+                }
+            }
             return true
         }
         return super.dispatchKeyEvent(event)
     }
 
+    /** Up moves from scrub controls to corner buttons; Down returns to the scrub controls. */
+    private fun overlayVerticalNav(keyCode: Int): Boolean {
+        if (binding.banner.visibility != View.VISIBLE) return false
+        val focus = currentFocus ?: return false
+        val corner = listOf(binding.recordButton, binding.sleepButton)
+            .firstOrNull { it.visibility == View.VISIBLE } ?: return false
+        val inCorner = corner === focus
+        val inControls = focus === binding.timeshiftBar || isInside(focus, binding.timeshiftControls)
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                if (!inControls) false else { corner.requestFocus(); true }
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                if (!inCorner) false else {
+                    val target = if (binding.timeshiftPanel.visibility == View.VISIBLE) binding.timeshiftBar
+                        else binding.playerView
+                    target.requestFocus()
+                    true
+                }
+            }
+            else -> false
+        }
+    }
+
+    private fun isInside(view: View, group: ViewGroup): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent === group) return true
+            parent = parent.parent
+        }
+        return false
+    }
+
+    private fun timeshiftGroupNav(keyCode: Int): Boolean {
+        if (binding.timeshiftPanel.visibility != View.VISIBLE) return false
+        val up = keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_CHANNEL_UP
+        val down = keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_CHANNEL_DOWN
+        if (!up && !down) return false
+        if (binding.timeshiftBar.hasFocus()) {
+            if (down) {
+                binding.tsPause.requestFocus()
+                return true
+            }
+            return false
+        }
+        if (binding.timeshiftControls.hasFocus()) {
+            if (up) {
+                binding.timeshiftBar.requestFocus()
+                return true
+            }
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Back closes the overlay before it leaves the channel. Only when nothing is showing does
+     * it hand control back to the home screen.
+     */
+    override fun onBackPressed() {
+        if (binding.banner.visibility == View.VISIBLE) {
+            hideBanner.run()
+            binding.playerView.requestFocus()
+            return
+        }
+        @Suppress("DEPRECATION")
+        super.onBackPressed()
+    }
+
+    /** Digits typed on the remote build a channel number; OK or a pause in typing tunes to it. */
+    private val typedNumber = StringBuilder()
+    private val numberCommit = Runnable { commitTypedNumber() }
+
+    private fun digitOf(keyCode: Int): Int? = when (keyCode) {
+        in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> keyCode - KeyEvent.KEYCODE_0
+        in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9 -> keyCode - KeyEvent.KEYCODE_NUMPAD_0
+        else -> null
+    }
+
+    private fun handleDigit(keyCode: Int): Boolean {
+        val digit = digitOf(keyCode) ?: return false
+        typedNumber.append(digit)
+        binding.banner.visibility = View.VISIBLE
+        binding.bannerNumber.text = typedNumber.toString()
+        handler.removeCallbacks(hideBanner)
+        handler.removeCallbacks(numberCommit)
+        handler.postDelayed(numberCommit, 1_500)
+        return true
+    }
+
+    private fun commitTypedNumber() {
+        val wanted = typedNumber.toString().toIntOrNull()
+        typedNumber.setLength(0)
+        binding.bannerNumber.text = current?.number?.toString().orEmpty()
+        handler.removeCallbacks(hideBanner)
+        handler.postDelayed(hideBanner, BANNER_MS)
+        if (wanted == null) return
+        lifecycleScope.launch {
+            val id = appContainer.database.channels().idForNumber(wanted, channelIds.toList()) ?: return@launch
+            channelIds.indexOf(id).takeIf { it >= 0 }?.let { loadChannel(it) }
+        }
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (binding.errorBox.visibility != View.VISIBLE && handleDigit(keyCode)) return true
+        // The scrub line and the buttons below it are one control group. This has to happen
+        // before the zapping handler, or down here changes channel instead of moving focus.
+        if (overlayVerticalNav(keyCode)) return true
+        if (timeshiftGroupNav(keyCode)) return true
         if (binding.errorBox.visibility == View.VISIBLE &&
             (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
             loadChannel(index)
             return true
         }
-        if (binding.channelOverlay.visibility == View.VISIBLE) {
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                binding.channelOverlay.visibility = View.GONE
-                binding.playerView.requestFocus()
-                return true
-            }
-            return super.onKeyDown(keyCode, event)
-        }
         if (keyCode == KeyEvent.KEYCODE_MEDIA_RECORD) {
             instantRecord()
             return true
+        }
+        if (timeshiftShown()) {
+            if (timeshiftKey(keyCode)) return true
+            // Up and down move around the controls rather than changing channel.
+            if (binding.timeshiftControls.hasFocus()) return super.onKeyDown(keyCode, event)
         }
         val vod = catchup || fileMode || (current?.kind?.let { it != ContentKind.LIVE } ?: false)
         when (keyCode) {
@@ -618,46 +1201,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> { zap(-1); return true }
                 KeyEvent.KEYCODE_DPAD_DOWN -> { zap(1); return true }
-                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { showChannels(); return true }
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { toggleControls(); return true }
                 KeyEvent.KEYCODE_INFO -> { current?.let { showBanner(it, null) }; return true }
             }
         }
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun showChannels() {
-        lifecycleScope.launch {
-            val channels = appContainer.channels.getByIds(channelIds).filter { it.kind == ContentKind.LIVE }
-            binding.channelOverlay.adapter = object : RecyclerView.Adapter<ChannelHolder>() {
-                override fun getItemCount() = channels.size
-                override fun onCreateViewHolder(parent: ViewGroup, type: Int) = ChannelHolder(TextView(parent.context).apply {
-                    isFocusable = true; isClickable = true; textSize = 20f
-                    setPadding(20, 18, 20, 18); setBackgroundResource(R.drawable.bg_focusable)
-                    layoutParams = RecyclerView.LayoutParams(-1, -2)
-                })
-                override fun onBindViewHolder(holder: ChannelHolder, position: Int) {
-                    val channel = channels[position]
-                    holder.label.text = "${channel.number ?: ""}  ${displayName(channel)}"
-                    holder.label.isActivated = channel.id == current?.id
-                    holder.label.setOnClickListener {
-                        binding.channelOverlay.visibility = View.GONE
-                        binding.playerView.requestFocus()
-                        loadChannel(channelIds.indexOf(channel.id))
-                    }
-                }
-            }
-            binding.banner.visibility = View.GONE
-            binding.channelOverlay.visibility = View.VISIBLE
-            val selected = channels.indexOfFirst { it.id == current?.id }.coerceAtLeast(0)
-            binding.channelOverlay.scrollToPosition(selected)
-            binding.channelOverlay.post {
-                binding.channelOverlay.findViewHolderForAdapterPosition(selected)?.itemView?.requestFocus()
-                    ?: binding.channelOverlay.requestFocus()
-            }
-        }
-    }
 
-    private class ChannelHolder(val label: TextView) : RecyclerView.ViewHolder(label)
 
     private fun showOptions() {
         val channel = current
@@ -671,12 +1222,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             val left = appContainer.sleep.remainingMinutes()
             items += (if (left != null) getString(R.string.sleep_banner, left) else getString(R.string.sleep_title)) to { showSleep() }
             if (channel != null && !fileMode) items += getString(R.string.external_player) to { openExternal() }
-            items += "Audio tracks" to { pickTrack(C.TRACK_TYPE_AUDIO) }
-            items += "Subtitles" to { pickTrack(C.TRACK_TYPE_TEXT) }
-            items += "Display mode" to { pickDisplayMode() }
+            items += getString(R.string.player_audio_tracks) to { pickTrack(C.TRACK_TYPE_AUDIO) }
+            items += getString(R.string.player_subtitles) to { pickTrack(C.TRACK_TYPE_TEXT) }
+            items += getString(R.string.setting_display_mode) to { pickDisplayMode() }
             if (live) items += getString(R.string.multiview) to { openMultiview() }
             if (pipSupported()) items += getString(R.string.pip) to { enterPip(); Unit }
-            AlertDialog.Builder(this@PlayerActivity).setTitle("Playback options")
+            AlertDialog.Builder(this@PlayerActivity).setTitle(getString(R.string.player_options))
                 .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
                 .show()
         }
@@ -686,14 +1237,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val exo = player?.exo ?: return
         val tracks = exo.currentTracks.groups.filter { it.type == type }
         val choices = tracks.flatMap { group -> (0 until group.length).filter { group.isTrackSupported(it) }.map { group to it } }
-        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) "Off" else "Automatic") + choices.mapIndexed { index, (group, track) ->
+        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) getString(R.string.off) else getString(R.string.common_automatic)) + choices.mapIndexed { index, (group, track) ->
             val format = group.getTrackFormat(track)
-            listOfNotNull(format.label, format.language, format.channelCount.takeIf { it > 0 }?.let { "$it channels" })
-                .joinToString(" · ").ifBlank { "Track ${index + 1}" }
+            listOfNotNull(format.label, format.language, format.channelCount.takeIf { it > 0 }?.let { resources.getQuantityString(R.plurals.audio_channels, it, it) })
+                .joinToString(" · ").ifBlank { getString(R.string.player_track, index + 1) }
         }
         val disabled = exo.trackSelectionParameters.disabledTrackTypes.contains(type)
         val selected = if (disabled) 0 else choices.indexOfFirst { (group, track) -> group.isTrackSelected(track) }.let { if (it < 0) 0 else it + 1 }
-        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) "Subtitles" else "Audio tracks")
+        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) getString(R.string.player_subtitles) else getString(R.string.player_audio_tracks))
             .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
                 val builder = exo.trackSelectionParameters.buildUpon().clearOverridesOfType(type)
                     .setTrackTypeDisabled(type, type == C.TRACK_TYPE_TEXT && which == 0)
@@ -709,8 +1260,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun pickDisplayMode() {
         lifecycleScope.launch {
             val selected = appContainer.settings.get().displayMode.ordinal
-            AlertDialog.Builder(this@PlayerActivity).setTitle("Display mode")
-                .setSingleChoiceItems(arrayOf("Normal", "Full", "Zoom", "Reduced"), selected) { dialog, which ->
+            AlertDialog.Builder(this@PlayerActivity).setTitle(getString(R.string.setting_display_mode))
+                .setSingleChoiceItems(arrayOf(getString(R.string.display_fit), getString(R.string.display_fill), getString(R.string.display_zoom), getString(R.string.display_reduced)), selected) { dialog, which ->
                     val mode = DisplayMode.entries[which]
                     applyDisplayMode(mode)
                     lifecycleScope.launch { appContainer.settings.setDisplayMode(mode) }
@@ -759,6 +1310,22 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         /** Wait a bit longer between each attempt. */
         private const val RECONNECT_DELAY_MS = 1_500L
 
+        /** One press of rewind or skip. */
+        private const val SKIP_MS = 30_000L
+
+        /** Bar redraw interval while the overlay is showing. */
+        private const val BAR_TICK_MS = 250L
+        private const val LONG_PRESS_MS = 500L
+
+        /** Remotes disagree about which code the menu button is; accept the common ones. */
+        private val MENU_KEYS = intArrayOf(KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_TV_CONTENTS_MENU)
+
+        /** Quiet time after the last rewind or skip press before playback moves. */
+        private const val SEEK_SETTLE_MS = 700L
+
+        /** A skip landing this close to live goes live instead. */
+        private const val LIVE_EDGE_MS = 10_000L
+
         private const val EXTRA_ARCHIVE_START = "archive_start"
         private const val EXTRA_ARCHIVE_STOP = "archive_stop"
         private const val EXTRA_ARCHIVE_TITLE = "archive_title"
@@ -788,7 +1355,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         private const val EXTRA_CHANNEL_LIST = "channel_list"
         private const val EXTRA_POSITION = "position"
         private const val STATE_INDEX = "index"
-        private const val BANNER_MS = 4_000L
+        private const val BANNER_MS = 10_000L
 
         fun intent(context: Context, channelId: Long, list: LongArray, position: Int): Intent =
             Intent(context, PlayerActivity::class.java)
