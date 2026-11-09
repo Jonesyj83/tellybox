@@ -43,7 +43,12 @@ internal object StalkerImport {
             StalkerImportResult(emptyList(), emptyList(), e.message ?: e.javaClass.simpleName,
                 ImportCompletion(mapOf(ContentKind.LIVE to LoadCompletion.FULL, ContentKind.MOVIE to LoadCompletion.FAILED, ContentKind.SERIES to LoadCompletion.FAILED)))
         }
-        return StalkerImportResult(live.channels + vod.channels, live.groups + vod.groups, vod.vodError, vod.completion)
+        return StalkerImportResult(
+            live.channels + vod.channels,
+            live.groups + vod.groups,
+            vod.vodError,
+            ImportCompletion(live.completion.kinds + vod.completion.kinds, vod.completion.categories),
+        )
     }
 
     internal suspend fun live(client: StalkerClient, playlistId: Long): StalkerImportResult {
@@ -74,12 +79,15 @@ internal object StalkerImport {
     internal suspend fun vod(client: StalkerClient, playlistId: Long, hideCensored: Boolean): StalkerImportResult {
         val started = System.nanoTime()
         val categories = withTimeoutOrNull(VOD_BUDGET_MS) { client.vodCategories() }
-            ?: return StalkerImportResult(emptyList(), emptyList(), "VOD time budget expired", ImportCompletion(emptyMap()))
+            ?: return StalkerImportResult(
+                emptyList(), emptyList(), "VOD time budget expired",
+                ImportCompletion(mapOf(ContentKind.MOVIE to LoadCompletion.PARTIAL, ContentKind.SERIES to LoadCompletion.PARTIAL)),
+            )
         val remaining = VOD_BUDGET_MS - (System.nanoTime() - started) / 1_000_000
         return loadVod(playlistId, hideCensored, categories, remaining.coerceAtLeast(1), client::vodItemsResult)
     }
 
-    private const val VOD_BUDGET_MS = 5 * 60 * 1000L
+    private const val VOD_BUDGET_MS = 10 * 60 * 1000L
 
     internal suspend fun loadVod(
         playlistId: Long,
@@ -88,6 +96,13 @@ internal object StalkerImport {
         budgetMs: Long = VOD_BUDGET_MS,
         fetch: suspend (String, Int) -> PageCollection<StalkerVodItem>,
     ): StalkerImportResult {
+        // A portal that answers with no categories is a bad answer, not an empty film library.
+        if (declaredCategories.isEmpty()) {
+            return StalkerImportResult(
+                emptyList(), emptyList(), "The portal listed no VOD categories",
+                ImportCompletion(mapOf(ContentKind.MOVIE to LoadCompletion.PARTIAL, ContentKind.SERIES to LoadCompletion.PARTIAL)),
+            )
+        }
         val categories = declaredCategories.filterNot { hideCensored && it.censored }
         val gate = Semaphore(PARALLEL)
         val results = arrayOfNulls<Result<PageCollection<StalkerVodItem>>>(categories.size)
@@ -97,7 +112,8 @@ internal object StalkerImport {
                     async {
                         gate.withPermit {
                             results[index] = try {
-                                Result.success(fetch(cat.id, 1))
+                                // Off the UI thread, so the whole category is worth having.
+                                Result.success(fetch(cat.id, com.tellybox.tv.data.parser.stalker.MAX_PAGES))
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {

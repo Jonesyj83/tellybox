@@ -7,17 +7,23 @@ import com.tellybox.tv.data.parser.long
 import com.tellybox.tv.data.parser.objects
 import com.tellybox.tv.data.parser.str
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.TimeZone
@@ -192,9 +198,30 @@ class StalkerClient(
             .apply { token?.let { header("Authorization", "Bearer $it") } }
             .build()
 
-        http.newCall(req).execute().use { resp ->
-            val body = resp.body?.string().orEmpty()
-            if (!resp.isSuccessful) throw StalkerException("HTTP ${resp.code}")
+        // Enqueued rather than executed, so cancelling the pass actually drops the request
+        // instead of waiting out the socket timeout.
+        val call = http.newCall(req)
+        val (code, body) = try {
+            suspendCancellableCoroutine<Pair<Int, String>> { cont ->
+                cont.invokeOnCancellation { call.cancel() }
+                call.enqueue(object : Callback {
+                    override fun onFailure(c: Call, e: IOException) {
+                        if (cont.isActive) cont.resumeWithException(e)
+                    }
+
+                    override fun onResponse(c: Call, resp: Response) {
+                        resp.use {
+                            val text = runCatching { it.body?.string().orEmpty() }.getOrDefault("")
+                            if (cont.isActive) cont.resume(it.code to text)
+                        }
+                    }
+                })
+            }
+        } catch (e: IOException) {
+            throw StalkerException(e.message ?: "The portal did not answer")
+        }
+        run {
+            if (code !in 200..299) throw StalkerException("HTTP $code")
             if (!allowNoToken && body.contains("Authorization failed", ignoreCase = true)) {
                 throw StalkerException("Authorization failed")
             }

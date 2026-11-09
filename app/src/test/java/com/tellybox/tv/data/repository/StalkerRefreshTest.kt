@@ -80,6 +80,36 @@ class StalkerRefreshTest {
     }
 
     @Test
+    fun cancellingStopsThePassAndLetsANewOneStart() = runBlocking {
+        var runs = 0
+        var stopped = false
+        val started = CompletableDeferred<Unit>()
+        val scope = CoroutineScope(Dispatchers.Unconfined)
+        val refresh = StalkerRefresh(scope) { _ ->
+            runs++
+            if (runs == 1) {
+                started.complete(Unit)
+                try {
+                    awaitCancellation()
+                } finally {
+                    stopped = true
+                }
+            }
+        }
+
+        refresh.refresh(5L) {}
+        withTimeout(1_000) { started.await() }
+
+        // What editing a playlist does before it refreshes.
+        refresh.cancel(5L)
+        assertTrue(stopped)
+
+        refresh.refresh(5L) {}
+        assertEquals(2, runs)
+        scope.cancel()
+    }
+
+    @Test
     fun deleteStopsThePassBeforeTheRowsGo() = runBlocking {
         var cancelled = false
         val started = CompletableDeferred<Unit>()

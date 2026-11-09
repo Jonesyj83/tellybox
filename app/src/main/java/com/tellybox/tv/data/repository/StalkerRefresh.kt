@@ -32,6 +32,13 @@ internal class StalkerRefresh(
 
     suspend fun vod(id: Long) { start(id)?.join() }
 
+    /** Stops the pass and waits for it, without touching the rows it already wrote. */
+    suspend fun cancel(id: Long) {
+        val job = synchronized(jobs) { jobs.remove(id) }
+        job?.cancel()
+        job?.join()
+    }
+
     suspend fun delete(id: Long, deleteRows: suspend () -> Unit) {
         val job = synchronized(jobs) {
             deleting.add(id)

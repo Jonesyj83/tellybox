@@ -248,11 +248,21 @@ class StalkerVodTest {
         val ordered = p.requests.filter { it["action"] == "get_ordered_list" }
         // Metadata only: no title was looked up for its stream during the import.
         assertTrue(ordered.none { it["movie_id"] != null })
-        // The import only asks for the first page; deeper pages are left for later.
-        assertEquals(listOf("1"), ordered.filter { it["category"] == "5" }.map { it["p"] })
-        assertTrue(ordered.none { it["category"] == "5" && it["p"] == "2" })
+        // Paged until an empty page: category 5 claims 3759 items but page 2 is empty.
+        assertEquals(listOf("1", "2"), ordered.filter { it["category"] == "5" }.map { it["p"] })
         // With no PIN, adult categories are fetched like any other.
         assertTrue(ordered.any { it["category"] == "73" })
+    }
+
+    @Test
+    fun aPortalThatListsNoVodCategoriesIsNotTreatedAsEmpty() = runBlocking {
+        val result = StalkerImport.loadVod(1, false, emptyList()) { _, _ -> error("must not fetch") }
+
+        assertEquals(0, result.channels.size)
+        assertNotNull(result.vodError)
+        // PARTIAL keeps the films already stored instead of pruning them away.
+        assertEquals(LoadCompletion.PARTIAL, result.completion.kinds[ContentKind.MOVIE])
+        assertEquals(LoadCompletion.PARTIAL, result.completion.kinds[ContentKind.SERIES])
     }
 
     @Test

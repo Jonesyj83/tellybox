@@ -88,6 +88,8 @@ class PlaylistRepository(
             }
             db.playlists().update(edited)
         }
+        // The old portal's tokens and its half-finished film pass both have to go.
+        stalkerRefresh.cancel(edited.id)
         stalkerClients.forget(edited.id)
         doRefresh(edited.id)
     }
@@ -258,9 +260,15 @@ class PlaylistRepository(
         client.connect()
         // Adult categories are left out entirely once a parental PIN exists.
         val imported = StalkerImport.live(client, playlist.id)
-        return stalkerRefresh.refresh(playlist.id) {
+        val stored = stalkerRefresh.refresh(playlist.id) {
             store(playlist.id, imported.channels, emptyList(), imported.groups, imported.completion)
         }
+        // Films land later, so report what the playlist holds rather than what just arrived,
+        // otherwise the summary makes it look like the library was wiped.
+        return stored.copy(
+            movies = db.channels().countForPlaylistByKind(playlist.id, ContentKind.MOVIE),
+            series = db.channels().countForPlaylistByKind(playlist.id, ContentKind.SERIES),
+        )
     }
 
     private val stalkerRefresh = StalkerRefresh(applicationScope, ::importStalkerVod)
