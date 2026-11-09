@@ -637,4 +637,5 @@
     <string name="recording_limit_title">أطول مما يسمح به أندرويد</string>
     <string name="recording_limit_message">يوقف أندرويد التسجيل في الخلفية بعد ست ساعات في اليوم، لذا سينتهي هذا مبكرًا.</string>
     <string name="recording_limit_continue">سجّل على أي حال</string>
+    <string name="backup_pin_not_included">لا تتضمن هذه النسخة الاحتياطية رمز PIN؛ سيُحتفظ بالرمز الحالي.</string>
 </resources>

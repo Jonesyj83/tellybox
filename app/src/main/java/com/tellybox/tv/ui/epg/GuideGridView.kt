@@ -282,9 +282,14 @@ class GuideGridView @JvmOverloads constructor(
                 if (!dragging) {
                     val row = firstRow + ((event.y - headerHeight) / rowHeight).toInt()
                     if (event.y >= headerHeight && row in channels.indices) {
+                        // A tap on the channel name picks that channel; only a tap in the grid
+                        // chooses a time, or the name column would compute a time from x < 0.
+                        val inGrid = event.x >= channelWidth
+                        if (inGrid) {
+                            focusTime = viewStart +
+                                ((event.x - channelWidth) / pxPerMinute * 60_000f).toLong()
+                        }
                         focusedRow = row
-                        focusTime = viewStart +
-                            ((event.x - channelWidth) / pxPerMinute * 60_000f).toLong()
                         blockAt(row, focusTime)?.let { callback?.onSelect(row, it) }
                         notifyFocus()
                         invalidate()

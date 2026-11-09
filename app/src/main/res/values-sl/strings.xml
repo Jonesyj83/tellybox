@@ -601,4 +601,5 @@
     <string name="recording_limit_title">Dlje, kot dovoljuje Android</string>
     <string name="recording_limit_message">Android po šestih urah na dan ustavi snemanje v ozadju, zato se bo to končalo prej.</string>
     <string name="recording_limit_continue">Vseeno posnami</string>
+    <string name="backup_pin_not_included">Ta varnostna kopija ne vsebuje kode PIN; trenutna koda PIN se ohrani.</string>
 </resources>

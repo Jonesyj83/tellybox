@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Længere end Android tillader</string>
     <string name="recording_limit_message">Android stopper optagelse i baggrunden efter seks timer om dagen, så denne slutter tidligt.</string>
     <string name="recording_limit_continue">Optag alligevel</string>
+    <string name="backup_pin_not_included">Denne sikkerhedskopi indeholder ikke en PIN-kode; den nuværende PIN-kode bevares.</string>
 </resources>

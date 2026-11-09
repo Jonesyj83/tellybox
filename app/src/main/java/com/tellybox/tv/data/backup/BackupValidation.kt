@@ -26,7 +26,8 @@ object BackupValidation {
     fun check(state: BackupState): Set<Problem> {
         val problems = LinkedHashSet<Problem>()
 
-        if (state.version != 1) problems += Problem.INCOMPLETE
+        if (state.version !in 1..2) problems += Problem.INCOMPLETE
+        if (state.parental?.valid() == false) problems += Problem.INCOMPLETE
         if (state.playlists.isEmpty()) problems += Problem.NO_PLAYLISTS
 
         if (state.playlists.size > MAX_PLAYLISTS ||

@@ -547,4 +547,5 @@
     <string name="recording_limit_title">超过 Android 允许的时长</string>
     <string name="recording_limit_message">Android 每天六小时后会停止后台录制，所以这次录制会提前结束。</string>
     <string name="recording_limit_continue">仍然录制</string>
+    <string name="backup_pin_not_included">此备份不包含 PIN 码；将保留当前 PIN 码。</string>
 </resources>

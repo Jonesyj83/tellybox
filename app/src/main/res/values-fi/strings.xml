@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Pidempi kuin Android sallii</string>
     <string name="recording_limit_message">Android lopettaa taustatalleennuksen kuuden tunnin jälkeen vuorokaudessa, joten tämä päättyy aikaisin.</string>
     <string name="recording_limit_continue">Tallenna silti</string>
+    <string name="backup_pin_not_included">Tämä varmuuskopio ei sisällä PIN-koodia; nykyinen PIN-koodi säilytetään.</string>
 </resources>

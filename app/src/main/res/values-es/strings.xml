@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Más largo de lo que permite Android</string>
     <string name="recording_limit_message">Android detiene la grabación en segundo plano tras seis horas al día, así que terminará antes.</string>
     <string name="recording_limit_continue">Grabar igualmente</string>
+    <string name="backup_pin_not_included">Esta copia de seguridad no incluye el PIN; se conserva el PIN actual.</string>
 </resources>

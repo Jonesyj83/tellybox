@@ -81,7 +81,7 @@ interface ChannelDao {
      * For typing a channel number on the remote. Scoped to the list on screen, otherwise a
      * number that exists in another playlist can match first and nothing tunes.
      */
-    @Query("SELECT id FROM channels WHERE number = :number AND id IN (:ids) LIMIT 1")
+    @Query("SELECT id FROM channels WHERE number = :number AND id IN (:ids) ORDER BY sortOrder, id LIMIT 1")
     suspend fun idForNumber(number: Int, ids: List<Long>): Long?
 
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortOrder, id")
@@ -138,6 +138,9 @@ interface ChannelDao {
 
     @Query("SELECT * FROM channels WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Long>): List<ChannelEntity>
+
+    @Query("SELECT * FROM channels WHERE id IN (:ids) ORDER BY sortOrder, id")
+    fun observeByIds(ids: List<Long>): Flow<List<ChannelEntity>>
 
     @Query("SELECT COUNT(*) FROM channels WHERE playlistId = :playlistId")
     suspend fun countForPlaylist(playlistId: Long): Int

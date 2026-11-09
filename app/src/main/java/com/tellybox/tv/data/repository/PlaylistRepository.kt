@@ -11,6 +11,7 @@ import com.tellybox.tv.data.db.PlaylistEntity
 import com.tellybox.tv.data.db.PlaylistType
 import com.tellybox.tv.data.parser.m3u.M3uParser
 import com.tellybox.tv.data.parser.m3u.M3uPlaylist
+import com.tellybox.tv.data.parser.stalker.LoadCompletion
 import com.tellybox.tv.data.parser.stalker.StalkerClient
 import com.tellybox.tv.data.parser.xtream.XtreamClient
 import com.tellybox.tv.data.parser.xtream.XtreamCredentials
@@ -24,6 +25,8 @@ data class RefreshSummary(
     val movies: Int,
     val series: Int,
     val epgUrls: List<String>,
+    val keptKinds: Set<ContentKind> = emptySet(),
+    val incompleteCategories: Set<String> = emptySet(),
 )
 
 /** A channel before it has a database id, tied to its group by name. */
@@ -192,7 +195,7 @@ class PlaylistRepository(
         }
 
         // VOD is optional on many lines; don't fail the whole refresh over it.
-        runCatching {
+        val moviesCompletion = optionalImport {
             val cats = client.vodCategories().associateBy { it.id }
             cats.values.forEach { groups += ImportedGroup(it.name, ContentKind.MOVIE, it.id) }
             client.vodStreams().forEachIndexed { i, s ->
@@ -212,9 +215,9 @@ class PlaylistRepository(
                     ),
                 )
             }
-        }.onFailure { if (it is CancellationException) throw it }
+        }
 
-        runCatching {
+        val seriesCompletion = optionalImport {
             val cats = client.seriesCategories().associateBy { it.id }
             cats.values.forEach { groups += ImportedGroup(it.name, ContentKind.SERIES, it.id) }
             client.series().forEachIndexed { i, s ->
@@ -235,9 +238,11 @@ class PlaylistRepository(
                     ),
                 )
             }
-        }.onFailure { if (it is CancellationException) throw it }
+        }
 
-        return store(playlist.id, out, listOf(creds.xmltvUrl()), groups)
+        return store(playlist.id, out, listOf(creds.xmltvUrl()), groups, ImportCompletion(mapOf(
+            ContentKind.LIVE to LoadCompletion.FULL,
+            ContentKind.MOVIE to moviesCompletion, ContentKind.SERIES to seriesCompletion)))
     }
 
     // --- Stalker -----------------------------------------------------------------------
@@ -247,7 +252,7 @@ class PlaylistRepository(
         client.connect()
         // Adult categories are left out entirely once a parental PIN exists.
         val imported = StalkerImport.load(client, playlist.id, hideCensored = hideAdult())
-        return store(playlist.id, imported.channels, emptyList(), imported.groups)
+        return store(playlist.id, imported.channels, emptyList(), imported.groups, imported.completion)
     }
 
     // --- persistence -------------------------------------------------------------------
@@ -257,6 +262,7 @@ class PlaylistRepository(
         channels: List<ImportedChannel>,
         epgUrls: List<String>,
         declaredGroups: List<ImportedGroup> = emptyList(),
+        completion: ImportCompletion = ImportCompletion(),
     ): RefreshSummary {
         // Group order: provider's declared order first, then any extra names in the order seen.
         val groupKeys = LinkedHashMap<Pair<ContentKind, String>, ImportedGroup>()
@@ -266,6 +272,7 @@ class PlaylistRepository(
         // Keep the user's hidden/ordering choices for groups that still exist.
         db.withTransaction {
             val previous = db.groups().getForPlaylist(playlistId).associateBy { it.kind to it.name }
+            val previousById = previous.values.associateBy { it.id }
             val oldChannels = db.channels().getForPlaylist(playlistId).associateBy { it.channelKey }
             val nextGroupOrder = (previous.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
             val nextChannelOrder = (oldChannels.values.maxOfOrNull { it.sortOrder } ?: -1) + 1
@@ -280,7 +287,7 @@ class PlaylistRepository(
                 ).withLocalChoices(old, nextGroupOrder + i)
             }
             // Explicit ids keep open players and guides attached to the same rows.
-            val groupPlan = planGroupRefresh(previous.values.toList(), groupEntities)
+            val groupPlan = planGroupRefresh(previous.values.toList(), groupEntities, { completion.canPrune(it.kind, it) })
             val ids = db.groups().insertAll(groupPlan.upserts)
             val idByKey = groupPlan.upserts.zip(ids).associate { (g, id) -> (g.kind to g.name) to id }
 
@@ -297,7 +304,9 @@ class PlaylistRepository(
                     number = ic.channel.number ?: position,
                 ).withLocalChoices(oldChannels[key], nextChannelOrder + position)
             }
-            val channelPlan = planChannelRefresh(oldChannels.values.toList(), incomingChannels)
+            val channelPlan = planChannelRefresh(oldChannels.values.toList(), incomingChannels, { row ->
+                completion.canPrune(row.kind, previousById[row.groupId])
+            })
             channelPlan.upserts.chunked(INSERT_CHUNK).forEach { db.channels().insertAll(it) }
             channelPlan.deleteIds.chunked(INSERT_CHUNK).forEach { db.channels().deleteByIds(it) }
             // Remove groups after channels have moved, so SET_NULL cannot detach surviving rows.
@@ -310,6 +319,8 @@ class PlaylistRepository(
             movies = channels.count { it.kind == ContentKind.MOVIE },
             series = channels.count { it.kind == ContentKind.SERIES },
             epgUrls = epgUrls,
+            keptKinds = completion.keptKinds,
+            incompleteCategories = completion.categories.filterValues { it != LoadCompletion.FULL }.keys,
         )
     }
 

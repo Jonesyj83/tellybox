@@ -87,12 +87,13 @@ class VodRepository(
         if (playlist.type == PlaylistType.STALKER) {
             val ref = StalkerVodRef.parse(series.streamUrl) as? StalkerVodRef.Series ?: error("Not a series")
             val seasonId = episode.seasonId ?: error("Episode no longer available")
-            return series.copy(channelKey = "stalker-episode:${episode.id}", name = episode.title,
+            // Series, season and episode together: an episode id alone can repeat across series.
+            return series.copy(channelKey = "stalker-episode:${ref.seriesId}:$seasonId:${episode.id}", name = episode.title,
                 streamUrl = StalkerVodRef.Episode(ref.seriesId, seasonId, episode.id.toString()).marker,
                 kind = ContentKind.MOVIE, resolvedUrl = null)
         }
         val credentials = XtreamCredentials.from(playlist.url, playlist.username, playlist.password)
-        return series.copy(channelKey = "episode:${episode.id}", name = episode.title,
+        return series.copy(channelKey = "episode:${series.channelKey}:${episode.seasonId ?: 0}:${episode.id}", name = episode.title,
             streamUrl = credentials.seriesUrl(episode.id, episode.containerExtension), kind = ContentKind.MOVIE,
             logoUrl = episode.image ?: series.logoUrl)
     }

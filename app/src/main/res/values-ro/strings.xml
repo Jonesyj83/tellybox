@@ -583,4 +583,5 @@
     <string name="recording_limit_title">Mai lung decât permite Android</string>
     <string name="recording_limit_message">Android oprește înregistrarea din fundal după șase ore pe zi, așa că aceasta se va termina mai devreme.</string>
     <string name="recording_limit_continue">Înregistrează totuși</string>
+    <string name="backup_pin_not_included">Această copie de rezervă nu include codul PIN; codul PIN actual este păstrat.</string>
 </resources>

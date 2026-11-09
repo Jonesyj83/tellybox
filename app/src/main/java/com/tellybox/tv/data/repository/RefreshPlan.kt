@@ -9,8 +9,9 @@ internal data class RefreshPlan<T>(val upserts: List<T>, val deleteIds: List<Lon
 internal fun planChannelRefresh(
     existing: List<ChannelEntity>,
     incoming: List<ChannelEntity>,
+    canPrune: (ChannelEntity) -> Boolean = { true },
 ): RefreshPlan<ChannelEntity> = planRefresh(
-    existing, incoming,
+    existing, incoming, canPrune,
     key = { it.playlistId to it.channelKey },
     id = { it.id },
     withId = { row, id -> row.copy(id = id) },
@@ -19,8 +20,9 @@ internal fun planChannelRefresh(
 internal fun planGroupRefresh(
     existing: List<ChannelGroupEntity>,
     incoming: List<ChannelGroupEntity>,
+    canPrune: (ChannelGroupEntity) -> Boolean = { true },
 ): RefreshPlan<ChannelGroupEntity> = planRefresh(
-    existing, incoming,
+    existing, incoming, canPrune,
     key = { Triple(it.playlistId, it.kind, it.name) },
     id = { it.id },
     withId = { row, id -> row.copy(id = id) },
@@ -29,6 +31,7 @@ internal fun planGroupRefresh(
 private fun <T, K> planRefresh(
     existing: List<T>,
     incoming: List<T>,
+    canPrune: (T) -> Boolean,
     key: (T) -> K,
     id: (T) -> Long,
     withId: (T, Long) -> T,
@@ -38,7 +41,7 @@ private fun <T, K> planRefresh(
     val incomingByKey = incoming.associateBy(key)
     return RefreshPlan(
         upserts = incomingByKey.map { (key, row) -> withId(row, oldByKey[key]?.let(id) ?: 0) },
-        deleteIds = existing.filter { key(it) !in incomingByKey }.map(id),
+        deleteIds = existing.filter { key(it) !in incomingByKey && canPrune(it) }.map(id),
     )
 }
 

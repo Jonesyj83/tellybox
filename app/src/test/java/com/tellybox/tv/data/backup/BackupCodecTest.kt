@@ -36,4 +36,41 @@ class BackupCodecTest {
         val empty = BackupState(version = 1, playlists = emptyList(), guides = emptyList(), favorites = emptyList(), history = emptyList(), blocks = emptySet(), settings = AppSettings())
         assertEquals(empty, BackupCodec.decode(BackupCodec.encode(empty)))
     }
+
+    @Test fun versionTwoRoundTripsAndAppliesPinState() = kotlinx.coroutines.runBlocking {
+        val salt = com.tellybox.tv.data.parental.PinSecurity.salt()
+        val hash = com.tellybox.tv.data.parental.PinSecurity.hash("2468", salt)
+        val config = com.tellybox.tv.data.parental.ParentalConfiguration(
+            hash = java.util.Base64.getEncoder().encodeToString(hash), salt = java.util.Base64.getEncoder().encodeToString(salt), allScreens = true, duration = 120,
+            failures = 2, cooldown = 12345,
+        )
+        val restored = BackupCodec.decode(BackupCodec.encode(state.copy(version = 2, parental = config)))
+        assertEquals(config, restored.parental)
+        var stored = config.copy(hash = "old-hash", salt = "old-salt")
+        var blocks = emptySet<String>()
+        com.tellybox.tv.data.parental.applyParentalBackup(restored.blocks, restored.parental) { nextBlocks, next ->
+            blocks = nextBlocks
+            stored = next ?: stored
+        }
+        assertEquals(config, stored)
+        assertTrue(com.tellybox.tv.data.parental.PinSecurity.matches("2468",
+            java.util.Base64.getDecoder().decode(stored.salt), java.util.Base64.getDecoder().decode(stored.hash)))
+        assertFalse(com.tellybox.tv.data.parental.PinSecurity.matches("1357",
+            java.util.Base64.getDecoder().decode(stored.salt), java.util.Base64.getDecoder().decode(stored.hash)))
+        assertFalse(BackupCodec.encode(restored).contains("\"2468\""))
+        assertEquals(state.blocks, blocks)
+    }
+
+    @Test fun legacyBackupHasNoParentalConfiguration() {
+        val legacy = BackupCodec.encode(state).replace(Regex(",?\\s*\"parental\": null"), "")
+        assertNull(BackupCodec.decode(legacy).parental)
+    }
+
+    @Test fun validationAcceptsBothVersionsOnly() {
+        assertTrue(BackupValidation.check(state).isEmpty())
+        assertTrue(BackupValidation.check(state.copy(version = 2)).isEmpty())
+        for (version in listOf(-1, 0, 3, 42)) {
+            assertTrue(BackupValidation.Problem.INCOMPLETE in BackupValidation.check(state.copy(version = version)))
+        }
+    }
 }

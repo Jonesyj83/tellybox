@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Langer dan Android toestaat</string>
     <string name="recording_limit_message">Android stopt achtergrondopname na zes uur per dag, dus deze stopt eerder.</string>
     <string name="recording_limit_continue">Toch opnemen</string>
+    <string name="backup_pin_not_included">Deze back-up bevat geen pincode; de huidige pincode blijft behouden.</string>
 </resources>

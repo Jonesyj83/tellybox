@@ -2,6 +2,8 @@ package com.tellybox.tv.data.repository
 
 import com.tellybox.tv.data.db.ChannelEntity
 import com.tellybox.tv.data.db.ContentKind
+import com.tellybox.tv.data.parser.stalker.LoadCompletion
+import com.tellybox.tv.data.parser.stalker.PageCollection
 import com.tellybox.tv.data.parser.stalker.StalkerClient
 import com.tellybox.tv.data.parser.stalker.StalkerVodCategory
 import com.tellybox.tv.data.parser.stalker.StalkerVodItem
@@ -18,6 +20,7 @@ internal data class StalkerImportResult(
     val groups: List<ImportedGroup>,
     /** Why movies and series are missing or incomplete, if they are. */
     val vodError: String? = null,
+    val completion: ImportCompletion = ImportCompletion(),
 )
 
 /**
@@ -36,9 +39,10 @@ internal object StalkerImport {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            StalkerImportResult(emptyList(), emptyList(), e.message ?: e.javaClass.simpleName)
+            StalkerImportResult(emptyList(), emptyList(), e.message ?: e.javaClass.simpleName,
+                ImportCompletion(mapOf(ContentKind.LIVE to LoadCompletion.FULL, ContentKind.MOVIE to LoadCompletion.FAILED, ContentKind.SERIES to LoadCompletion.FAILED)))
         }
-        return StalkerImportResult(live.channels + vod.channels, live.groups + vod.groups, vod.vodError)
+        return StalkerImportResult(live.channels + vod.channels, live.groups + vod.groups, vod.vodError, vod.completion)
     }
 
     private suspend fun live(client: StalkerClient, playlistId: Long): StalkerImportResult {
@@ -67,15 +71,24 @@ internal object StalkerImport {
     }
 
     private suspend fun vod(client: StalkerClient, playlistId: Long, hideCensored: Boolean): StalkerImportResult {
-        val categories = client.vodCategories().filterNot { hideCensored && it.censored }
+        return loadVod(playlistId, hideCensored, client.vodCategories(), client::vodItemsResult)
+    }
+
+    internal suspend fun loadVod(
+        playlistId: Long,
+        hideCensored: Boolean,
+        declaredCategories: List<StalkerVodCategory>,
+        fetch: suspend (String, Int) -> PageCollection<StalkerVodItem>,
+    ): StalkerImportResult {
+        val categories = declaredCategories.filterNot { hideCensored && it.censored }
         val gate = Semaphore(PARALLEL)
-        val perCategory: List<Pair<StalkerVodCategory, Result<List<StalkerVodItem>>>> = coroutineScope {
+        val perCategory: List<Pair<StalkerVodCategory, Result<PageCollection<StalkerVodItem>>>> = coroutineScope {
             categories.map { cat ->
                 async {
                     gate.withPermit {
                         // One broken category shouldn't cost the others.
                         val items = try {
-                            Result.success(client.vodItems(cat.id).filterNot { hideCensored && it.censored })
+                            Result.success(fetch(cat.id, com.tellybox.tv.data.parser.stalker.MAX_PAGES))
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -91,7 +104,7 @@ internal object StalkerImport {
         val channels = ArrayList<ImportedChannel>()
         // Categories come in the portal's order; a mixed one yields a movie and a series group.
         for ((cat, result) in perCategory) {
-            val items = result.getOrNull() ?: continue
+            val items = result.getOrNull()?.items?.filterNot { hideCensored && it.censored } ?: continue
             val (series, movies) = items.partition { it.isSeries }
             if (movies.isNotEmpty()) groups += ImportedGroup(cat.title, ContentKind.MOVIE, cat.id)
             if (series.isNotEmpty()) groups += ImportedGroup(cat.title, ContentKind.SERIES, cat.id)
@@ -100,7 +113,9 @@ internal object StalkerImport {
         val error = perCategory.firstNotNullOfOrNull { (cat, r) ->
             r.exceptionOrNull()?.let { "${cat.title}: ${it.message ?: it.javaClass.simpleName}" }
         }
-        return StalkerImportResult(channels, groups, error)
+        return StalkerImportResult(channels, groups, error, ImportCompletion(categories = perCategory.associate { (cat, result) ->
+            cat.id to (result.getOrNull()?.completion ?: LoadCompletion.FAILED)
+        }))
     }
 
     private fun kindOf(item: StalkerVodItem) = if (item.isSeries) ContentKind.SERIES else ContentKind.MOVIE

@@ -565,4 +565,5 @@
     <string name="recording_limit_title">უფრო გრძელი, ვიდრე Android იძლევა საშუალებას</string>
     <string name="recording_limit_message">Android ფონურ ჩაწერას დღეში ექვსი საათის შემდეგ წყვეტს, ამიტომ ეს ადრე დასრულდება.</string>
     <string name="recording_limit_continue">მაინც ჩაწერე</string>
+    <string name="backup_pin_not_included">ეს სარეზერვო ასლი არ შეიცავს PIN-კოდს; მიმდინარე PIN-კოდი შენარჩუნდება.</string>
 </resources>

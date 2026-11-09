@@ -563,4 +563,5 @@
     <string name="recording_limit_title">Longer than Android allows</string>
     <string name="recording_limit_message">Android stops background recording after six hours in a day, so this will finish early.</string>
     <string name="recording_limit_continue">Record anyway</string>
+    <string name="backup_pin_not_included">PIN not included in this backup; the current PIN is kept.</string>
 </resources>

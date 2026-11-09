@@ -547,4 +547,5 @@
     <string name="recording_limit_title">Dài hơn mức Android cho phép</string>
     <string name="recording_limit_message">Android dừng ghi nền sau sáu giờ mỗi ngày, nên bản ghi này sẽ kết thúc sớm.</string>
     <string name="recording_limit_continue">Vẫn ghi</string>
+    <string name="backup_pin_not_included">Bản sao lưu này không bao gồm mã PIN; mã PIN hiện tại sẽ được giữ lại.</string>
 </resources>

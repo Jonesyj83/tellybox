@@ -601,4 +601,5 @@
     <string name="recording_limit_title">Delší, než Android dovoluje</string>
     <string name="recording_limit_message">Android po šesti hodinách denně zastaví nahrávání na pozadí, takže to skončí dřív.</string>
     <string name="recording_limit_continue">Přesto nahrát</string>
+    <string name="backup_pin_not_included">Tato záloha neobsahuje PIN; aktuální PIN bude zachován.</string>
 </resources>

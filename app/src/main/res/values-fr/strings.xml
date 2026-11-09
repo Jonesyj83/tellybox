@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Plus long qu\'Android ne le permet</string>
     <string name="recording_limit_message">Android arrête l\'enregistrement en arrière-plan au bout de six heures par jour, donc celui-ci s\'arrêtera avant la fin.</string>
     <string name="recording_limit_continue">Enregistrer quand même</string>
+    <string name="backup_pin_not_included">Cette sauvegarde ne contient pas de code PIN ; le code PIN actuel est conservé.</string>
 </resources>

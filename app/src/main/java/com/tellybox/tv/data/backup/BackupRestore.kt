@@ -38,12 +38,13 @@ object BackupRestore {
         val db = container.database
         return db.withTransaction {
             BackupState(
-                version = 1,
+                version = 2,
                 playlists = db.playlists().getAll(),
                 guides = db.epg().observeSources().first(),
                 favorites = db.favorites().observeAll().first(),
                 history = db.history().getAll(),
                 blocks = container.parental.exportBlocks(),
+                parental = container.parental.exportConfiguration(),
                 settings = container.settings.get(),
             )
         }
@@ -62,6 +63,8 @@ object BackupRestore {
         }
         // These two can still fail; if they do, the caller puts the snapshot back.
         container.settings.replace(state.settings)
-        container.parental.replaceBlocks(state.blocks)
+        com.tellybox.tv.data.parental.applyParentalBackup(state.blocks, state.parental.takeIf { state.version >= 2 }) { blocks, config ->
+            container.parental.replaceConfiguration(blocks, config)
+        }
     }
 }

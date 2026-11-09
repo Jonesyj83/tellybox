@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Μεγαλύτερο από όσο επιτρέπει το Android</string>
     <string name="recording_limit_message">Το Android σταματά την εγγραφή στο παρασκήνιο μετά από έξι ώρες την ημέρα, οπότε θα τελειώσει νωρίτερα.</string>
     <string name="recording_limit_continue">Εγγραφή ούτως ή άλλως</string>
+    <string name="backup_pin_not_included">Αυτό το αντίγραφο ασφαλείας δεν περιλαμβάνει PIN· το τρέχον PIN διατηρείται.</string>
 </resources>

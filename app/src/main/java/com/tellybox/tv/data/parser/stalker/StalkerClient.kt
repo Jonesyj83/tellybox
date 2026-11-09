@@ -106,7 +106,10 @@ class StalkerClient(
 
     /** Every title in a category, metadata only. Nothing here is resolved to a stream. */
     suspend fun vodItems(categoryId: String, maxPages: Int = MAX_PAGES): List<StalkerVodItem> =
-        collectPages(maxPages) { p -> vodPage(categoryId, p).let { it.totalItems to it.items } }
+        vodItemsResult(categoryId, maxPages).items
+
+    suspend fun vodItemsResult(categoryId: String, maxPages: Int = MAX_PAGES): PageCollection<StalkerVodItem> =
+        collectPagesResult(maxPages) { p -> vodPage(categoryId, p).let { it.totalItems to it.items } }
 
     suspend fun seasons(seriesId: String): List<StalkerSeason> = collectPages { p ->
         val js = call("vod", "get_ordered_list", mapOf("movie_id" to seriesId, "season_id" to "0", "p" to p.toString()))

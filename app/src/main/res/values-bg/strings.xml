@@ -565,4 +565,5 @@
     <string name="recording_limit_title">По-дълго от разрешеното от Android</string>
     <string name="recording_limit_message">Android спира фоновото записване след шест часа на ден, затова това ще приключи по-рано.</string>
     <string name="recording_limit_continue">Запиши въпреки това</string>
+    <string name="backup_pin_not_included">Този архив не съдържа ПИН код; текущият ПИН се запазва.</string>
 </resources>

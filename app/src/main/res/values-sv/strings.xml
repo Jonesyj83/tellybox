@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Längre än Android tillåter</string>
     <string name="recording_limit_message">Android stoppar bakgrundsinspelning efter sex timmar per dag, så den här avslutas tidigt.</string>
     <string name="recording_limit_continue">Spela in ändå</string>
+    <string name="backup_pin_not_included">Denna säkerhetskopia innehåller ingen PIN-kod; den nuvarande PIN-koden behålls.</string>
 </resources>

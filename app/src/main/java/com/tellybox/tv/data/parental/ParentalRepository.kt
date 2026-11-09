@@ -24,6 +24,23 @@ class ParentalRepository(context: Context) {
     }.distinctUntilChanged()
     fun exportBlocks(): Set<String> = prefs.getStringSet("blocks", emptySet())!!.toSet()
     fun replaceBlocks(blocks: Set<String>) { prefs.edit().putStringSet("blocks", blocks).commit() }
+    fun exportConfiguration() = ParentalConfiguration(
+        hash = prefs.getString("hash", null), salt = prefs.getString("salt", null),
+        allScreens = allScreens, duration = duration,
+        failures = prefs.getInt("failures", 0), cooldown = prefs.getLong("cooldown", 0),
+    )
+
+    fun replaceConfiguration(blocks: Set<String>, configuration: ParentalConfiguration?) {
+        require(configuration == null || configuration.valid())
+        val editor = prefs.edit().putStringSet("blocks", blocks)
+        configuration?.let {
+            editor.putString("hash", it.hash).putString("salt", it.salt)
+                .putBoolean("all", it.allScreens).putInt("duration", it.duration)
+                .putInt("failures", it.failures).putLong("cooldown", it.cooldown)
+        }
+        check(editor.commit()) { "Could not save parental configuration" }
+        window.lock()
+    }
     val configured get() = prefs.contains("hash")
     val unlocked get() = !configured || window.isOpen()
     val allScreens get() = prefs.getBoolean("all", false)

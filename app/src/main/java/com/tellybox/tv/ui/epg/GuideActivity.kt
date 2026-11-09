@@ -68,9 +68,15 @@ class GuideActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGrid
         }
         lifecycleScope.launch {
             val explicit = intent.getLongArrayExtra(EXTRA_CHANNEL_LIST)
-            if (explicit != null && explicit.isNotEmpty()) return@launch
-            appContainer.channels.observeAll().collect { list ->
-                applyChannels(list)
+            if (explicit != null && explicit.isNotEmpty()) {
+                // Opened from a filtered list: follow those rows, so an edit or refresh shows up.
+                appContainer.channels.observeByIds(explicit.toList()).collect { list ->
+                    applyChannels(list)
+                }
+            } else {
+                appContainer.channels.observeAll().collect { list ->
+                    applyChannels(list)
+                }
             }
         }
     }
@@ -92,13 +98,17 @@ class GuideActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGrid
     private suspend fun applyChannels(list: List<com.tellybox.tv.data.db.ChannelEntity>) {
         val visibleIds = list.map { it.id }
         if (visibleIds == lastIds) return
+        val previous = lastIds
         val focus = keepFocusId()
         lastIds = visibleIds
         binding.empty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
         val tokens = appContainer.settings.get().channelNameTokens
         channels = list.map { it.copy(name = com.tellybox.tv.data.settings.ChannelNames.display(it.name, tokens)) }
         guide.channels = channels
-        binding.grid.setChannels(channels.map { GuideSupport.guideChannel(it) }, focus)
+        // Same guide, updated: keep the highlighted row and the time on screen. A different
+        // list (a new filter) should open where it was asked to.
+        val sameList = previous != null && previous.any { it in visibleIds.toSet() }
+        binding.grid.setChannels(channels.map { GuideSupport.guideChannel(it) }, focus, keepPosition = sameList)
         if (!binding.grid.hasFocus()) binding.grid.requestFocus()
     }
 

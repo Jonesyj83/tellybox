@@ -601,4 +601,5 @@
     <string name="recording_limit_title">Довше, ніж дозволяє Android</string>
     <string name="recording_limit_message">Android зупиняє фоновий запис після шести годин на добу, тож цей запис завершиться раніше.</string>
     <string name="recording_limit_continue">Все одно записати</string>
+    <string name="backup_pin_not_included">Ця резервна копія не містить PIN-коду; поточний PIN-код буде збережено.</string>
 </resources>

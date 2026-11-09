@@ -134,12 +134,15 @@ object StalkerVodMapper {
         if (path.contains("://")) path else base?.resolve(path)?.toString()
 }
 
-/**
- * Walks `p=1, 2, …` until the portal's `total_items` is reached, a page comes back empty,
- * or [maxPages] pages have been read. A page that fails after earlier ones succeeded ends
- * the walk with what was already read; a failing first page is the caller's problem.
- */
-suspend fun <T> collectPages(maxPages: Int = MAX_PAGES, fetch: suspend (page: Int) -> Pair<Int?, List<T>>): List<T> {
+// Preserve completion separately: playback can use partial lists, but refresh must not prune them.
+enum class LoadCompletion { FULL, FAILED, PARTIAL }
+
+data class PageCollection<T>(val items: List<T>, val completion: LoadCompletion)
+
+suspend fun <T> collectPages(maxPages: Int = MAX_PAGES, fetch: suspend (page: Int) -> Pair<Int?, List<T>>): List<T> =
+    collectPagesResult(maxPages, fetch).items
+
+suspend fun <T> collectPagesResult(maxPages: Int = MAX_PAGES, fetch: suspend (page: Int) -> Pair<Int?, List<T>>): PageCollection<T> {
     val out = ArrayList<T>()
     for (page in 1..maxPages) {
         val (total, items) = try {
@@ -147,13 +150,15 @@ suspend fun <T> collectPages(maxPages: Int = MAX_PAGES, fetch: suspend (page: In
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (page == 1) throw e else break
+            if (page == 1) throw e
+            return PageCollection(out, LoadCompletion.PARTIAL)
         }
-        if (items.isEmpty()) break
+        if (items.isEmpty()) return PageCollection(out,
+            if (total == null || out.size >= total) LoadCompletion.FULL else LoadCompletion.PARTIAL)
         out += items
-        if (total != null && out.size >= total) break
+        if (total != null && out.size >= total) return PageCollection(out, LoadCompletion.FULL)
     }
-    return out
+    return PageCollection(out, LoadCompletion.PARTIAL)
 }
 
 /**

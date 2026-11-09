@@ -565,4 +565,5 @@
     <string name="recording_limit_title">Android\'in izin verdiğinden uzun</string>
     <string name="recording_limit_message">Android arka planda kaydı günde altı saat sonra durdurur, bu yüzden bu kayıt erken bitecek.</string>
     <string name="recording_limit_continue">Yine de kaydet</string>
+    <string name="backup_pin_not_included">Bu yedek PIN içermez; mevcut PIN korunur.</string>
 </resources>

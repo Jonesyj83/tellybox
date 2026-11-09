@@ -601,4 +601,5 @@
     <string name="recording_limit_title">Ilgiau, nei leidžia Android</string>
     <string name="recording_limit_message">Android sustabdo įrašymą fone po šešių valandų per dieną, todėl šis įrašas baigsis anksčiau.</string>
     <string name="recording_limit_continue">Vis tiek įrašyti</string>
+    <string name="backup_pin_not_included">Šioje atsarginėje kopijoje nėra PIN kodo; dabartinis PIN kodas išsaugomas.</string>
 </resources>
