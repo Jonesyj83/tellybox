@@ -248,10 +248,25 @@ class StalkerVodTest {
         val ordered = p.requests.filter { it["action"] == "get_ordered_list" }
         // Metadata only: no title was looked up for its stream during the import.
         assertTrue(ordered.none { it["movie_id"] != null })
-        // Paged until an empty page: category 5 claims 3759 items but page 2 is empty.
-        assertEquals(listOf("1", "2"), ordered.filter { it["category"] == "5" }.map { it["p"] })
+        // The import only asks for the first page; deeper pages are left for later.
+        assertEquals(listOf("1"), ordered.filter { it["category"] == "5" }.map { it["p"] })
+        assertTrue(ordered.none { it["category"] == "5" && it["p"] == "2" })
         // With no PIN, adult categories are fetched like any other.
         assertTrue(ordered.any { it["category"] == "73" })
+    }
+
+    @Test
+    fun liveImportNeverAsksForVod() = runBlocking {
+        val p = portal()
+        val c = client(p).also { it.connect() }
+        val result = StalkerImport.live(c, playlistId = 1)
+
+        assertEquals(listOf("One"), result.channels.map { it.channel.name })
+        assertEquals(listOf("News"), result.groups.map { it.name })
+        assertEquals(LoadCompletion.FULL, result.completion.kinds[ContentKind.LIVE])
+        // Movies and series are a separate pass, so nothing here may touch them.
+        val vod = p.requests.filter { it["type"] == "vod" }
+        assertTrue(vod.isEmpty())
     }
 
     @Test

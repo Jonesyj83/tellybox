@@ -1,6 +1,7 @@
 package com.tellybox.tv.data.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.room.withTransaction
 import com.tellybox.tv.data.db.ChannelEntity
 import com.tellybox.tv.data.db.ChannelGroupEntity
@@ -16,6 +17,9 @@ import com.tellybox.tv.data.parser.stalker.StalkerClient
 import com.tellybox.tv.data.parser.xtream.XtreamClient
 import com.tellybox.tv.data.parser.xtream.XtreamCredentials
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import okhttp3.OkHttpClient
 
@@ -61,9 +65,11 @@ class PlaylistRepository(
     }
 
     suspend fun delete(id: Long) {
-        // Groups, channels, favorites, history and EPG sources all cascade.
-        db.playlists().delete(id)
-        stalkerClients.forget(id)
+        stalkerRefresh.delete(id) {
+            // Groups, channels, favorites, history and EPG sources all cascade.
+            db.playlists().delete(id)
+            stalkerClients.forget(id)
+        }
     }
 
     suspend fun setEnabled(playlist: PlaylistEntity, enabled: Boolean) {
@@ -251,8 +257,29 @@ class PlaylistRepository(
         val client = stalkerClients.get(playlist)
         client.connect()
         // Adult categories are left out entirely once a parental PIN exists.
-        val imported = StalkerImport.load(client, playlist.id, hideCensored = hideAdult())
-        return store(playlist.id, imported.channels, emptyList(), imported.groups, imported.completion)
+        val imported = StalkerImport.live(client, playlist.id)
+        return stalkerRefresh.refresh(playlist.id) {
+            store(playlist.id, imported.channels, emptyList(), imported.groups, imported.completion)
+        }
+    }
+
+    private val stalkerRefresh = StalkerRefresh(applicationScope, ::importStalkerVod)
+
+    suspend fun refreshStalkerVod(playlistId: Long) = stalkerRefresh.vod(playlistId)
+
+    /** Runs after the live channels are on screen, so a big film library cannot block them. */
+    private suspend fun importStalkerVod(playlistId: Long) {
+        try {
+            val playlist = db.playlists().get(playlistId) ?: return
+            if (playlist.type != PlaylistType.STALKER) return
+            val imported = StalkerImport.vod(stalkerClients.get(playlist), playlistId, hideAdult())
+            store(playlistId, imported.channels, emptyList(), imported.groups, imported.completion)
+            imported.vodError?.let { Log.w("PlaylistRepository", "Stalker VOD: $it") }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("PlaylistRepository", "Stalker VOD refresh failed", e)
+        }
     }
 
     // --- persistence -------------------------------------------------------------------
@@ -325,6 +352,7 @@ class PlaylistRepository(
     }
 
     companion object {
+        private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         const val UNGROUPED = "Other"
         const val CATCHUP_XTREAM = "xtream"
         const val CATCHUP_STALKER = "stalker"
