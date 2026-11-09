@@ -591,4 +591,11 @@
         <item quantity="many">%d программ</item>
         <item quantity="other">%d программ</item>
     </plurals>
+    <string name="backup_rejected_title">Эту резервную копию нельзя восстановить</string>
+    <string name="backup_problem_no_playlists">В ней нет ни одного плейлиста.</string>
+    <string name="backup_problem_duplicate_playlists">Один и тот же плейлист встречается несколько раз.</string>
+    <string name="backup_problem_guide_without_playlist">Гид ссылается на плейлист, которого нет в файле.</string>
+    <string name="backup_problem_duplicate_entries">Некоторые избранные или записи истории повторяются.</string>
+    <string name="backup_problem_too_much_data">В ней больше, чем приложение импортирует.</string>
+    <string name="backup_problem_incomplete">Часть файла отсутствует или не читается.</string>
 </resources>

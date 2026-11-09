@@ -555,4 +555,11 @@
         <item quantity="one">%d programa</item>
         <item quantity="other">%d programas</item>
     </plurals>
+    <string name="backup_rejected_title">Esta copia no se puede restaurar</string>
+    <string name="backup_problem_no_playlists">No contiene ninguna lista de canales.</string>
+    <string name="backup_problem_duplicate_playlists">La misma lista aparece más de una vez.</string>
+    <string name="backup_problem_guide_without_playlist">Una guía apunta a una lista que no está en el archivo.</string>
+    <string name="backup_problem_duplicate_entries">Algunos favoritos o entradas del historial están repetidos.</string>
+    <string name="backup_problem_too_much_data">Contiene más de lo que la app va a importar.</string>
+    <string name="backup_problem_incomplete">Falta parte del archivo o no se puede leer.</string>
 </resources>

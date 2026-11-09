@@ -591,4 +591,11 @@
         <item quantity="many">%d programów</item>
         <item quantity="other">%d programów</item>
     </plurals>
+    <string name="backup_rejected_title">Nie można przywrócić tej kopii</string>
+    <string name="backup_problem_no_playlists">Nie ma w niej żadnej playlisty.</string>
+    <string name="backup_problem_duplicate_playlists">Ta sama playlista występuje więcej niż raz.</string>
+    <string name="backup_problem_guide_without_playlist">Przewodnik wskazuje playlistę, której nie ma w pliku.</string>
+    <string name="backup_problem_duplicate_entries">Niektóre ulubione lub wpisy historii się powtarzają.</string>
+    <string name="backup_problem_too_much_data">Zawiera więcej, niż aplikacja zaimportuje.</string>
+    <string name="backup_problem_incomplete">Część pliku brakuje lub jest nieczytelna.</string>
 </resources>

@@ -627,4 +627,11 @@
         <item quantity="many">%d برنامج</item>
         <item quantity="other">%d برنامج</item>
     </plurals>
+    <string name="backup_rejected_title">لا يمكن استعادة هذه النسخة</string>
+    <string name="backup_problem_no_playlists">لا تحتوي على أي قوائم تشغيل.</string>
+    <string name="backup_problem_duplicate_playlists">تظهر قائمة التشغيل نفسها أكثر من مرة.</string>
+    <string name="backup_problem_guide_without_playlist">يشير الدليل إلى قائمة تشغيل غير موجودة في الملف.</string>
+    <string name="backup_problem_duplicate_entries">بعض المفضلة أو سجل المشاهدة مكرر.</string>
+    <string name="backup_problem_too_much_data">تحتوي على أكثر مما سيستورده التطبيق.</string>
+    <string name="backup_problem_incomplete">جزء من الملف مفقود أو غير مقروء.</string>
 </resources>

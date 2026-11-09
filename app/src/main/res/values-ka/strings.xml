@@ -555,4 +555,11 @@
         <item quantity="one">%d პროგრამა</item>
         <item quantity="other">%d პროგრამა</item>
     </plurals>
+    <string name="backup_rejected_title">ეს სარეზერვო ასლი ვერ აღდგება</string>
+    <string name="backup_problem_no_playlists">მასში არც ერთი არხების სია არ არის.</string>
+    <string name="backup_problem_duplicate_playlists">იგივე სია რამდენჯერმე გვხვდება.</string>
+    <string name="backup_problem_guide_without_playlist">გიდი მიუთითებს სიაზე, რომელიც ფაილში არ არის.</string>
+    <string name="backup_problem_duplicate_entries">ზოგიერთი რჩეული ან ისტორიის ჩანაწერი მეორდება.</string>
+    <string name="backup_problem_too_much_data">შეიცავს უფრო მეტს, ვიდრე აპი შემოიტანს.</string>
+    <string name="backup_problem_incomplete">ფაილის ნაწილი აკლია ან წაუკითხავია.</string>
 </resources>

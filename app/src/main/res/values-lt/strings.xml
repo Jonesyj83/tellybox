@@ -591,4 +591,11 @@
         <item quantity="many">%d programos</item>
         <item quantity="other">%d programų</item>
     </plurals>
+    <string name="backup_rejected_title">Šios atsarginės kopijos atkurti negalima</string>
+    <string name="backup_problem_no_playlists">Joje nėra nė vieno kanalų sąrašo.</string>
+    <string name="backup_problem_duplicate_playlists">Tas pats sąrašas kartojasi kelis kartus.</string>
+    <string name="backup_problem_guide_without_playlist">Vadovas nurodo sąrašą, kurio nėra faile.</string>
+    <string name="backup_problem_duplicate_entries">Kai kurie mėgstami ar istorijos įrašai kartojasi.</string>
+    <string name="backup_problem_too_much_data">Joje daugiau, nei programa importuos.</string>
+    <string name="backup_problem_incomplete">Dalis failo trūksta arba neperskaitoma.</string>
 </resources>

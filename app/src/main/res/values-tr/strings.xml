@@ -555,4 +555,11 @@
         <item quantity="one">%d program</item>
         <item quantity="other">%d program</item>
     </plurals>
+    <string name="backup_rejected_title">Bu yedek geri yüklenemiyor</string>
+    <string name="backup_problem_no_playlists">İçinde hiç kanal listesi yok.</string>
+    <string name="backup_problem_duplicate_playlists">Aynı liste birden fazla kez geçiyor.</string>
+    <string name="backup_problem_guide_without_playlist">Rehber, dosyada olmayan bir listeye işaret ediyor.</string>
+    <string name="backup_problem_duplicate_entries">Bazı favoriler veya geçmiş kayıtları tekrarlanıyor.</string>
+    <string name="backup_problem_too_much_data">Uygulamanın içe aktaracağından fazlasını içeriyor.</string>
+    <string name="backup_problem_incomplete">Dosyanın bir kısmı eksik veya okunamıyor.</string>
 </resources>

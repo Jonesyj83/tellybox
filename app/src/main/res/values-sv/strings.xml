@@ -555,4 +555,11 @@
         <item quantity="one">%d program</item>
         <item quantity="other">%d program</item>
     </plurals>
+    <string name="backup_rejected_title">Den här säkerhetskopian kan inte återställas</string>
+    <string name="backup_problem_no_playlists">Den innehåller inga spellistor.</string>
+    <string name="backup_problem_duplicate_playlists">Samma spellista förekommer flera gånger.</string>
+    <string name="backup_problem_guide_without_playlist">Guiden pekar på en spellista som inte finns i filen.</string>
+    <string name="backup_problem_duplicate_entries">Vissa favoriter eller historikposter upprepas.</string>
+    <string name="backup_problem_too_much_data">Den innehåller mer än appen importerar.</string>
+    <string name="backup_problem_incomplete">En del av filen saknas eller går inte att läsa.</string>
 </resources>

@@ -555,4 +555,11 @@
         <item quantity="one">%d програма</item>
         <item quantity="other">%d програми</item>
     </plurals>
+    <string name="backup_rejected_title">Това резервно копие не може да бъде възстановено</string>
+    <string name="backup_problem_no_playlists">В него няма нито един списък.</string>
+    <string name="backup_problem_duplicate_playlists">Същият списък се среща повече от веднъж.</string>
+    <string name="backup_problem_guide_without_playlist">Програмата препраща към списък, който липсва във файла.</string>
+    <string name="backup_problem_duplicate_entries">Някои любими или записи от историята се повтарят.</string>
+    <string name="backup_problem_too_much_data">Съдържа повече, отколкото приложението ще внесе.</string>
+    <string name="backup_problem_incomplete">Част от файла липсва или е нечетима.</string>
 </resources>

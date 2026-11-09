@@ -591,4 +591,11 @@
         <item quantity="many">%d програм</item>
         <item quantity="other">%d програм</item>
     </plurals>
+    <string name="backup_rejected_title">Цю резервну копію не можна відновити</string>
+    <string name="backup_problem_no_playlists">У ній немає жодного списку каналів.</string>
+    <string name="backup_problem_duplicate_playlists">Той самий список трапляється кілька разів.</string>
+    <string name="backup_problem_guide_without_playlist">Гід посилається на список, якого немає у файлі.</string>
+    <string name="backup_problem_duplicate_entries">Деякі обрані або записи історії повторюються.</string>
+    <string name="backup_problem_too_much_data">У ній більше, ніж застосунок імпортує.</string>
+    <string name="backup_problem_incomplete">Частина файлу відсутня або не читається.</string>
 </resources>

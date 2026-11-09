@@ -555,4 +555,11 @@
         <item quantity="one">%d πρόγραμμα</item>
         <item quantity="other">%d προγράμματα</item>
     </plurals>
+    <string name="backup_rejected_title">Αυτό το αντίγραφο δεν μπορεί να επαναφερθεί</string>
+    <string name="backup_problem_no_playlists">Δεν περιέχει καμία λίστα καναλιών.</string>
+    <string name="backup_problem_duplicate_playlists">Η ίδια λίστα εμφανίζεται περισσότερες από μία φορές.</string>
+    <string name="backup_problem_guide_without_playlist">Ο οδηγός δείχνει λίστα που δεν υπάρχει στο αρχείο.</string>
+    <string name="backup_problem_duplicate_entries">Κάποια αγαπημένα ή καταχωρήσεις ιστορικού επαναλαμβάνονται.</string>
+    <string name="backup_problem_too_much_data">Περιέχει περισσότερα από όσα θα εισαγάγει η εφαρμογή.</string>
+    <string name="backup_problem_incomplete">Μέρος του αρχείου λείπει ή δεν διαβάζεται.</string>
 </resources>

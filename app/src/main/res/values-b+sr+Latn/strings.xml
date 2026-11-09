@@ -573,4 +573,11 @@
         <item quantity="few">%d programa</item>
         <item quantity="other">%d programa</item>
     </plurals>
+    <string name="backup_rejected_title">Ova rezervna kopija ne može da se vrati</string>
+    <string name="backup_problem_no_playlists">U njoj nema nijedne liste kanala.</string>
+    <string name="backup_problem_duplicate_playlists">Ista lista se pojavljuje više puta.</string>
+    <string name="backup_problem_guide_without_playlist">Vodič upućuje na listu koje nema u datoteci.</string>
+    <string name="backup_problem_duplicate_entries">Neki omiljeni ili unosi istorije se ponavljaju.</string>
+    <string name="backup_problem_too_much_data">Sadrži više nego što će aplikacija uvesti.</string>
+    <string name="backup_problem_incomplete">Deo datoteke nedostaje ili se ne može pročitati.</string>
 </resources>

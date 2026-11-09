@@ -573,4 +573,11 @@
         <item quantity="few">%d programe</item>
         <item quantity="other">%d de programe</item>
     </plurals>
+    <string name="backup_rejected_title">Această copie nu poate fi restaurată</string>
+    <string name="backup_problem_no_playlists">Nu conține nicio listă de canale.</string>
+    <string name="backup_problem_duplicate_playlists">Aceeași listă apare de mai multe ori.</string>
+    <string name="backup_problem_guide_without_playlist">Ghidul indică o listă care nu este în fișier.</string>
+    <string name="backup_problem_duplicate_entries">Unele favorite sau intrări din istoric se repetă.</string>
+    <string name="backup_problem_too_much_data">Conține mai mult decât va importa aplicația.</string>
+    <string name="backup_problem_incomplete">O parte din fișier lipsește sau nu poate fi citită.</string>
 </resources>

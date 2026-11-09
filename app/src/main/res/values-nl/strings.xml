@@ -555,4 +555,11 @@
         <item quantity="one">%d programma</item>
         <item quantity="other">%d programma\'s</item>
     </plurals>
+    <string name="backup_rejected_title">Deze back-up kan niet worden hersteld</string>
+    <string name="backup_problem_no_playlists">Er zitten geen playlists in.</string>
+    <string name="backup_problem_duplicate_playlists">Dezelfde playlist staat er meerdere keren in.</string>
+    <string name="backup_problem_guide_without_playlist">Een gids verwijst naar een playlist die niet in het bestand staat.</string>
+    <string name="backup_problem_duplicate_entries">Sommige favorieten of geschiedenisregels staan dubbel.</string>
+    <string name="backup_problem_too_much_data">Er zit meer in dan deze app importeert.</string>
+    <string name="backup_problem_incomplete">Een deel van het bestand ontbreekt of is onleesbaar.</string>
 </resources>

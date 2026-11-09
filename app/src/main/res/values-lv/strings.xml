@@ -573,4 +573,11 @@
         <item quantity="one">%d programma</item>
         <item quantity="other">%d programmas</item>
     </plurals>
+    <string name="backup_rejected_title">Šo dublējumu nevar atjaunot</string>
+    <string name="backup_problem_no_playlists">Tajā nav neviena kanālu saraksta.</string>
+    <string name="backup_problem_duplicate_playlists">Tas pats saraksts parādās vairākas reizes.</string>
+    <string name="backup_problem_guide_without_playlist">Programma norāda uz sarakstu, kura failā nav.</string>
+    <string name="backup_problem_duplicate_entries">Daži izlases vai vēstures ieraksti atkārtojas.</string>
+    <string name="backup_problem_too_much_data">Tajā ir vairāk, nekā lietotne importēs.</string>
+    <string name="backup_problem_incomplete">Daļa faila trūkst vai nav nolasāma.</string>
 </resources>

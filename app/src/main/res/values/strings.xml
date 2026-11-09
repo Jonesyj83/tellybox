@@ -553,4 +553,11 @@
         <item quantity="one">%d programme</item>
         <item quantity="other">%d programmes</item>
     </plurals>
+    <string name="backup_rejected_title">This backup can\'t be restored</string>
+    <string name="backup_problem_no_playlists">It has no playlists in it.</string>
+    <string name="backup_problem_duplicate_playlists">The same playlist appears more than once.</string>
+    <string name="backup_problem_guide_without_playlist">A guide points at a playlist that isn\'t in the file.</string>
+    <string name="backup_problem_duplicate_entries">Some favourites or history entries are repeated.</string>
+    <string name="backup_problem_too_much_data">It holds more than this app will import.</string>
+    <string name="backup_problem_incomplete">Part of the file is missing or unreadable.</string>
 </resources>

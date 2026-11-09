@@ -555,4 +555,11 @@
         <item quantity="one">%d program</item>
         <item quantity="other">%d program</item>
     </plurals>
+    <string name="backup_rejected_title">Ez a mentés nem állítható vissza</string>
+    <string name="backup_problem_no_playlists">Nincs benne egyetlen csatornalista sem.</string>
+    <string name="backup_problem_duplicate_playlists">Ugyanaz a lista többször szerepel.</string>
+    <string name="backup_problem_guide_without_playlist">A műsorújság olyan listára hivatkozik, amely nincs a fájlban.</string>
+    <string name="backup_problem_duplicate_entries">Néhány kedvenc vagy előzmény bejegyzés ismétlődik.</string>
+    <string name="backup_problem_too_much_data">Többet tartalmaz, mint amit az alkalmazás importál.</string>
+    <string name="backup_problem_incomplete">A fájl egy része hiányzik vagy olvashatatlan.</string>
 </resources>

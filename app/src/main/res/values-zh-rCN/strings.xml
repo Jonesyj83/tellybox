@@ -537,4 +537,11 @@
     <plurals name="count_programmes">
         <item quantity="other">%d 个程序</item>
     </plurals>
+    <string name="backup_rejected_title">无法恢复此备份</string>
+    <string name="backup_problem_no_playlists">里面没有任何频道列表。</string>
+    <string name="backup_problem_duplicate_playlists">同一个列表出现了不止一次。</string>
+    <string name="backup_problem_guide_without_playlist">节目指南指向文件中不存在的列表。</string>
+    <string name="backup_problem_duplicate_entries">部分收藏或历史记录重复了。</string>
+    <string name="backup_problem_too_much_data">内容超过了本应用可导入的数量。</string>
+    <string name="backup_problem_incomplete">文件有一部分缺失或无法读取。</string>
 </resources>

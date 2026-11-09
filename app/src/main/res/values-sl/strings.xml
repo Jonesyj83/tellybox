@@ -591,4 +591,11 @@
         <item quantity="few">%d programi</item>
         <item quantity="other">%d programov</item>
     </plurals>
+    <string name="backup_rejected_title">Te varnostne kopije ni mogoče obnoviti</string>
+    <string name="backup_problem_no_playlists">V njej ni nobenega seznama kanalov.</string>
+    <string name="backup_problem_duplicate_playlists">Isti seznam se pojavi večkrat.</string>
+    <string name="backup_problem_guide_without_playlist">Vodnik kaže na seznam, ki ga v datoteki ni.</string>
+    <string name="backup_problem_duplicate_entries">Nekateri priljubljeni ali vnosi zgodovine se ponavljajo.</string>
+    <string name="backup_problem_too_much_data">Vsebuje več, kot bo aplikacija uvozila.</string>
+    <string name="backup_problem_incomplete">Del datoteke manjka ali je neberljiv.</string>
 </resources>

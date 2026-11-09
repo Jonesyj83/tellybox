@@ -555,4 +555,11 @@
         <item quantity="one">%d programme</item>
         <item quantity="other">%d programmes</item>
     </plurals>
+    <string name="backup_rejected_title">Cette sauvegarde ne peut pas être restaurée</string>
+    <string name="backup_problem_no_playlists">Elle ne contient aucune liste.</string>
+    <string name="backup_problem_duplicate_playlists">La même liste apparaît plusieurs fois.</string>
+    <string name="backup_problem_guide_without_playlist">Un guide renvoie à une liste absente du fichier.</string>
+    <string name="backup_problem_duplicate_entries">Certains favoris ou entrées d\'historique sont en double.</string>
+    <string name="backup_problem_too_much_data">Elle contient plus que ce que l\'appli importe.</string>
+    <string name="backup_problem_incomplete">Une partie du fichier manque ou est illisible.</string>
 </resources>

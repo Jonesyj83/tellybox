@@ -573,4 +573,11 @@
         <item quantity="few">%d programa</item>
         <item quantity="other">%d programa</item>
     </plurals>
+    <string name="backup_rejected_title">Ova sigurnosna kopija ne može se vratiti</string>
+    <string name="backup_problem_no_playlists">U njoj nema nijednog popisa kanala.</string>
+    <string name="backup_problem_duplicate_playlists">Isti popis pojavljuje se više puta.</string>
+    <string name="backup_problem_guide_without_playlist">Vodič upućuje na popis kojeg nema u datoteci.</string>
+    <string name="backup_problem_duplicate_entries">Neki omiljeni ili unosi povijesti se ponavljaju.</string>
+    <string name="backup_problem_too_much_data">Sadrži više nego što će aplikacija uvesti.</string>
+    <string name="backup_problem_incomplete">Dio datoteke nedostaje ili se ne može pročitati.</string>
 </resources>

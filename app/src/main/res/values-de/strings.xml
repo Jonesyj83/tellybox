@@ -555,4 +555,11 @@
         <item quantity="one">%d Programm</item>
         <item quantity="other">%d Programme</item>
     </plurals>
+    <string name="backup_rejected_title">Diese Sicherung kann nicht eingespielt werden</string>
+    <string name="backup_problem_no_playlists">Sie enthält keine Playlists.</string>
+    <string name="backup_problem_duplicate_playlists">Dieselbe Playlist kommt mehrfach vor.</string>
+    <string name="backup_problem_guide_without_playlist">Ein Programmführer verweist auf eine Playlist, die nicht in der Datei ist.</string>
+    <string name="backup_problem_duplicate_entries">Einige Favoriten oder Verlaufseinträge sind doppelt.</string>
+    <string name="backup_problem_too_much_data">Sie enthält mehr, als diese App importiert.</string>
+    <string name="backup_problem_incomplete">Ein Teil der Datei fehlt oder ist unlesbar.</string>
 </resources>

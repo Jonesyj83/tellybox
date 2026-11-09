@@ -573,4 +573,11 @@
         <item quantity="two">%d תוכניות</item>
         <item quantity="other">%d תוכניות</item>
     </plurals>
+    <string name="backup_rejected_title">לא ניתן לשחזר את הגיבוי הזה</string>
+    <string name="backup_problem_no_playlists">אין בו אף רשימת ערוצים.</string>
+    <string name="backup_problem_duplicate_playlists">אותה רשימה מופיעה יותר מפעם אחת.</string>
+    <string name="backup_problem_guide_without_playlist">המדריך מפנה לרשימה שאינה בקובץ.</string>
+    <string name="backup_problem_duplicate_entries">חלק מהמועדפים או מרשומות ההיסטוריה חוזרים על עצמם.</string>
+    <string name="backup_problem_too_much_data">הוא מכיל יותר ממה שהאפליקציה תייבא.</string>
+    <string name="backup_problem_incomplete">חלק מהקובץ חסר או אינו קריא.</string>
 </resources>

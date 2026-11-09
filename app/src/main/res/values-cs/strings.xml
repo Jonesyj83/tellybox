@@ -591,4 +591,11 @@
         <item quantity="many">%d programů</item>
         <item quantity="other">%d programů</item>
     </plurals>
+    <string name="backup_rejected_title">Tuto zálohu nelze obnovit</string>
+    <string name="backup_problem_no_playlists">Neobsahuje žádný seznam kanálů.</string>
+    <string name="backup_problem_duplicate_playlists">Stejný seznam je uveden vícekrát.</string>
+    <string name="backup_problem_guide_without_playlist">Průvodce odkazuje na seznam, který v souboru není.</string>
+    <string name="backup_problem_duplicate_entries">Některé oblíbené položky nebo záznamy historie se opakují.</string>
+    <string name="backup_problem_too_much_data">Obsahuje více, než aplikace naimportuje.</string>
+    <string name="backup_problem_incomplete">Část souboru chybí nebo je nečitelná.</string>
 </resources>
