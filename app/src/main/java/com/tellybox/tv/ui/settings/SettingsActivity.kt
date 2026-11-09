@@ -129,39 +129,39 @@ class SettingsActivity : SectionActivity() {
         }
 
         return listOf(
-            Row(R.string.ui_parental_controls, getString(R.string.ui_pin_blocks_and_unlock_duration)) {
+            Row(R.string.parental_controls, getString(R.string.parental_summary)) {
                 startActivity(android.content.Intent(this, com.tellybox.tv.ui.parental.ParentalActivity::class.java))
             },
             Row(R.string.setting_language, AppLanguages.current()?.name ?: getString(R.string.language_system)) {
                 val languages = listOf(getString(R.string.language_system) to "") + AppLanguages.all.map { it.name to it.tag }
                 pick(R.string.setting_language, languages, AppLanguages.current()?.tag.orEmpty(), { tag -> AppLanguages.apply(tag) })
             },
-            Row(R.string.ui_channel_name_cleanup, s.channelNameTokens.ifEmpty { getString(R.string.off) }) {
+            Row(R.string.playlist_name_cleanup, s.channelNameTokens.ifEmpty { getString(R.string.off) }) {
                 val input = android.widget.EditText(this).apply {
                     inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
                     minLines = 3
-                    hint = getString(R.string.ui_one_prefix_or_suffix_per_line_uk_hd_fhd)
+                    hint = getString(R.string.playlist_affixes_hint)
                     setText(s.channelNameTokens)
                 }
-                AlertDialog.Builder(this).setTitle(getString(R.string.ui_strip_prefixes_and_suffixes))
-                    .setMessage(getString(R.string.ui_one_literal_token_per_line_matching_is_case_sensitive_clear_to_disable))
-                    .setView(input).setPositiveButton(getString(R.string.ui_save)) { _, _ ->
+                AlertDialog.Builder(this).setTitle(getString(R.string.playlist_strip_affixes))
+                    .setMessage(getString(R.string.playlist_tokens_hint))
+                    .setView(input).setPositiveButton(getString(R.string.common_save)) { _, _ ->
                         lifecycleScope.launch { repo.setChannelNameTokens(input.text.toString()) }
                     }.setNegativeButton(R.string.cancel, null).show()
             },
-            Row(R.string.ui_show_clock, onOff(s.showClock)) { lifecycleScope.launch { repo.setShowClock(!s.showClock) } },
-            Row(R.string.ui_dim_past_programmes, onOff(s.dimPast)) { lifecycleScope.launch { repo.setDimPast(!s.dimPast) } },
-            Row(R.string.ui_panel_transparency, percent(100 - s.panelOpacity)) {
-                AlertDialog.Builder(this).setTitle(getString(R.string.ui_panel_transparency)).setItems(arrayOf(getString(R.string.ui_opaque), percent(10), percent(25), percent(40))) { _, i -> lifecycleScope.launch { repo.setPanelOpacity(listOf(100, 90, 75, 60)[i]) } }.show()
+            Row(R.string.appearance_show_clock, onOff(s.showClock)) { lifecycleScope.launch { repo.setShowClock(!s.showClock) } },
+            Row(R.string.guide_dim_past, onOff(s.dimPast)) { lifecycleScope.launch { repo.setDimPast(!s.dimPast) } },
+            Row(R.string.appearance_panel_transparency, percent(100 - s.panelOpacity)) {
+                AlertDialog.Builder(this).setTitle(getString(R.string.appearance_panel_transparency)).setItems(arrayOf(getString(R.string.appearance_opaque), percent(10), percent(25), percent(40))) { _, i -> lifecycleScope.launch { repo.setPanelOpacity(listOf(100, 90, 75, 60)[i]) } }.show()
             },
-            Row(R.string.ui_full_guide_scan, onOff(s.fullScan)) { lifecycleScope.launch { repo.setFullScan(!s.fullScan) } },
-            Row(R.string.ui_audio_decoder, if (s.softwareAudioDecoders) getString(R.string.ui_software_preferred) else getString(R.string.ui_hardware_preferred)) {
-                AlertDialog.Builder(this).setTitle(getString(R.string.ui_audio_decoder)).setSingleChoiceItems(arrayOf(getString(R.string.ui_hardware_preferred), getString(R.string.ui_software_preferred)), if (s.softwareAudioDecoders) 1 else 0) { dialog, index ->
+            Row(R.string.guide_full_scan, onOff(s.fullScan)) { lifecycleScope.launch { repo.setFullScan(!s.fullScan) } },
+            Row(R.string.player_audio_decoder, if (s.softwareAudioDecoders) getString(R.string.player_decoder_software) else getString(R.string.player_decoder_hardware)) {
+                AlertDialog.Builder(this).setTitle(getString(R.string.player_audio_decoder)).setSingleChoiceItems(arrayOf(getString(R.string.player_decoder_hardware), getString(R.string.player_decoder_software)), if (s.softwareAudioDecoders) 1 else 0) { dialog, index ->
                     dialog.dismiss()
                     lifecycleScope.launch { repo.setSoftwareAudioDecoders(index == 1) }
                 }.show()
             },
-            Row(R.string.ui_audio_passthrough, onOff(s.audioPassthrough)) { lifecycleScope.launch { repo.setAudioPassthrough(!s.audioPassthrough) } },
+            Row(R.string.player_audio_passthrough, onOff(s.audioPassthrough)) { lifecycleScope.launch { repo.setAudioPassthrough(!s.audioPassthrough) } },
             Row(R.string.setting_buffer, bufferLabel(s.buffer)) {
                 pick(R.string.setting_buffer, buffers, s.buffer, repo::setBuffer)
             },
@@ -211,7 +211,7 @@ class SettingsActivity : SectionActivity() {
                 pick(R.string.setting_reminder_popup, listOf(10, 20, 30, 60, 120).map { seconds(it) to it },
                     s.reminderPopupSeconds, repo::setReminderPopupSeconds)
             },
-            Row(R.string.guide_counts, getString(R.string.ui_refresh), title = guideIdSummary) { reimportGuides() },
+            Row(R.string.guide_counts, getString(R.string.common_refresh), title = guideIdSummary) { reimportGuides() },
             Row(R.string.setting_guide_interval, resources.getQuantityString(R.plurals.hours, s.guideRefreshHours, s.guideRefreshHours)) {
                 pick(R.string.setting_guide_interval, intervals, s.guideRefreshHours, repo::setGuideRefreshHours)
             },
@@ -273,13 +273,13 @@ class SettingsActivity : SectionActivity() {
             }.show()
     }
 
-    private fun maintenance() = listOf(Row(R.string.ui_clear_epg, getString(R.string.ui_maintenance)) { clearEpg() }, Row(R.string.ui_clear_logo_cache, getString(R.string.ui_maintenance)) {
+    private fun maintenance() = listOf(Row(R.string.guide_clear_all, getString(R.string.settings_maintenance)) { clearEpg() }, Row(R.string.appearance_clear_logos, getString(R.string.settings_maintenance)) {
         lifecycleScope.launch {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 coil.Coil.imageLoader(this@SettingsActivity).diskCache?.clear()
                 coil.Coil.imageLoader(this@SettingsActivity).memoryCache?.clear()
             }
-            android.widget.Toast.makeText(this@SettingsActivity, getString(R.string.ui_logo_cache_cleared), android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(this@SettingsActivity, getString(R.string.appearance_logos_cleared), android.widget.Toast.LENGTH_SHORT).show()
         }
     })
 
@@ -287,10 +287,10 @@ class SettingsActivity : SectionActivity() {
         val dao = appContainer.database.epg()
         val sources = appContainer.epg.observeSources().let { it.first() }
         val count = sources.sumOf { dao.programCount(it.id) }
-        AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.ui_clear_epg_prompt)).setMessage(resources.getQuantityString(R.plurals.clear_epg_confirm, count, count))
-            .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.ui_clear)) { _, _ -> lifecycleScope.launch {
+        AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.guide_clear_all_prompt)).setMessage(resources.getQuantityString(R.plurals.clear_epg_confirm, count, count))
+            .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.common_clear)) { _, _ -> lifecycleScope.launch {
                 sources.forEach { dao.deleteProgramsForSource(it.id); dao.deleteChannelsForSource(it.id); dao.setSourceRefreshResult(it.id, 0, null) }
-                android.widget.Toast.makeText(this@SettingsActivity, getString(R.string.ui_epg_cleared), android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this@SettingsActivity, getString(R.string.guide_cleared), android.widget.Toast.LENGTH_SHORT).show()
             } }.show()
     }
 
@@ -298,32 +298,32 @@ class SettingsActivity : SectionActivity() {
         val sources = appContainer.database.epg().observeSources().first().filter { it.enabled }
         val playlists = appContainer.database.playlists().getAll()
         val labels = sources.map { source ->
-            val updated = if (source.lastUpdated == 0L) getString(R.string.ui_never_updated)
+            val updated = if (source.lastUpdated == 0L) getString(R.string.guide_never_updated)
                 else java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT, androidx.core.os.ConfigurationCompat.getLocales(resources.configuration)[0] ?: java.util.Locale.getDefault()).format(java.util.Date(source.lastUpdated))
             getString(R.string.guide_source_details, source.name, source.url, updated) + source.lastError?.let { " — $it" }.orEmpty()
-        } + getString(R.string.ui_assign_guide_to_playlist)
-        AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.ui_guide_sources)).setItems(labels.toTypedArray()) { _, index ->
+        } + getString(R.string.guide_assign)
+        AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.guide_source_list)).setItems(labels.toTypedArray()) { _, index ->
             if (index < sources.size) {
                 val source = sources[index]
-                AlertDialog.Builder(this@SettingsActivity).setTitle(source.name).setItems(arrayOf(getString(R.string.ui_refresh_now), getString(R.string.ui_remove_guide))) { _, action -> lifecycleScope.launch {
+                AlertDialog.Builder(this@SettingsActivity).setTitle(source.name).setItems(arrayOf(getString(R.string.common_refresh_now), getString(R.string.guide_remove))) { _, action -> lifecycleScope.launch {
                     if (action == 0) {
                         val result = appContainer.epg.refresh(source)
-                        AlertDialog.Builder(this@SettingsActivity).setMessage(result.fold({ it.error ?: getString(R.string.ui_guide_refreshed) }, { getString(R.string.ui_refresh_failed_1_s, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
+                        AlertDialog.Builder(this@SettingsActivity).setMessage(result.fold({ it.error ?: getString(R.string.guide_refreshed) }, { getString(R.string.common_refresh_failed, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
                     } else appContainer.epg.deleteSource(source.id)
                 } }.setOnCancelListener { showGuides(index) }.show()
             } else chooseGuidePlaylist(playlists)
-        }.setPositiveButton(getString(R.string.ui_close), null).create().apply {
+        }.setPositiveButton(getString(R.string.common_close), null).create().apply {
             setOnShowListener { listView.setSelection(focusIndex.coerceAtMost(listView.count - 1)); listView.requestFocus() }
         }.show()
     }
 
     private fun chooseGuidePlaylist(playlists: List<com.tellybox.tv.data.db.PlaylistEntity>, focusIndex: Int = 0) {
-        AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.ui_choose_playlist)).setItems(playlists.map { it.name }.toTypedArray()) { _, which ->
+        AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.playlist_choose)).setItems(playlists.map { it.name }.toTypedArray()) { _, which ->
                 val input = android.widget.EditText(this@SettingsActivity).apply { hint = "https://example.com/guide.xml"; setSingleLine() }
-                AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.ui_guide_url)).setView(input).setNegativeButton(getString(R.string.cancel)) { _, _ -> chooseGuidePlaylist(playlists, which) }.setPositiveButton(getString(R.string.ui_assign)) { _, _ -> lifecycleScope.launch {
+                AlertDialog.Builder(this@SettingsActivity).setTitle(getString(R.string.guide_url)).setView(input).setNegativeButton(getString(R.string.cancel)) { _, _ -> chooseGuidePlaylist(playlists, which) }.setPositiveButton(getString(R.string.guide_assign_action)) { _, _ -> lifecycleScope.launch {
                     if (input.text.isNotBlank()) {
                         appContainer.epg.addSource(input.text.toString(), playlists[which].name, playlists[which].id)
-                        android.widget.Toast.makeText(this@SettingsActivity, getString(R.string.ui_guide_assigned), android.widget.Toast.LENGTH_SHORT).show()
+                        android.widget.Toast.makeText(this@SettingsActivity, getString(R.string.guide_assigned), android.widget.Toast.LENGTH_SHORT).show()
                     }
                 } }.setOnCancelListener { chooseGuidePlaylist(playlists, which) }.show()
             }.setOnCancelListener { showGuides(Int.MAX_VALUE) }.create().apply {
@@ -342,10 +342,10 @@ class SettingsActivity : SectionActivity() {
         val rows = section.select(buildRows(s)) { it.id }
         return rows + when (section) {
             SettingsSection.GENERAL -> maintenance()
-            SettingsSection.PLAYLISTS -> listOf(Row(R.string.ui_manage_playlists, getString(R.string.ui_add_edit_refresh_and_remove_streams)) { openSection(Section.PLAYLISTS) })
-            SettingsSection.EPG -> listOf(Row(R.string.ui_guide_sources_and_assignments, getString(R.string.ui_urls_and_last_update_times)) { showGuides() }, Row(R.string.ui_clear_epg, "") { clearEpg() })
-            SettingsSection.BACKUP -> listOf(Row(R.string.ui_export_backup, getString(R.string.ui_includes_credentials_and_parental_pin)) { requestBackupExport() }, Row(R.string.ui_import_backup, getString(R.string.ui_replace_configuration_from_a_versioned_json_file)) { chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) }) })
-            SettingsSection.ABOUT -> listOf(Row(R.string.about_version, getString(R.string.ui_a_player_for_playlists_supplied_by_you), title = getString(R.string.about_version, com.tellybox.tv.BuildConfig.VERSION_NAME)) {}, Row(R.string.ui_open_source_licences, getString(R.string.ui_androidx_media3_kotlin_coil_okhttp_and_retrofit)) { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton(R.string.ok, null).show() })
+            SettingsSection.PLAYLISTS -> listOf(Row(R.string.playlist_manage, getString(R.string.playlist_manage_summary)) { openSection(Section.PLAYLISTS) })
+            SettingsSection.EPG -> listOf(Row(R.string.guide_sources, getString(R.string.guide_sources_summary)) { showGuides() }, Row(R.string.guide_clear_all, "") { clearEpg() })
+            SettingsSection.BACKUP -> listOf(Row(R.string.backup_export, getString(R.string.backup_export_summary)) { requestBackupExport() }, Row(R.string.backup_import, getString(R.string.backup_import_summary)) { chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) }) })
+            SettingsSection.ABOUT -> listOf(Row(R.string.about_version, getString(R.string.settings_about_summary), title = getString(R.string.about_version, com.tellybox.tv.BuildConfig.VERSION_NAME)) {}, Row(R.string.settings_licences, getString(R.string.settings_licences_summary)) { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton(R.string.ok, null).show() })
             else -> emptyList()
         }
     }
@@ -354,37 +354,37 @@ class SettingsActivity : SectionActivity() {
         currentSettings = s
         val list = rowsFor(current, s)
         val descriptions = mapOf(
-            R.string.ui_channel_name_cleanup to getString(R.string.ui_remove_configured_prefixes_and_suffixes_from_channel_names),
-            R.string.ui_show_clock to getString(R.string.ui_display_the_clock_on_the_home_screen),
-            R.string.ui_dim_past_programmes to getString(R.string.ui_shade_programmes_that_have_already_finished),
-            R.string.ui_panel_transparency to getString(R.string.ui_choose_how_much_video_shows_through_panels),
-            R.string.ui_full_guide_scan to getString(R.string.ui_store_all_guide_programmes_including_channels_outside_your_playlists),
-            R.string.ui_audio_decoder to getString(R.string.ui_choose_the_preferred_decoder_for_audio_playback),
-            R.string.ui_audio_passthrough to getString(R.string.ui_send_supported_audio_directly_to_your_receiver),
-            R.string.setting_buffer to getString(R.string.ui_increase_buffering_for_streams_that_pause_or_stutter),
-            R.string.setting_decoders to getString(R.string.ui_choose_the_preferred_decoder_for_video_playback),
-            R.string.setting_tunneling to getString(R.string.ui_use_supported_hardware_audio_and_video_synchronisation),
-            R.string.setting_display_mode to getString(R.string.ui_choose_how_video_fits_the_screen),
-            R.string.setting_background_playback to getString(R.string.ui_keep_playback_running_when_leaving_the_player),
+            R.string.playlist_name_cleanup to getString(R.string.playlist_strip_affixes_hint),
+            R.string.appearance_show_clock to getString(R.string.appearance_show_clock_hint),
+            R.string.guide_dim_past to getString(R.string.guide_dim_past_hint),
+            R.string.appearance_panel_transparency to getString(R.string.appearance_panel_hint),
+            R.string.guide_full_scan to getString(R.string.guide_full_scan_hint),
+            R.string.player_audio_decoder to getString(R.string.player_audio_decoder_hint),
+            R.string.player_audio_passthrough to getString(R.string.player_passthrough_hint),
+            R.string.setting_buffer to getString(R.string.player_buffer_hint),
+            R.string.setting_decoders to getString(R.string.player_video_decoder_hint),
+            R.string.setting_tunneling to getString(R.string.player_tunneled_hint),
+            R.string.setting_display_mode to getString(R.string.player_display_mode_hint),
+            R.string.setting_background_playback to getString(R.string.player_keep_playing_hint),
             R.string.setting_timeshift to getString(R.string.setting_timeshift_desc),
-            R.string.setting_preview_follows_focus to getString(R.string.ui_update_the_preview_as_you_move_between_channels),
-            R.string.setting_multiview_warning to getString(R.string.ui_remind_on_opening_multiview_that_each_screen_uses_one_provider_connect),
+            R.string.setting_preview_follows_focus to getString(R.string.appearance_preview_hint),
+            R.string.setting_multiview_warning to getString(R.string.multiview_connection_hint),
             R.string.setting_language to getString(R.string.setting_language_desc),
-            R.string.setting_guide_interval to getString(R.string.ui_choose_how_often_guides_refresh_automatically),
-            R.string.setting_epg_offset to getString(R.string.ui_shift_programme_times_to_correct_a_provider_time_offset),
-            R.string.setting_store_descriptions to getString(R.string.ui_keep_programme_descriptions_for_guide_details),
-            R.string.setting_update_guides to getString(R.string.ui_download_and_refresh_every_enabled_guide_source),
-            R.string.setting_pad_before to getString(R.string.ui_start_recording_before_the_scheduled_programme_time),
-            R.string.setting_pad_after to getString(R.string.ui_continue_recording_after_the_scheduled_programme_ends),
-            R.string.setting_instant_length to getString(R.string.ui_set_the_default_duration_for_an_instant_recording),
-            R.string.setting_reminder_before to getString(R.string.ui_choose_how_early_a_programme_reminder_appears),
-            R.string.setting_reminder_popup to getString(R.string.ui_choose_how_long_a_reminder_stays_on_screen),
-            R.string.ui_clear_epg to getString(R.string.ui_delete_stored_guide_programmes_while_keeping_source_assignments),
-            R.string.ui_clear_logo_cache to getString(R.string.ui_remove_cached_logos_so_they_download_again),
-            R.string.recordings_title to getString(R.string.ui_open_the_list_of_scheduled_and_finished_recordings),
-            R.string.reminders_title to getString(R.string.ui_open_the_list_of_programme_reminders),
+            R.string.setting_guide_interval to getString(R.string.guide_auto_refresh_hint),
+            R.string.setting_epg_offset to getString(R.string.guide_time_offset_hint),
+            R.string.setting_store_descriptions to getString(R.string.guide_descriptions_hint),
+            R.string.setting_update_guides to getString(R.string.guide_refresh_all_hint),
+            R.string.setting_pad_before to getString(R.string.recording_padding_start_hint),
+            R.string.setting_pad_after to getString(R.string.recording_padding_end_hint),
+            R.string.setting_instant_length to getString(R.string.recording_default_duration_hint),
+            R.string.setting_reminder_before to getString(R.string.reminder_lead_time_hint),
+            R.string.setting_reminder_popup to getString(R.string.reminder_duration_hint),
+            R.string.guide_clear_all to getString(R.string.guide_clear_all_hint),
+            R.string.appearance_clear_logos to getString(R.string.appearance_clear_logos_hint),
+            R.string.recordings_title to getString(R.string.recording_open_list),
+            R.string.reminders_title to getString(R.string.reminder_open_list),
         )
-        val explanatory = listOf(R.string.ui_manage_playlists, R.string.ui_parental_controls, R.string.ui_guide_sources_and_assignments, R.string.ui_export_backup, R.string.ui_import_backup, R.string.ui_open_source_licences)
+        val explanatory = listOf(R.string.playlist_manage, R.string.parental_controls, R.string.guide_sources, R.string.backup_export, R.string.backup_import, R.string.settings_licences)
         view.b.title.setText(current.title)
         view.b.subtitle.setText(current.summary)
         val focused = view.b.list.focusedChild?.let { view.b.list.getChildAdapterPosition(it) }

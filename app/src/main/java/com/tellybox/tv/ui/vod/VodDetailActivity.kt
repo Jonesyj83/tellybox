@@ -87,13 +87,13 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
         historyJob?.cancel()
         loadJob?.cancel()
         loaded = false
-        text(R.id.status, getString(R.string.ui_loading))
+        text(R.id.status, getString(R.string.common_loading))
         listOf(R.id.actions, R.id.retry, R.id.seasonScroll, R.id.episodes).forEach { view(it).visibility = View.GONE }
         listOf(R.id.title, R.id.metadata, R.id.genre, R.id.plot, R.id.credits, R.id.artworkFallback).forEach { text(it, null) }
         findViewById<ImageView>(R.id.poster).load(null)
         loadJob = lifecycleScope.launch {
             val channel = appContainer.channels.get(intent.getLongExtra("channel_id", -1))
-            if (channel == null) { text(R.id.status, getString(R.string.ui_title_no_longer_available)); return@launch }
+            if (channel == null) { text(R.id.status, getString(R.string.vod_title_unavailable)); return@launch }
             if (appContainer.parental.allScreens && !appContainer.parental.unlocked) return@launch
             if (!appContainer.parental.allowed(channel, appContainer.database)) {
                 requestPin(cancel = { finish() }) { load() }
@@ -115,16 +115,16 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
                 val details = appContainer.vod.details(channel)
                 text(R.id.status, null)
                 text(R.id.metadata, listOfNotNull(details.year, details.duration,
-                    details.rating?.let { getString(R.string.ui_rating_1_s, it) }, details.country)
+                    details.rating?.let { getString(R.string.vod_rating, it) }, details.country)
                     .filter { it.isNotBlank() }.joinToString(" · "))
                 text(R.id.genre, details.genre)
                 text(R.id.plot, details.plot)
                 text(R.id.credits, listOfNotNull(
-                    details.cast?.let { getString(R.string.ui_cast_1_s, it) },
-                    details.director?.let { getString(R.string.ui_director_1_s, it) }).joinToString(" · "))
+                    details.cast?.let { getString(R.string.vod_cast, it) },
+                    details.director?.let { getString(R.string.vod_director, it) }).joinToString(" · "))
                 loaded = true
                 if (channel.kind == ContentKind.SERIES) {
-                    if (details.episodes.isEmpty()) text(R.id.status, getString(R.string.ui_no_episodes_available))
+                    if (details.episodes.isEmpty()) text(R.id.status, getString(R.string.vod_no_episodes))
                     else {
                         val seasons = findViewById<LinearLayout>(R.id.seasons)
                         seasons.removeAllViews()
@@ -143,7 +143,7 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
                             val button = layoutInflater.inflate(R.layout.item_vod_season, seasons, false) as Button
                             button.id = View.generateViewId()
                             button.tag = number
-                            button.text = getString(R.string.ui_season_1_d, number)
+                            button.text = getString(R.string.vod_season, number)
                             button.nextFocusLeftId = if (seasons.childCount == 0) R.id.artwork else seasons.getChildAt(seasons.childCount - 1).id
                             if (seasons.childCount > 0) seasons.getChildAt(seasons.childCount - 1).nextFocusRightId = button.id
                             button.setOnClickListener { season(number, true) }
@@ -162,7 +162,7 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
                 }
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
-                text(R.id.status, getString(R.string.ui_details_unavailable_check_your_connection_and_try_again))
+                text(R.id.status, getString(R.string.vod_details_failed))
                 view(R.id.retry).visibility = View.VISIBLE
                 if (channel.kind == ContentKind.SERIES) view(R.id.retry).requestFocus()
             }
@@ -181,7 +181,7 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appContainer.database.history().observe(channel.playlistId, channel.channelKey).collect { history ->
                     val position = history?.positionMs ?: 0
-                    resume.text = if (position > 0) getString(R.string.ui_resume_1_s, resources.getQuantityString(R.plurals.minutes, (position / 60_000).toInt(), (position / 60_000).toInt())) else getString(R.string.recording_play)
+                    resume.text = if (position > 0) getString(R.string.vod_resume, resources.getQuantityString(R.plurals.minutes, (position / 60_000).toInt(), (position / 60_000).toInt())) else getString(R.string.recording_play)
                     if (position <= 0 && beginning.hasFocus()) resume.requestFocus()
                     beginning.visibility = if (position > 0) android.view.View.VISIBLE else android.view.View.GONE
                 }
@@ -235,12 +235,12 @@ class VodDetailActivity : com.tellybox.tv.ui.parental.ProtectedActivity() {
                     .setMessage(listOfNotNull(episode.plot, episode.durationSecs?.let {
                         resources.getQuantityString(R.plurals.minutes, it / 60, it / 60)
                     }).joinToString("\n"))
-                    .setPositiveButton(if (position > 0) getString(R.string.ui_resume) else getString(R.string.recording_play)) { _, _ -> play(channel, episode.id, false) }
-                    .setNeutralButton(getString(R.string.ui_play_from_beginning)) { _, _ -> play(channel, episode.id, true) }
+                    .setPositiveButton(if (position > 0) getString(R.string.vod_continue) else getString(R.string.recording_play)) { _, _ -> play(channel, episode.id, false) }
+                    .setNeutralButton(getString(R.string.vod_from_start)) { _, _ -> play(channel, episode.id, true) }
                     .setNegativeButton(getString(R.string.cancel), null).show()
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
-                Toast.makeText(this@VodDetailActivity, getString(R.string.ui_unable_to_open_episode), Toast.LENGTH_LONG).show()
+                Toast.makeText(this@VodDetailActivity, getString(R.string.vod_episode_failed), Toast.LENGTH_LONG).show()
             }
         }
     }

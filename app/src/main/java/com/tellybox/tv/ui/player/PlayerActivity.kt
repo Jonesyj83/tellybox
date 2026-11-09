@@ -472,7 +472,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 val episode = intent.getLongExtra("episode_id", -1)
                 if (episode >= 0) container.vod.episode(stored, episode) else stored
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { showError(getString(R.string.ui_unable_to_open_episode)); return@launch }
+            catch (e: Exception) { showError(getString(R.string.vod_episode_failed)); return@launch }
             current = channel
             updateButtons()
             triedHls = false
@@ -1222,12 +1222,12 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             val left = appContainer.sleep.remainingMinutes()
             items += (if (left != null) getString(R.string.sleep_banner, left) else getString(R.string.sleep_title)) to { showSleep() }
             if (channel != null && !fileMode) items += getString(R.string.external_player) to { openExternal() }
-            items += getString(R.string.ui_audio_tracks) to { pickTrack(C.TRACK_TYPE_AUDIO) }
-            items += getString(R.string.ui_subtitles) to { pickTrack(C.TRACK_TYPE_TEXT) }
+            items += getString(R.string.player_audio_tracks) to { pickTrack(C.TRACK_TYPE_AUDIO) }
+            items += getString(R.string.player_subtitles) to { pickTrack(C.TRACK_TYPE_TEXT) }
             items += getString(R.string.setting_display_mode) to { pickDisplayMode() }
             if (live) items += getString(R.string.multiview) to { openMultiview() }
             if (pipSupported()) items += getString(R.string.pip) to { enterPip(); Unit }
-            AlertDialog.Builder(this@PlayerActivity).setTitle(getString(R.string.ui_playback_options))
+            AlertDialog.Builder(this@PlayerActivity).setTitle(getString(R.string.player_options))
                 .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
                 .show()
         }
@@ -1237,14 +1237,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val exo = player?.exo ?: return
         val tracks = exo.currentTracks.groups.filter { it.type == type }
         val choices = tracks.flatMap { group -> (0 until group.length).filter { group.isTrackSupported(it) }.map { group to it } }
-        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) getString(R.string.off) else getString(R.string.ui_automatic)) + choices.mapIndexed { index, (group, track) ->
+        val labels = listOf(if (type == C.TRACK_TYPE_TEXT) getString(R.string.off) else getString(R.string.common_automatic)) + choices.mapIndexed { index, (group, track) ->
             val format = group.getTrackFormat(track)
             listOfNotNull(format.label, format.language, format.channelCount.takeIf { it > 0 }?.let { resources.getQuantityString(R.plurals.audio_channels, it, it) })
-                .joinToString(" · ").ifBlank { getString(R.string.ui_track_1_d, index + 1) }
+                .joinToString(" · ").ifBlank { getString(R.string.player_track, index + 1) }
         }
         val disabled = exo.trackSelectionParameters.disabledTrackTypes.contains(type)
         val selected = if (disabled) 0 else choices.indexOfFirst { (group, track) -> group.isTrackSelected(track) }.let { if (it < 0) 0 else it + 1 }
-        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) getString(R.string.ui_subtitles) else getString(R.string.ui_audio_tracks))
+        AlertDialog.Builder(this).setTitle(if (type == C.TRACK_TYPE_TEXT) getString(R.string.player_subtitles) else getString(R.string.player_audio_tracks))
             .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
                 val builder = exo.trackSelectionParameters.buildUpon().clearOverridesOfType(type)
                     .setTrackTypeDisabled(type, type == C.TRACK_TYPE_TEXT && which == 0)

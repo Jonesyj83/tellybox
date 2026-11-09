@@ -44,10 +44,10 @@
             <Button android:id="@+id/watch" style="@style/Button.TV" android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:text="@string/recording_play" />
             <Button android:id="@+id/beginning" style="@style/Button.TV" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:visibility="gone" android:text="@string/ui_play_from_beginning" />
+                android:layout_height="wrap_content" android:visibility="gone" android:text="@string/vod_from_start" />
         </LinearLayout>
         <TextView android:id="@+id/status" style="@style/Text.Body" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="@string/ui_loading" />
+            android:layout_height="wrap_content" android:text="@string/common_loading" />
         <Button android:id="@+id/retry" style="@style/Button.TV" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:visibility="gone" android:text="@string/retry" />
         <HorizontalScrollView android:id="@+id/seasonScroll" android:layout_width="match_parent"

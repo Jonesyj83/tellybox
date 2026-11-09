@@ -29,8 +29,8 @@ internal fun SettingsActivity.exportBackup() = lifecycleScope.launch {
     }
     AlertDialog.Builder(this@exportBackup)
         .setMessage(result.fold(
-            { getString(R.string.ui_backup_saved_in_downloads, name) },
-            { getString(R.string.ui_export_failed_1_s, it.message.orEmpty()) },
+            { getString(R.string.backup_saved, name) },
+            { getString(R.string.backup_export_failed, it.message.orEmpty()) },
         ))
         .setPositiveButton(getString(R.string.ok), null)
         .show()
@@ -46,16 +46,16 @@ internal fun SettingsActivity.chooseBackup(onChooseFile: () -> Unit) = lifecycle
         // A backup written before a reinstall is still on the card, but the reinstall no longer
         // owns it and the index no longer lists it — the picker is the only way back to it.
         AlertDialog.Builder(this@chooseBackup)
-            .setTitle(getString(R.string.ui_import_backup))
-            .setMessage(getString(R.string.ui_no_backups_in_downloads))
-            .setPositiveButton(getString(R.string.ui_choose_a_file)) { _, _ -> onChooseFile() }
+            .setTitle(getString(R.string.backup_import))
+            .setMessage(getString(R.string.backup_none_found))
+            .setPositiveButton(getString(R.string.common_choose_file)) { _, _ -> onChooseFile() }
             .setNegativeButton(getString(R.string.cancel), null)
             .show()
         return@launch
     }
-    val options = files + getString(R.string.ui_choose_a_file)
+    val options = files + getString(R.string.common_choose_file)
     AlertDialog.Builder(this@chooseBackup)
-        .setTitle(getString(R.string.ui_import_backup))
+        .setTitle(getString(R.string.backup_import))
         .setItems(options.toTypedArray()) { _, which ->
             if (which < files.size) importBackup(files[which]) else onChooseFile()
         }
@@ -79,14 +79,14 @@ internal fun SettingsActivity.importBackupUri(uri: Uri) = lifecycleScope.launch 
 }
 
 private fun SettingsActivity.showImportFailure(failure: Throwable) {
-    AlertDialog.Builder(this).setMessage(getString(R.string.ui_import_failed_1_s, failure.message.orEmpty()))
+    AlertDialog.Builder(this).setMessage(getString(R.string.backup_import_failed, failure.message.orEmpty()))
         .setPositiveButton(getString(R.string.ok), null).show()
 }
 
 /** Decode, judge the whole file, then ask before replacing anything. */
 private fun SettingsActivity.applyBackupText(text: String) = lifecycleScope.launch {
     val decoded = runCatching {
-        require(text.length <= 16_000_000) { getString(R.string.ui_backup_is_too_large) }
+        require(text.length <= 16_000_000) { getString(R.string.backup_too_large) }
         BackupCodec.decode(text)
     }
     val state = decoded.getOrElse {
@@ -104,11 +104,11 @@ private fun SettingsActivity.applyBackupText(text: String) = lifecycleScope.laun
             .show()
         return@launch
     }
-    AlertDialog.Builder(this@applyBackupText).setTitle(getString(R.string.ui_replace_saved_configuration))
-        .setMessage(getString(R.string.ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block, state.playlists.size) + if (state.parental == null || state.version == 1) "\n" + getString(R.string.backup_pin_not_included) else "")
-        .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.ui_replace)) { _, _ -> requestPin(always = true) { lifecycleScope.launch {
+    AlertDialog.Builder(this@applyBackupText).setTitle(getString(R.string.backup_replace_title))
+        .setMessage(getString(R.string.backup_replace_summary, state.playlists.size) + if (state.parental == null || state.version == 1) "\n" + getString(R.string.backup_pin_not_included) else "")
+        .setNegativeButton(getString(R.string.cancel), null).setPositiveButton(getString(R.string.common_replace)) { _, _ -> requestPin(always = true) { lifecycleScope.launch {
             val restored = BackupRestore.restore(appContainer, state)
-            AlertDialog.Builder(this@applyBackupText).setMessage(restored.fold({ getString(R.string.ui_backup_restored_open_playlists_to_refresh_streams) }, { getString(R.string.ui_restore_failed_1_s, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
+            AlertDialog.Builder(this@applyBackupText).setMessage(restored.fold({ getString(R.string.backup_restored) }, { getString(R.string.backup_restore_failed, it.message.orEmpty()) })).setPositiveButton(getString(R.string.ok), null).show()
         } } }.show()
 }
 

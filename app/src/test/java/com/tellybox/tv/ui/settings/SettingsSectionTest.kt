@@ -11,7 +11,7 @@ class SettingsSectionTest {
     @Test
     fun `translated or duplicate titles cannot change section membership`() {
         val language = Row(R.string.setting_language, "اللغة")
-        val clock = Row(R.string.ui_show_clock, "اللغة")
+        val clock = Row(R.string.appearance_show_clock, "اللغة")
         val timeshift = Row(R.string.setting_timeshift, "Décalage temporel")
         val rows = listOf(timeshift, clock, language)
         assertEquals(listOf(language), SettingsSection.GENERAL.select(rows) { it.id })
@@ -26,6 +26,6 @@ class SettingsSectionTest {
         assertEquals(ids.size, ids.toSet().size)
         // These used to depend on the positions of section headers.
         assertTrue(R.string.setting_timeshift_buffer in SettingsSection.PLAYER.rowIds)
-        assertTrue(R.string.ui_full_guide_scan in SettingsSection.EPG.rowIds)
+        assertTrue(R.string.guide_full_scan in SettingsSection.EPG.rowIds)
     }
 }
