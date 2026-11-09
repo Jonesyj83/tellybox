@@ -609,7 +609,7 @@
     <string name="reminder_starting_soon">Zaczyna się wkrótce na %1$s</string>
     <string name="recording_count">%1$d nagrań</string>
     <string name="recording_failed_title">Nagrywanie nie powiodło się: %1$s</string>
-    <string name="rec_already_recording">Ten kanał jest już wtedy nagrywany</string>
+    <string name="rec_already_recording">Ten kanał jest już o tej porze nagrywany</string>
     <string name="rec_no_duration">Ta audycja nie ma czasu trwania</string>
     <string name="rec_no_archive">Audycja się skończyła, a kanał nie ma archiwum</string>
     <string name="rec_archive_expired">Audycja jest starsza niż %1$d-dniowe archiwum kanału</string>
