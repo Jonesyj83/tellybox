@@ -29,8 +29,13 @@ object BackupRestore {
             Result.success(Unit)
         } catch (failure: Throwable) {
             val rollback = runCatching { apply(container, snapshot) }
-            rollback.exceptionOrNull()?.let { Result.failure(RollbackFailed(failure, it)) }
-                ?: Result.failure(failure)
+            rollback.exceptionOrNull()?.let { undoFailure ->
+                android.util.Log.e("BackupRestore", "Restore failed and could not be undone", failure)
+                Result.failure(RollbackFailed(failure, undoFailure))
+            } ?: run {
+                android.util.Log.w("BackupRestore", "Restore failed, previous state put back", failure)
+                Result.failure(failure)
+            }
         }
     }
 
