@@ -44,9 +44,13 @@ internal fun SettingsActivity.exportBackup() = lifecycleScope.launch {
 internal fun SettingsActivity.chooseBackup(onChooseFile: () -> Unit) = lifecycleScope.launch {
     val files = withContext(Dispatchers.IO) { runCatching { BackupFiles.list(this@chooseBackup) }.getOrDefault(emptyList()) }
     if (files.isEmpty()) {
+        // A backup written before a reinstall is still on the card, but the reinstall no longer
+        // owns it and the index no longer lists it — the picker is the only way back to it.
         AlertDialog.Builder(this@chooseBackup)
+            .setTitle(getString(R.string.ui_import_backup))
             .setMessage(getString(R.string.ui_no_backups_in_downloads))
-            .setPositiveButton(getString(R.string.ok), null)
+            .setPositiveButton(getString(R.string.ui_choose_a_file)) { _, _ -> onChooseFile() }
+            .setNegativeButton(getString(R.string.cancel), null)
             .show()
         return@launch
     }
