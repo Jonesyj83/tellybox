@@ -47,6 +47,9 @@ class BackgroundRefresh(
                 .forEach {
                     _status.value = RefreshStatus.Playlist(it.name)
                     playlists.refresh(it.id)
+                    // Friends and films arrive after the channels, so wait for that pass too,
+                    // otherwise the worker finishes and the process may be killed before it lands.
+                    playlists.refreshStalkerVod(it.id)
                 }
             val staleGuides = epg.staleSources(cutoff)
             if (staleGuides.isNotEmpty()) {

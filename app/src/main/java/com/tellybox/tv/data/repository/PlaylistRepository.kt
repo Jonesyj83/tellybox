@@ -1,6 +1,7 @@
 package com.tellybox.tv.data.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.room.withTransaction
 import com.tellybox.tv.data.db.ChannelEntity
 import com.tellybox.tv.data.db.ChannelGroupEntity
@@ -16,6 +17,9 @@ import com.tellybox.tv.data.parser.stalker.StalkerClient
 import com.tellybox.tv.data.parser.xtream.XtreamClient
 import com.tellybox.tv.data.parser.xtream.XtreamCredentials
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import okhttp3.OkHttpClient
 
@@ -61,9 +65,11 @@ class PlaylistRepository(
     }
 
     suspend fun delete(id: Long) {
-        // Groups, channels, favorites, history and EPG sources all cascade.
-        db.playlists().delete(id)
-        stalkerClients.forget(id)
+        stalkerRefresh.delete(id) {
+            // Groups, channels, favorites, history and EPG sources all cascade.
+            db.playlists().delete(id)
+            stalkerClients.forget(id)
+        }
     }
 
     suspend fun setEnabled(playlist: PlaylistEntity, enabled: Boolean) {
@@ -82,6 +88,8 @@ class PlaylistRepository(
             }
             db.playlists().update(edited)
         }
+        // The old portal's tokens and its half-finished film pass both have to go.
+        stalkerRefresh.cancel(edited.id)
         stalkerClients.forget(edited.id)
         doRefresh(edited.id)
     }
@@ -251,8 +259,54 @@ class PlaylistRepository(
         val client = stalkerClients.get(playlist)
         client.connect()
         // Adult categories are left out entirely once a parental PIN exists.
-        val imported = StalkerImport.load(client, playlist.id, hideCensored = hideAdult())
-        return store(playlist.id, imported.channels, emptyList(), imported.groups, imported.completion)
+        val imported = StalkerImport.live(client, playlist.id)
+        val stored = stalkerRefresh.refresh(playlist.id) {
+            store(playlist.id, imported.channels, emptyList(), imported.groups, imported.completion)
+        }
+        // Films land later, so report what the playlist holds rather than what just arrived,
+        // otherwise the summary makes it look like the library was wiped.
+        return stored.copy(
+            movies = db.channels().countForPlaylistByKind(playlist.id, ContentKind.MOVIE),
+            series = db.channels().countForPlaylistByKind(playlist.id, ContentKind.SERIES),
+        )
+    }
+
+    private val stalkerRefresh = StalkerRefresh(applicationScope, ::importStalkerVod)
+
+    suspend fun refreshStalkerVod(playlistId: Long) = stalkerRefresh.vod(playlistId)
+
+    /**
+     * Runs after the live channels are on screen, so a big film library cannot block them. The
+     * walk is stored a chunk of categories at a time, so the film list fills in as it goes rather
+     * than staying empty until the last page.
+     */
+    private suspend fun importStalkerVod(playlistId: Long) {
+        try {
+            val playlist = db.playlists().get(playlistId) ?: return
+            if (playlist.type != PlaylistType.STALKER) return
+            val client = stalkerClients.get(playlist)
+            val categories = client.vodCategories().filterNot { hideAdult() && it.censored }
+            if (categories.isEmpty()) {
+                Log.w("PlaylistRepository", "The portal listed no VOD categories")
+                return
+            }
+            val started = System.nanoTime()
+            categories.chunked(VOD_CHUNK).forEach { chunk ->
+                val left = VOD_BUDGET_MS - (System.nanoTime() - started) / 1_000_000
+                if (left <= 0) return@forEach
+                val part = StalkerImport.loadVod(playlistId, false, chunk, left, client::vodItemsResult)
+                // Only this chunk may be pruned. Every other category is marked PARTIAL for this
+                // store, otherwise its rows look missing and get deleted.
+                val chunkIds = chunk.map { it.id }.toSet()
+                val others = categories.map { it.id }.filterNot { it in chunkIds }
+                store(playlistId, part.channels, emptyList(), part.groups, batchedCompletion(part.completion.categories, others))
+                part.vodError?.let { Log.w("PlaylistRepository", "Stalker VOD: $it") }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("PlaylistRepository", "Stalker VOD refresh failed", e)
+        }
     }
 
     // --- persistence -------------------------------------------------------------------
@@ -325,6 +379,13 @@ class PlaylistRepository(
     }
 
     companion object {
+        private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        /**
+         * Categories per store. One at a time: a single big category can take a minute, and the
+         * point is that the ones already walked are visible while the rest are still coming.
+         */
+        private const val VOD_CHUNK = 1
+        private const val VOD_BUDGET_MS = 10 * 60 * 1000L
         const val UNGROUPED = "Other"
         const val CATCHUP_XTREAM = "xtream"
         const val CATCHUP_STALKER = "stalker"

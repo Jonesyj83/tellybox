@@ -7,17 +7,24 @@ import com.tellybox.tv.data.parser.long
 import com.tellybox.tv.data.parser.objects
 import com.tellybox.tv.data.parser.str
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.TimeZone
@@ -192,15 +199,49 @@ class StalkerClient(
             .apply { token?.let { header("Authorization", "Bearer $it") } }
             .build()
 
-        http.newCall(req).execute().use { resp ->
-            val body = resp.body?.string().orEmpty()
-            if (!resp.isSuccessful) throw StalkerException("HTTP ${resp.code}")
-            if (!allowNoToken && body.contains("Authorization failed", ignoreCase = true)) {
-                throw StalkerException("Authorization failed")
+        // Enqueued rather than executed, so cancelling the pass actually drops the request
+        // instead of waiting out the socket timeout. Rate limits get a short, bounded retry:
+        // losing a whole category because the portal was busy costs films for a whole refresh.
+        var attempt = 0
+        var code: Int
+        var body: String
+        do {
+            attempt++
+            val (c, b) = execute(req)
+            code = c
+            body = b
+            if ((code == 429 || code == 503) && attempt < BUSY_ATTEMPTS) delay(BUSY_WAIT_MS * attempt)
+        } while ((code == 429 || code == 503) && attempt < BUSY_ATTEMPTS)
+
+        if (code !in 200..299) throw StalkerException("HTTP $code")
+        if (!allowNoToken && body.contains("Authorization failed", ignoreCase = true)) {
+            throw StalkerException("Authorization failed")
+        }
+        val root = runCatching { json.parseToJsonElement(body) }.getOrNull() as? JsonObject
+            ?: throw StalkerException("Unexpected response from portal")
+        root["js"]
+    }
+
+    private suspend fun execute(req: Request): Pair<Int, String> {
+        val call = http.newCall(req)
+        return try {
+            suspendCancellableCoroutine<Pair<Int, String>> { cont ->
+                cont.invokeOnCancellation { call.cancel() }
+                call.enqueue(object : Callback {
+                    override fun onFailure(c: Call, e: IOException) {
+                        if (cont.isActive) cont.resumeWithException(e)
+                    }
+
+                    override fun onResponse(c: Call, resp: Response) {
+                        resp.use {
+                            val text = runCatching { it.body?.string().orEmpty() }.getOrDefault("")
+                            if (cont.isActive) cont.resume(it.code to text)
+                        }
+                    }
+                })
             }
-            val root = runCatching { json.parseToJsonElement(body) }.getOrNull() as? JsonObject
-                ?: throw StalkerException("Unexpected response from portal")
-            root["js"]
+        } catch (e: IOException) {
+            throw StalkerException(e.message ?: "The portal did not answer")
         }
     }
 
@@ -222,6 +263,10 @@ class StalkerClient(
     )
 
     companion object {
+        /** Goes at a busy portal before giving up on a page. */
+        private const val BUSY_ATTEMPTS = 3
+        private const val BUSY_WAIT_MS = 700L
+
         private const val USER_AGENT =
             "Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 2 rev: 250 Safari/533.3"
 

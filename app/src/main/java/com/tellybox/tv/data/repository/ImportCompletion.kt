@@ -19,6 +19,18 @@ internal data class ImportCompletion(
     }
 }
 
+/**
+ * Completion for one batch of VOD categories. Categories not walked yet are marked PARTIAL, so
+ * their stored rows survive while the finished ones are pruned normally.
+ */
+internal fun batchedCompletion(
+    finished: Map<String, LoadCompletion>,
+    remaining: List<String>,
+): ImportCompletion = ImportCompletion(
+    kinds = mapOf(ContentKind.MOVIE to LoadCompletion.FULL, ContentKind.SERIES to LoadCompletion.FULL),
+    categories = finished + remaining.associateWith { LoadCompletion.PARTIAL },
+)
+
 internal suspend fun optionalImport(load: suspend () -> Unit): LoadCompletion = try {
     load()
     LoadCompletion.FULL
