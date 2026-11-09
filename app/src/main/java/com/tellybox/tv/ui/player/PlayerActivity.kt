@@ -658,7 +658,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             return
         }
         reconnects++
-        val keep = if (catchup || fileMode) player?.exo?.currentPosition ?: archivePosition else 0L
+        val keep = com.tellybox.tv.player.resumeAt(catchup || fileMode, player?.exo?.currentPosition, archivePosition)
         binding.errorDetail.text = getString(R.string.player_reconnecting, reconnects, MAX_RECONNECTS)
         binding.errorBox.visibility = View.VISIBLE
         lifecycleScope.launch {
