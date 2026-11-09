@@ -3,6 +3,7 @@ package com.tellybox.tv.data.parser.stalker
 import com.tellybox.tv.data.db.ContentKind
 import com.tellybox.tv.data.parser.objects
 import com.tellybox.tv.data.repository.StalkerImport
+import com.tellybox.tv.data.repository.StalkerImportResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -192,6 +193,18 @@ class StalkerVodTest {
         }
     }.also { servers += it }
 
+
+    /** Live plus the whole film walk, the way the old one-call import did it. */
+    private suspend fun importAll(client: StalkerClient, playlistId: Long, hideCensored: Boolean): StalkerImportResult {
+        val live = StalkerImport.live(client, playlistId)
+        val vod = try {
+            StalkerImport.loadVod(playlistId, hideCensored, client.vodCategories(), fetch = client::vodItemsResult)
+        } catch (e: Exception) {
+            StalkerImportResult(emptyList(), emptyList(), e.message ?: e.javaClass.simpleName)
+        }
+        return StalkerImportResult(live.channels + vod.channels, live.groups + vod.groups, vod.vodError, vod.completion)
+    }
+
     private fun client(p: FakePortal) = StalkerClient("http://127.0.0.1:${p.port}/portal.php", "00:1A:79:AB:CD:EF", OkHttpClient())
 
     @Test
@@ -231,7 +244,7 @@ class StalkerVodTest {
     fun importStoresMarkersAndNeverResolvesTitles() = runBlocking {
         val p = portal()
         val c = client(p).also { it.connect() }
-        val result = StalkerImport.load(c, playlistId = 1, hideCensored = false)
+        val result = importAll(c, playlistId = 1, hideCensored = false)
 
         val movies = result.channels.filter { it.kind == ContentKind.MOVIE }
         val series = result.channels.filter { it.kind == ContentKind.SERIES }
@@ -283,7 +296,7 @@ class StalkerVodTest {
     fun censoredCategoriesAreSkippedWhenAPinIsSet() = runBlocking {
         val p = portal()
         val c = client(p).also { it.connect() }
-        StalkerImport.load(c, playlistId = 1, hideCensored = true)
+        importAll(c, playlistId = 1, hideCensored = true)
         val asked = p.requests.filter { it["action"] == "get_ordered_list" }.mapNotNull { it["category"] }.toSet()
         listOf("96", "73", "114", "118", "116", "143", "148", "149", "153").forEach { assertFalse(it in asked) }
         assertTrue("5" in asked && "42" in asked)
@@ -293,7 +306,7 @@ class StalkerVodTest {
     fun portalThatErrorsOnVodStillImportsLive() = runBlocking {
         val p = portal(failVod = true)
         val c = client(p).also { it.connect() }
-        val result = StalkerImport.load(c, playlistId = 1, hideCensored = false)
+        val result = importAll(c, playlistId = 1, hideCensored = false)
         assertEquals(listOf("One"), result.channels.map { it.channel.name })
         assertTrue(result.channels.all { it.kind == ContentKind.LIVE })
         assertEquals(listOf("News"), result.groups.map { it.name })

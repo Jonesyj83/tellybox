@@ -275,14 +275,33 @@ class PlaylistRepository(
 
     suspend fun refreshStalkerVod(playlistId: Long) = stalkerRefresh.vod(playlistId)
 
-    /** Runs after the live channels are on screen, so a big film library cannot block them. */
+    /**
+     * Runs after the live channels are on screen, so a big film library cannot block them. The
+     * walk is stored a chunk of categories at a time, so the film list fills in as it goes rather
+     * than staying empty until the last page.
+     */
     private suspend fun importStalkerVod(playlistId: Long) {
         try {
             val playlist = db.playlists().get(playlistId) ?: return
             if (playlist.type != PlaylistType.STALKER) return
-            val imported = StalkerImport.vod(stalkerClients.get(playlist), playlistId, hideAdult())
-            store(playlistId, imported.channels, emptyList(), imported.groups, imported.completion)
-            imported.vodError?.let { Log.w("PlaylistRepository", "Stalker VOD: $it") }
+            val client = stalkerClients.get(playlist)
+            val categories = client.vodCategories().filterNot { hideAdult() && it.censored }
+            if (categories.isEmpty()) {
+                Log.w("PlaylistRepository", "The portal listed no VOD categories")
+                return
+            }
+            val started = System.nanoTime()
+            categories.chunked(VOD_CHUNK).forEach { chunk ->
+                val left = VOD_BUDGET_MS - (System.nanoTime() - started) / 1_000_000
+                if (left <= 0) return@forEach
+                val part = StalkerImport.loadVod(playlistId, false, chunk, left, client::vodItemsResult)
+                // Only this chunk may be pruned. Every other category is marked PARTIAL for this
+                // store, otherwise its rows look missing and get deleted.
+                val chunkIds = chunk.map { it.id }.toSet()
+                val others = categories.map { it.id }.filterNot { it in chunkIds }
+                store(playlistId, part.channels, emptyList(), part.groups, batchedCompletion(part.completion.categories, others))
+                part.vodError?.let { Log.w("PlaylistRepository", "Stalker VOD: $it") }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -361,6 +380,12 @@ class PlaylistRepository(
 
     companion object {
         private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        /**
+         * Categories per store. One at a time: a single big category can take a minute, and the
+         * point is that the ones already walked are visible while the rest are still coming.
+         */
+        private const val VOD_CHUNK = 1
+        private const val VOD_BUDGET_MS = 10 * 60 * 1000L
         const val UNGROUPED = "Other"
         const val CATCHUP_XTREAM = "xtream"
         const val CATCHUP_STALKER = "stalker"
