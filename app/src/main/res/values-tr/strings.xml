@@ -415,7 +415,7 @@
     <string name="ui_assign">Ata</string>
     <string name="ui_guide_assigned">Rehber atandı</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Akışları ekleyin, düzenleyin, yenileyin ve kaldırın</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Kimlik bilgilerini içerir; ebeveyn PIN hariçtir</string>
+    <string name="ui_includes_credentials_and_parental_pin">Giriş bilgilerini ve ebeveyn PIN kodunu içerir</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Yapılandırmayı sürümlendirilmiş bir JSON dosyasından değiştirin</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Sizin tarafınızdan sağlanan çalma listeleri için bir oynatıcı.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Dışa aktarma başarısız oldu: %1$s</string>
     <string name="ui_import_failed_1_s">İçe aktarma başarısız oldu: %1$s</string>
     <string name="ui_restore_failed_1_s">Geri yükleme başarısız oldu: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Çalma listelerini (%1$d), rehber atamalarını, favorileri, izleme geçmişini, engellenen kanalları/grupları ve ayarları değiştirin. Önbelleğe alınmış kanallar ve programlar temizlenecek; içe aktardıktan sonra çalma listelerini yenileyin. Kayıtlar ve hatırlatıcılar kalıyor. Ebeveyn PIN dahil değildir ve değişmeden kalacaktır.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Oynatma listelerini (%1$d), rehber atamalarını, favorileri, izleme geçmişini, engelleri, ayarları ve ebeveyn PIN kodunu değiştirir. Önbellekteki kanallar ve programlar silinir; ardından listeleri yenileyin. Kayıtlar ve hatırlatıcılar kalır.</string>
     <string name="ui_rating_1_s">Değerlendirme: %1$s</string>
     <string name="ui_cast_1_s">Oyuncular: %1$s</string>
     <string name="ui_director_1_s">Yönetmen: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Altyazılar</string>
     <string name="ui_playback_options">Oynatma seçenekleri</string>
     <string name="ui_automatic">Otomatik</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Yedekleme dışa aktarıldı. Bu dosyayı gizli tutun: oynatma listesi kimlik bilgilerini içerir. Ebeveyn PIN hariçtir.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Yedek dışa aktarıldı. Bu dosyayı gizli tutun: liste giriş bilgilerini ve ebeveyn PIN kodunu içerir.</string>
     <string name="ui_backup_is_too_large">Yedekleme çok büyük</string>
     <string name="ui_replace_saved_configuration">Kaydedilen yapılandırma değiştirilsin mi?</string>
     <string name="ui_replace">Değiştir</string>

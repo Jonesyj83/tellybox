@@ -415,7 +415,7 @@
     <string name="ui_assign">Määritä</string>
     <string name="ui_guide_assigned">Opas määrätty</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Lisää, muokkaa, päivitä ja poista streameja</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Sisältää valtuustiedot; ei sisällä vanhempien PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Sisältää tunnukset ja lapsilukon PIN-koodin</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Korvaa kokoonpano versioidusta JSON-tiedostosta</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Soitin toimittamillesi soittolistoille.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Vienti epäonnistui: %1$s</string>
     <string name="ui_import_failed_1_s">Tuonti epäonnistui: %1$s</string>
     <string name="ui_restore_failed_1_s">Palautus epäonnistui: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Korvaa soittolistat (%1$d), opastehtävät, suosikit, katseluhistoria, estetyt kanavat/ryhmät ja asetukset. Välimuistissa olevat kanavat ja ohjelmat tyhjennetään; päivittää soittolistat tuonnin jälkeen. Tallenteet ja muistutukset säilyvät. Vanhemman PIN ei sisälly hintaan ja pysyy ennallaan.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Korvaa soittolistat (%1$d), ohjelmaoppaan liitokset, suosikit, katseluhistorian, estot, asetukset ja lapsilukon PIN-koodin. Välimuistissa olevat kanavat ja ohjelmat tyhjennetään; päivitä soittolistat sen jälkeen. Tallenteet ja muistutukset säilyvät.</string>
     <string name="ui_rating_1_s">Luokitus: %1$s</string>
     <string name="ui_cast_1_s">Näyttelijät: %1$s</string>
     <string name="ui_director_1_s">Ohjaus: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Tekstitykset</string>
     <string name="ui_playback_options">Toistovaihtoehdot</string>
     <string name="ui_automatic">Automaattinen</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Varmuuskopio viety. Pidä tämä tiedosto yksityisenä: se sisältää soittolistan tunnistetiedot. Vanhemman PIN on poissuljettu.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Varmuuskopio viety. Pidä tiedosto yksityisenä: se sisältää soittolistojen tunnukset ja lapsilukon PIN-koodin.</string>
     <string name="ui_backup_is_too_large">Varmuuskopio on liian suuri</string>
     <string name="ui_replace_saved_configuration">Korvataanko tallennettu kokoonpano?</string>
     <string name="ui_replace">Vaihda</string>

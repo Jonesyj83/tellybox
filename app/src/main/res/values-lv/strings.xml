@@ -428,7 +428,7 @@
     <string name="ui_assign">Piešķirt</string>
     <string name="ui_guide_assigned">Piešķirts ceļvedis</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Pievienojiet, rediģējiet, atsvaidziniet un noņemiet straumes</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Ietver akreditācijas datus; neietver vecāku PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Ietver pieteikšanās datus un vecāku PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Aizstāt konfigurāciju no JSON faila ar versiju</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Jūsu nodrošināto atskaņošanas sarakstu atskaņotājs.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -472,7 +472,7 @@
     <string name="ui_export_failed_1_s">Eksportēšana neizdevās: %1$s</string>
     <string name="ui_import_failed_1_s">Importēšana neizdevās: %1$s</string>
     <string name="ui_restore_failed_1_s">Atjaunot neizdevās: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Aizstāt atskaņošanas sarakstus (%1$d), ceļvežu uzdevumus, izlasi, skatīšanās vēsturi, bloķētos kanālus/grupas un iestatījumus. Kešatmiņā saglabātie kanāli un programmas tiks notīrītas; pēc importēšanas atsvaidzināt atskaņošanas sarakstus. Ieraksti un atgādinājumi paliek. Vecāku PIN nav iekļauts un paliks nemainīgs.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Aizstāj atskaņošanas sarakstus (%1$d), ceļveža piesaistes, izlasi, skatīšanās vēsturi, bloķējumus, iestatījumus un vecāku PIN. Kešatmiņā saglabātie kanāli un raidījumi tiek notīrīti; pēc tam atjauniniet sarakstus. Ieraksti un atgādinājumi paliek.</string>
     <string name="ui_rating_1_s">Vērtējums: %1$s</string>
     <string name="ui_cast_1_s">Lomās: %1$s</string>
     <string name="ui_director_1_s">Režisors: %1$s</string>
@@ -519,7 +519,7 @@
     <string name="ui_subtitles">Subtitri</string>
     <string name="ui_playback_options">Atskaņošanas iespējas</string>
     <string name="ui_automatic">Automātiski</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Dublējums eksportēts. Saglabājiet šo failu privātu: tajā ir atskaņošanas saraksta akreditācijas dati. Vecāku PIN ir izslēgts.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Dublējums eksportēts. Glabājiet failu privāti: tajā ir atskaņošanas sarakstu pieteikšanās dati un vecāku PIN.</string>
     <string name="ui_backup_is_too_large">Dublējums ir pārāk liels</string>
     <string name="ui_replace_saved_configuration">Vai aizstāt saglabāto konfigurāciju?</string>
     <string name="ui_replace">Aizstāt</string>

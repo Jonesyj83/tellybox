@@ -428,7 +428,7 @@
     <string name="ui_assign">הקצה</string>
     <string name="ui_guide_assigned">הוקצה מדריך</string>
     <string name="ui_add_edit_refresh_and_remove_streams">הוסף, ערוך, רענן והסר זרמים</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">כולל אישורים; לא כולל PIN הורה</string>
+    <string name="ui_includes_credentials_and_parental_pin">כולל פרטי התחברות ואת קוד ההורים</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">החלף תצורה מקובץ JSON עם גרסה</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">נגן לפלייליסטים שסופקו על ידך.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -472,7 +472,7 @@
     <string name="ui_export_failed_1_s">הייצוא נכשל: %1$s</string>
     <string name="ui_import_failed_1_s">הייבוא נכשל: %1$s</string>
     <string name="ui_restore_failed_1_s">השחזור נכשל: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">החלף רשימות השמעה (%1$d), מטלות מדריך, מועדפים, היסטוריית צפייה, ערוצים/קבוצות חסומים והגדרות. ערוצים ותוכניות המאוחסנים במטמון ימוקו; רענן רשימות השמעה לאחר הייבוא. נותרו הקלטות ותזכורות. ה-PIN ההורי אינו כלול והוא יישאר ללא שינוי.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">מחליף פלייליסטים (%1$d), שיוכי מדריך, מועדפים, היסטוריית צפייה, חסימות, הגדרות ואת קוד ההורים. ערוצים ותוכניות במטמון נמחקים; רענן את הפלייליסטים לאחר מכן. הקלטות ותזכורות נשמרות.</string>
     <string name="ui_rating_1_s">דירוג: %1$s</string>
     <string name="ui_cast_1_s">שחקנים: %1$s</string>
     <string name="ui_director_1_s">בימוי: %1$s</string>
@@ -519,7 +519,7 @@
     <string name="ui_subtitles">כתוביות</string>
     <string name="ui_playback_options">אפשרויות השמעה</string>
     <string name="ui_automatic">אוטומטי</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">הגיבוי יוצא. השאר את הקובץ הזה פרטי: הוא מכיל אישורים של רשימת השמעה. ה-PIN ההורי אינו נכלל.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">הגיבוי יוצא. שמור את הקובץ פרטי: הוא מכיל פרטי התחברות לפלייליסטים ואת קוד ההורים.</string>
     <string name="ui_backup_is_too_large">הגיבוי גדול מדי</string>
     <string name="ui_replace_saved_configuration">להחליף תצורה שמורה?</string>
     <string name="ui_replace">החלף</string>

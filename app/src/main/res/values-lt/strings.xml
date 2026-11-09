@@ -441,7 +441,7 @@
     <string name="ui_assign">Priskirti</string>
     <string name="ui_guide_assigned">Paskirtas vadovas</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Pridėkite, redaguokite, atnaujinkite ir pašalinkite srautus</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Apima kredencialus; neapima tėvų PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Įtraukia prisijungimo duomenis ir tėvų PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Pakeiskite konfigūraciją iš JSON failo su versija</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Jūsų pateiktų grojaraščių grotuvas.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -485,7 +485,7 @@
     <string name="ui_export_failed_1_s">Eksportuoti nepavyko: %1$s</string>
     <string name="ui_import_failed_1_s">Importuoti nepavyko: %1$s</string>
     <string name="ui_restore_failed_1_s">Atkurti nepavyko: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Pakeiskite grojaraščius (%1$d), vadovų užduotis, mėgstamiausius, žiūrėjimo istoriją, užblokuotus kanalus / grupes ir nustatymus. Talpykloje esantys kanalai ir programos bus išvalyti; importavus atnaujinti grojaraščius. Liko įrašai ir priminimai. Tėvų PIN nėra įtrauktas ir išliks nepakitęs.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Pakeičia grojaraščius (%1$d), programos priskyrimus, mėgstamus, žiūrėjimo istoriją, blokavimus, nustatymus ir tėvų PIN. Podėlyje esantys kanalai ir laidos išvalomi; po to atnaujinkite grojaraščius. Įrašai ir priminimai lieka.</string>
     <string name="ui_rating_1_s">Įvertinimas: %1$s</string>
     <string name="ui_cast_1_s">Aktoriai: %1$s</string>
     <string name="ui_director_1_s">Režisierius: %1$s</string>
@@ -532,7 +532,7 @@
     <string name="ui_subtitles">Subtitrai</string>
     <string name="ui_playback_options">Atkūrimo parinktys</string>
     <string name="ui_automatic">Automatinis</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Atsarginė kopija eksportuota. Laikykite šį failą privatų: jame yra grojaraščio kredencialai. Tėvų PIN neįtrauktas.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Atsarginė kopija eksportuota. Saugokite failą: jame yra grojaraščių prisijungimo duomenys ir tėvų PIN.</string>
     <string name="ui_backup_is_too_large">Atsarginė kopija per didelė</string>
     <string name="ui_replace_saved_configuration">Pakeisti išsaugotą konfigūraciją?</string>
     <string name="ui_replace">Pakeiskite</string>

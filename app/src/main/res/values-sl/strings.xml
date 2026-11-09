@@ -441,7 +441,7 @@
     <string name="ui_assign">Dodeli</string>
     <string name="ui_guide_assigned">Vodnik dodeljen</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Dodajanje, urejanje, osveževanje in odstranjevanje tokov</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Vključuje poverilnice; izključuje starševski PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Vsebuje prijavne podatke in starševski PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Zamenjajte konfiguracijo iz datoteke JSON z različicami</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Predvajalnik za sezname predvajanja, ki ga zagotovite vi.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -485,7 +485,7 @@
     <string name="ui_export_failed_1_s">Izvoz ni uspel: %1$s</string>
     <string name="ui_import_failed_1_s">Uvoz ni uspel: %1$s</string>
     <string name="ui_restore_failed_1_s">Obnovitev ni uspela: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Zamenjajte sezname predvajanja (%1$d), dodelitve vodnikov, priljubljene, zgodovino ogledov, blokirane kanale/skupine in nastavitve. Predpomnjeni kanali in programi bodo izbrisani; osvežite sezname predvajanja po uvozu. Posnetki in opomniki ostanejo. Starševski PIN ni vključen in bo ostal nespremenjen.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Zamenja sezname (%1$d), dodelitve vodnika, priljubljene, zgodovino gledanja, blokade, nastavitve in starševski PIN. Predpomnjeni kanali in oddaje se izbrišejo; nato osvežite sezname. Posnetki in opomniki ostanejo.</string>
     <string name="ui_rating_1_s">Ocena: %1$s</string>
     <string name="ui_cast_1_s">Igralci: %1$s</string>
     <string name="ui_director_1_s">Režija: %1$s</string>
@@ -532,7 +532,7 @@
     <string name="ui_subtitles">Podnapisi</string>
     <string name="ui_playback_options">Možnosti predvajanja</string>
     <string name="ui_automatic">Samodejno</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Varnostna kopija izvožena. Naj bo ta datoteka zasebna: vsebuje poverilnice seznama predvajanja. Starševski PIN je izključen.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Varnostna kopija je izvožena. Datoteko hranite zasebno: vsebuje prijavne podatke seznamov in starševski PIN.</string>
     <string name="ui_backup_is_too_large">Varnostna kopija je prevelika</string>
     <string name="ui_replace_saved_configuration">Želite zamenjati shranjeno konfiguracijo?</string>
     <string name="ui_replace">Zamenjaj</string>

@@ -428,7 +428,7 @@
     <string name="ui_assign">Atribuiți</string>
     <string name="ui_guide_assigned">Ghid atribuit</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Adăugați, editați, reîmprospătați și eliminați fluxuri</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Include acreditări; exclude PIN parental</string>
+    <string name="ui_includes_credentials_and_parental_pin">Include datele de conectare și PIN-ul parental</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Înlocuiți configurația dintr-un fișier JSON cu versiune</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Un player pentru listele de redare furnizate de dvs.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -472,7 +472,7 @@
     <string name="ui_export_failed_1_s">Export eșuat: %1$s</string>
     <string name="ui_import_failed_1_s">Importul eșuat: %1$s</string>
     <string name="ui_restore_failed_1_s">Restaurarea eșuată: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Înlocuiți listele de redare (%1$d), sarcinile de ghidare, favoritele, istoricul vizionărilor, canalele/grupurile și setările blocate. Canalele și programele memorate în cache vor fi șterse; reîmprospătați listele de redare după importare. Înregistrările și mementourile rămân. PIN parental nu este inclus și va rămâne neschimbat.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Înlocuiește listele (%1$d), atribuirile ghidului, favoritele, istoricul, blocările, setările și PIN-ul parental. Canalele și emisiunile din cache sunt șterse; reîmprospătați listele după aceea. Înregistrările și mementourile rămân.</string>
     <string name="ui_rating_1_s">Evaluare: %1$s</string>
     <string name="ui_cast_1_s">Distribuție: %1$s</string>
     <string name="ui_director_1_s">Regizor: %1$s</string>
@@ -519,7 +519,7 @@
     <string name="ui_subtitles">Subtitrări</string>
     <string name="ui_playback_options">Opțiuni de redare</string>
     <string name="ui_automatic">automată</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exportat. Păstrați acest fișier privat: conține acreditările listei de redare. PIN parental este exclus.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Copie de rezervă exportată. Păstrați fișierul privat: conține datele de conectare ale listelor și PIN-ul parental.</string>
     <string name="ui_backup_is_too_large">Backup-ul este prea mare</string>
     <string name="ui_replace_saved_configuration">Înlocuiți configurația salvată?</string>
     <string name="ui_replace">Înlocuiește</string>

@@ -467,7 +467,7 @@
     <string name="ui_assign">تعيين</string>
     <string name="ui_guide_assigned">تم تعيين الدليل</string>
     <string name="ui_add_edit_refresh_and_remove_streams">إضافة وتحرير وتحديث وإزالة التدفقات</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">يتضمن بيانات الدخول؛ لا يتضمن PIN للرقابة الأبوية</string>
+    <string name="ui_includes_credentials_and_parental_pin">يتضمن بيانات الدخول ورمز PIN الخاص بالرقابة الأبوية</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">استبدل التكوين من ملف JSON ذي الإصدار</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">مشغل لقوائم التشغيل التي تقدمها.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -511,7 +511,7 @@
     <string name="ui_export_failed_1_s">فشل التصدير: %1$s</string>
     <string name="ui_import_failed_1_s">فشل الاستيراد: %1$s</string>
     <string name="ui_restore_failed_1_s">فشلت الاستعادة: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">استبدال قوائم التشغيل (%1$d) وتعيينات الدليل والمفضلة وسجل المشاهدة والقنوات والمجموعات المحظورة والإعدادات. ستُمسح القنوات والبرامج المخزنة مؤقتًا؛ حدّث قوائم التشغيل بعد الاستيراد. تبقى التسجيلات والتذكيرات. لا يتضمن الملف PIN للرقابة الأبوية وسيبقى دون تغيير.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">استبدال القوائم (%1$d) وتعيينات الدليل والمفضلة وسجل المشاهدة والحظر والإعدادات ورمز PIN للرقابة الأبوية. تُمسح القنوات والبرامج المخزنة مؤقتًا؛ حدّث القوائم بعد ذلك. تبقى التسجيلات والتذكيرات.</string>
     <string name="ui_rating_1_s">التقييم: %1$s</string>
     <string name="ui_cast_1_s">طاقم العمل: %1$s</string>
     <string name="ui_director_1_s">المخرج: %1$s</string>
@@ -558,7 +558,7 @@
     <string name="ui_subtitles">الترجمة</string>
     <string name="ui_playback_options">خيارات التشغيل</string>
     <string name="ui_automatic">تلقائي</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">تم تصدير النسخة الاحتياطية. احتفظ بهذا الملف بسرية: فهو يحتوي على بيانات دخول قوائم التشغيل. لا يتضمن PIN للرقابة الأبوية.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">تم تصدير النسخة الاحتياطية. احتفظ بهذا الملف خاصًا: فهو يحتوي على بيانات اعتماد القوائم ورمز PIN للرقابة الأبوية.</string>
     <string name="ui_backup_is_too_large">النسخة الاحتياطية كبيرة جدًا</string>
     <string name="ui_replace_saved_configuration">هل تريد استبدال التكوين المحفوظ؟</string>
     <string name="ui_replace">استبدال</string>

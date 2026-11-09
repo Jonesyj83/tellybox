@@ -402,7 +402,7 @@
     <string name="ui_assign">Chỉ định</string>
     <string name="ui_guide_assigned">Hướng dẫn được chỉ định</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Thêm, chỉnh sửa, làm mới và xóa luồng</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Bao gồm thông tin xác thực; không bao gồm PIN của cha mẹ</string>
+    <string name="ui_includes_credentials_and_parental_pin">Bao gồm thông tin đăng nhập và mã PIN phụ huynh</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Thay thế cấu hình từ tệp JSON được phiên bản</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Trình phát dành cho danh sách phát do bạn cung cấp.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -446,7 +446,7 @@
     <string name="ui_export_failed_1_s">Xuất không thành công: %1$s</string>
     <string name="ui_import_failed_1_s">Nhập không thành công: %1$s</string>
     <string name="ui_restore_failed_1_s">Khôi phục không thành công: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Thay thế danh sách phát (%1$d), bài tập hướng dẫn, mục yêu thích, lịch sử xem, kênh/nhóm bị chặn và cài đặt. Các kênh và chương trình được lưu trong bộ nhớ đệm sẽ bị xóa; làm mới danh sách phát sau khi nhập. Bản ghi và lời nhắc vẫn còn. PIN gốc không được bao gồm và sẽ không thay đổi.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Thay thế danh sách (%1$d), gán lịch, mục yêu thích, lịch sử xem, chặn, cài đặt và mã PIN phụ huynh. Kênh và chương trình đã lưu đệm sẽ bị xoá; sau đó làm mới danh sách. Bản ghi và nhắc nhở được giữ lại.</string>
     <string name="ui_rating_1_s">Đánh giá: %1$s</string>
     <string name="ui_cast_1_s">Diễn viên: %1$s</string>
     <string name="ui_director_1_s">Đạo diễn: %1$s</string>
@@ -493,7 +493,7 @@
     <string name="ui_subtitles">phụ đề</string>
     <string name="ui_playback_options">Tùy chọn phát lại</string>
     <string name="ui_automatic">tự động</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Đã xuất bản sao lưu. Giữ tệp này ở chế độ riêng tư: nó chứa thông tin xác thực danh sách phát. PIN gốc bị loại trừ.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Đã xuất bản sao lưu. Hãy giữ tệp này riêng tư: tệp chứa thông tin đăng nhập danh sách và mã PIN phụ huynh.</string>
     <string name="ui_backup_is_too_large">Bản sao lưu quá lớn</string>
     <string name="ui_replace_saved_configuration">Thay thế cấu hình đã lưu?</string>
     <string name="ui_replace">Thay thế</string>

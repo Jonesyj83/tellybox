@@ -415,7 +415,7 @@
     <string name="ui_assign">Tildel</string>
     <string name="ui_guide_assigned">Guide tildelt</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Tilføj, rediger, opdater og fjern streams</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Inkluderer legitimationsoplysninger; udelukker forældre PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Indeholder loginoplysninger og forældre-PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Erstat konfiguration fra en versioneret JSON-fil</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">En afspiller til afspilningslister leveret af dig.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Eksport mislykkedes: %1$s</string>
     <string name="ui_import_failed_1_s">Import mislykkedes: %1$s</string>
     <string name="ui_restore_failed_1_s">Gendannelse mislykkedes: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Erstat afspilningslister (%1$d), guideopgaver, favoritter, afspilningshistorik, blokerede kanaler/grupper og indstillinger. Cachelagrede kanaler og programmer vil blive ryddet; Opdater afspilningslister efter import. Optagelser og påmindelser forbliver. Forældre PIN er ikke inkluderet og forbliver uændret.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Erstatter playlister (%1$d), guide-tildeling, favoritter, visningshistorik, blokeringer, indstillinger og forældre-PIN. Mellemlagrede kanaler og programmer ryddes; opdater playlisterne bagefter. Optagelser og påmindelser bevares.</string>
     <string name="ui_rating_1_s">Bedømmelse: %1$s</string>
     <string name="ui_cast_1_s">Medvirkende: %1$s</string>
     <string name="ui_director_1_s">Instruktør: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Undertekster</string>
     <string name="ui_playback_options">Afspilningsmuligheder</string>
     <string name="ui_automatic">Automatisk</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup eksporteret. Hold denne fil privat: den indeholder legitimationsoplysninger til spillelisten. Den overordnede PIN er udelukket.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup eksporteret. Hold filen privat: den indeholder playlisteoplysninger og forældre-PIN.</string>
     <string name="ui_backup_is_too_large">Sikkerhedskopien er for stor</string>
     <string name="ui_replace_saved_configuration">Vil du erstatte den gemte konfiguration?</string>
     <string name="ui_replace">Udskift</string>

@@ -415,7 +415,7 @@
     <string name="ui_assign">Присвояване</string>
     <string name="ui_guide_assigned">Назначен е водач</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Добавяне, редактиране, опресняване и премахване на потоци</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Включва пълномощия; изключва родителския PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Включва данни за вход и родителски PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Заменете конфигурацията от JSON файл с версии</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Плейър за плейлисти, предоставен от вас.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Неуспешно експортиране: %1$s</string>
     <string name="ui_import_failed_1_s">Неуспешно импортиране: %1$s</string>
     <string name="ui_restore_failed_1_s">Неуспешно възстановяване: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Замяна на плейлисти (%1$d), задания за ръководство, любими, хронология на гледане, блокирани канали/групи и настройки. Кешираните канали и програми ще бъдат изчистени; опресняване на плейлисти след импортиране. Записите и напомнянията остават. Родителският PIN не е включен и ще остане непроменен.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Заменя плейлисти (%1$d), задаването на програмата, любими, историята, блокировките, настройките и родителския PIN. Кешираните канали и предавания се изчистват; след това обновете плейлистите. Записите и напомнянията остават.</string>
     <string name="ui_rating_1_s">Рейтинг: %1$s</string>
     <string name="ui_cast_1_s">В ролите: %1$s</string>
     <string name="ui_director_1_s">Режисьор: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">субтитри</string>
     <string name="ui_playback_options">Опции за възпроизвеждане</string>
     <string name="ui_automatic">Автоматично</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Резервното копие е експортирано. Запазете този файл личен: той съдържа идентификационни данни за списък за изпълнение. Родителският PIN е изключен.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Архивът е експортиран. Пазете файла поверителен: съдържа данните за вход на плейлистите и родителския PIN.</string>
     <string name="ui_backup_is_too_large">Резервното копие е твърде голямо</string>
     <string name="ui_replace_saved_configuration">Замяна на запазената конфигурация?</string>
     <string name="ui_replace">Сменете</string>

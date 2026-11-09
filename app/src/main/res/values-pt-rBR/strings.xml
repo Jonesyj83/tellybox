@@ -415,7 +415,7 @@
     <string name="ui_assign">Atribuir</string>
     <string name="ui_guide_assigned">Guia atribuído</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Adicionar, editar, atualizar e remover streams</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Inclui credenciais; exclui parental PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Inclui credenciais e o PIN dos pais</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Substituir a configuração de um arquivo JSON com versão</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Um player para playlists fornecido por você.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Falha na exportação: %1$s</string>
     <string name="ui_import_failed_1_s">Falha na importação: %1$s</string>
     <string name="ui_restore_failed_1_s">Falha na restauração: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Substitua listas de reprodução (%1$d), atribuições de guia, favoritos, histórico de exibição, canais/grupos bloqueados e configurações. Os canais e programas armazenados em cache serão apagados; atualize as listas de reprodução após a importação. As gravações e lembretes permanecem. O PIN parental não está incluído e permanecerá inalterado.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Substitui listas (%1$d), atribuições do guia, favoritos, histórico, bloqueios, configurações e o PIN dos pais. Os canais e programas em cache são apagados; atualize as listas depois. Gravações e lembretes permanecem.</string>
     <string name="ui_rating_1_s">Classificação: %1$s</string>
     <string name="ui_cast_1_s">Elenco: %1$s</string>
     <string name="ui_director_1_s">Direção: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Legendas</string>
     <string name="ui_playback_options">Opções de reprodução</string>
     <string name="ui_automatic">Automático</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exportado. Mantenha este arquivo privado: ele contém credenciais da lista de reprodução. O PIN parental está excluído.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exportado. Mantenha este arquivo privado: ele contém credenciais das listas e o PIN dos pais.</string>
     <string name="ui_backup_is_too_large">O backup é muito grande</string>
     <string name="ui_replace_saved_configuration">Substituir configuração salva?</string>
     <string name="ui_replace">Substituir</string>

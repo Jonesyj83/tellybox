@@ -415,7 +415,7 @@
     <string name="ui_assign">მიანიჭეთ</string>
     <string name="ui_guide_assigned">მინიჭებული გზამკვლევი</string>
     <string name="ui_add_edit_refresh_and_remove_streams">დაამატეთ, დაარედაქტირეთ, განაახლეთ და წაშალეთ ნაკადები</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">მოყვება რწმუნებათა სიგელები; გამორიცხავს მშობელს PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">მოიცავს მონაცემებს და მშობლის PIN-ს</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">შეცვალეთ კონფიგურაცია ვერსიირებული JSON ფაილიდან</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">თქვენ მიერ მოწოდებული პლეილისტები.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">ექსპორტი ვერ მოხერხდა: %1$s</string>
     <string name="ui_import_failed_1_s">იმპორტი ვერ მოხერხდა: %1$s</string>
     <string name="ui_restore_failed_1_s">აღდგენა ვერ მოხერხდა: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">შეცვალეთ დასაკრავი სიები (%1$d), გიდის დავალებები, ფავორიტები, ნახვის ისტორია, დაბლოკილი არხები/ჯგუფები და პარამეტრები. ქეშირებული არხები და პროგრამები გასუფთავდება; განაახლეთ დასაკრავი სიები იმპორტის შემდეგ. რჩება ჩანაწერები და შეხსენებები. მშობლის PIN არ შედის და უცვლელი დარჩება.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">ცვლის დაკვრის სიებს (%1$d), გიდის მიბმებს, რჩეულებს, ისტორიას, ბლოკებს, პარამეტრებსა და მშობლის PIN-ს. ქეშირებული არხები და გადაცემები იშლება; შემდეგ განაახლეთ სიები. ჩანაწერები და შეხსენებები რჩება.</string>
     <string name="ui_rating_1_s">რეიტინგი: %1$s</string>
     <string name="ui_cast_1_s">როლებში: %1$s</string>
     <string name="ui_director_1_s">რეჟისორი: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">სუბტიტრები</string>
     <string name="ui_playback_options">დაკვრის პარამეტრები</string>
     <string name="ui_automatic">ავტომატური</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">სარეზერვო ასლი ექსპორტირებულია. შეინახეთ ეს ფაილი კონფიდენციალურად: ის შეიცავს დასაკრავი სიის ავტორიზაციას. მშობლის PIN გამორიცხულია.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">სარეზერვო ასლი ექსპორტირდა. შეინახეთ ფაილი დაცულად: მასშია დაკვრის სიების მონაცემები და მშობლის PIN.</string>
     <string name="ui_backup_is_too_large">სარეზერვო ასლი ძალიან დიდია</string>
     <string name="ui_replace_saved_configuration">გსურთ შენახული კონფიგურაციის შეცვლა?</string>
     <string name="ui_replace">ჩანაცვლება</string>

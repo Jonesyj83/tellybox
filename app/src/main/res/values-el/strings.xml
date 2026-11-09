@@ -415,7 +415,7 @@
     <string name="ui_assign">Εκχώρηση</string>
     <string name="ui_guide_assigned">Ανατέθηκε οδηγός</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Προσθήκη, επεξεργασία, ανανέωση και κατάργηση ροών</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Περιλαμβάνει διαπιστευτήρια. εξαιρεί το γονικό PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Περιλαμβάνει στοιχεία σύνδεσης και το PIN γονικού ελέγχου</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Αντικαταστήστε τη διαμόρφωση από ένα αρχείο JSON με έκδοση</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Μια συσκευή αναπαραγωγής για λίστες αναπαραγωγής που παρέχεται από εσάς.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Η εξαγωγή απέτυχε: %1$s</string>
     <string name="ui_import_failed_1_s">Η εισαγωγή απέτυχε: %1$s</string>
     <string name="ui_restore_failed_1_s">Η επαναφορά απέτυχε: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Αντικαταστήστε λίστες αναπαραγωγής (%1$d), αναθέσεις οδηγών, αγαπημένα, ιστορικό παρακολούθησης, αποκλεισμένα κανάλια/ομάδες και ρυθμίσεις. Τα αποθηκευμένα κανάλια και τα προγράμματα θα διαγραφούν. ανανέωση λιστών αναπαραγωγής μετά την εισαγωγή. Οι ηχογραφήσεις και οι υπενθυμίσεις παραμένουν. Το γονικό PIN δεν περιλαμβάνεται και θα παραμείνει αμετάβλητο.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Αντικαθιστά λίστες (%1$d), αντιστοιχίσεις οδηγού, αγαπημένα, ιστορικό, αποκλεισμούς, ρυθμίσεις και το PIN γονικού ελέγχου. Τα προσωρινά κανάλια και προγράμματα διαγράφονται· ανανεώστε τις λίστες μετά. Οι εγγραφές και οι υπενθυμίσεις παραμένουν.</string>
     <string name="ui_rating_1_s">Βαθμολογία: %1$s</string>
     <string name="ui_cast_1_s">Πρωταγωνιστούν: %1$s</string>
     <string name="ui_director_1_s">Σκηνοθεσία: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Υπότιτλοι</string>
     <string name="ui_playback_options">Επιλογές αναπαραγωγής</string>
     <string name="ui_automatic">Αυτόματο</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Έγινε εξαγωγή αντιγράφων ασφαλείας. Διατηρήστε αυτό το αρχείο ιδιωτικό: περιέχει διαπιστευτήρια λίστας αναπαραγωγής. Το γονικό PIN εξαιρείται.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Το αντίγραφο ασφαλείας εξήχθη. Κρατήστε το αρχείο ιδιωτικό: περιέχει στοιχεία σύνδεσης λιστών και το PIN γονικού ελέγχου.</string>
     <string name="ui_backup_is_too_large">Το αντίγραφο ασφαλείας είναι πολύ μεγάλο</string>
     <string name="ui_replace_saved_configuration">Αντικατάσταση αποθηκευμένης διαμόρφωσης;</string>
     <string name="ui_replace">Αντικαταστήστε</string>

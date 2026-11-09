@@ -428,7 +428,7 @@
     <string name="ui_assign">Dodeli</string>
     <string name="ui_guide_assigned">Vodič je dodeljen</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Dodajte, uredite, osvežite i uklonite strimove</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Uključuje akreditive; isključuje roditeljski PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Uključuje podatke za prijavu i roditeljski PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Zamenite konfiguraciju iz verzionisane JSON datoteke</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Plejer za vaše plejliste.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -472,7 +472,7 @@
     <string name="ui_export_failed_1_s">Izvoz nije uspeo: %1$s</string>
     <string name="ui_import_failed_1_s">Uvoz nije uspeo: %1$s</string>
     <string name="ui_restore_failed_1_s">Vraćanje nije uspelo: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Zamenite plejliste (%1$d), zadatke vodiča, omiljene, istoriju gledanja, blokirane kanale/grupe i podešavanja. Keširani kanali i programi će biti obrisani; osvežite liste pesama nakon uvoza. Ostaju snimci i podsetnici. Roditeljski PIN nije uključen i ostaće nepromenjen.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Zamenjuje plejliste (%1$d), dodelu vodiča, omiljene, istoriju gledanja, blokade, podešavanja i roditeljski PIN. Keširani kanali i emisije se brišu; zatim osvežite plejliste. Snimci i podsetnici ostaju.</string>
     <string name="ui_rating_1_s">Ocena: %1$s</string>
     <string name="ui_cast_1_s">Uloge: %1$s</string>
     <string name="ui_director_1_s">Režija: %1$s</string>
@@ -519,7 +519,7 @@
     <string name="ui_subtitles">Titlovi</string>
     <string name="ui_playback_options">Opcije reprodukcije</string>
     <string name="ui_automatic">Automatski</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Izvezena rezervna kopija. Čuvajte ovu datoteku privatnom: sadrži akreditive liste za reprodukciju. Roditeljski PIN je isključen.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Rezervna kopija je izvezena. Čuvajte ovaj fajl privatnim: sadrži podatke za prijavu plejlisti i roditeljski PIN.</string>
     <string name="ui_backup_is_too_large">Rezervna kopija je prevelika</string>
     <string name="ui_replace_saved_configuration">Zameniti sačuvanu konfiguraciju?</string>
     <string name="ui_replace">Zamenite</string>

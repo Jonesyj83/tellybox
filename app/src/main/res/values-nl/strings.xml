@@ -415,7 +415,7 @@
     <string name="ui_assign">Toewijzen</string>
     <string name="ui_guide_assigned">Gids toegewezen</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Streams toevoegen, bewerken, vernieuwen en verwijderen</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Inclusief inloggegevens; sluit ouderlijke PIN uit</string>
+    <string name="ui_includes_credentials_and_parental_pin">Bevat inloggegevens en de ouder-PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Vervang de configuratie uit een JSON-bestand met versiebeheer</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Een speler voor door u aangeleverde afspeellijsten.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Exporteren mislukt: %1$s</string>
     <string name="ui_import_failed_1_s">Importeren mislukt: %1$s</string>
     <string name="ui_restore_failed_1_s">Herstellen mislukt: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Vervang afspeellijsten (%1$d), gidsopdrachten, favorieten, kijkgeschiedenis, geblokkeerde kanalen/groepen en instellingen. In de cache opgeslagen kanalen en programma\'s worden gewist; ververs afspeellijsten na het importeren. Opnames en herinneringen blijven bewaard. De ouderlijke PIN is niet inbegrepen en blijft ongewijzigd.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Vervangt afspeellijsten (%1$d), gidskoppelingen, favorieten, kijkgeschiedenis, blokkades, instellingen en de ouder-PIN. Gebufferde zenders en programma\'s worden gewist; vernieuw daarna de afspeellijsten. Opnames en herinneringen blijven.</string>
     <string name="ui_rating_1_s">Beoordeling: %1$s</string>
     <string name="ui_cast_1_s">Cast: %1$s</string>
     <string name="ui_director_1_s">Regie: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Ondertitels</string>
     <string name="ui_playback_options">Afspeelopties</string>
     <string name="ui_automatic">Automatisch</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Back-up geëxporteerd. Houd dit bestand privé: het bevat inloggegevens voor de afspeellijst. De ouderlijke PIN is uitgesloten.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Back-up geëxporteerd. Houd dit bestand privé: het bevat inloggegevens van afspeellijsten en de ouder-PIN.</string>
     <string name="ui_backup_is_too_large">Back-up is te groot</string>
     <string name="ui_replace_saved_configuration">Opgeslagen configuratie vervangen?</string>
     <string name="ui_replace">Vervangen</string>

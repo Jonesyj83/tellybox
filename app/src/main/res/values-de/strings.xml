@@ -415,7 +415,7 @@
     <string name="ui_assign">Zuweisen</string>
     <string name="ui_guide_assigned">Führer zugewiesen</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Streams hinzufügen, bearbeiten, aktualisieren und entfernen</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Beinhaltet Anmeldeinformationen; schließt das übergeordnete Element PIN aus</string>
+    <string name="ui_includes_credentials_and_parental_pin">Enthält Zugangsdaten und die Eltern-PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Ersetzen Sie die Konfiguration aus einer versionierten JSON-Datei</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Ein Player für von Ihnen bereitgestellte Playlists.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -459,7 +459,7 @@
     <string name="ui_export_failed_1_s">Export fehlgeschlagen: %1$s</string>
     <string name="ui_import_failed_1_s">Import fehlgeschlagen: %1$s</string>
     <string name="ui_restore_failed_1_s">Wiederherstellung fehlgeschlagen: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Ersetzen Sie Wiedergabelisten (%1$d), Guide-Zuweisungen, Favoriten, Wiedergabeverlauf, blockierte Kanäle/Gruppen und Einstellungen. Zwischengespeicherte Kanäle und Programme werden gelöscht; Wiedergabelisten nach dem Import aktualisieren. Aufzeichnungen und Erinnerungen bleiben bestehen. Das übergeordnete Element PIN ist nicht im Lieferumfang enthalten und bleibt unverändert.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Ersetzt Playlists (%1$d), Guide-Zuordnungen, Favoriten, Verlauf, Sperren, Einstellungen und die Eltern-PIN. Zwischengespeicherte Sender und Sendungen werden gelöscht; Playlists danach aktualisieren. Aufnahmen und Erinnerungen bleiben.</string>
     <string name="ui_rating_1_s">Bewertung: %1$s</string>
     <string name="ui_cast_1_s">Besetzung: %1$s</string>
     <string name="ui_director_1_s">Regie: %1$s</string>
@@ -506,7 +506,7 @@
     <string name="ui_subtitles">Untertitel</string>
     <string name="ui_playback_options">Wiedergabeoptionen</string>
     <string name="ui_automatic">Automatisch</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exportiert. Halten Sie diese Datei privat: Sie enthält Anmeldeinformationen für die Wiedergabeliste. Der übergeordnete PIN ist ausgeschlossen.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Sicherung exportiert. Halten Sie die Datei privat: Sie enthält Playlist-Zugangsdaten und die Eltern-PIN.</string>
     <string name="ui_backup_is_too_large">Das Backup ist zu groß</string>
     <string name="ui_replace_saved_configuration">Gespeicherte Konfiguration ersetzen?</string>
     <string name="ui_replace">Ersetzen</string>

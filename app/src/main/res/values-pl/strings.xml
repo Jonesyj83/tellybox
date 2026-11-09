@@ -441,7 +441,7 @@
     <string name="ui_assign">Przypisz</string>
     <string name="ui_guide_assigned">Przewodnik przydzielony</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Dodawaj, edytuj, odświeżaj i usuwaj strumienie</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Zawiera referencje; nie obejmuje rodzicielskiego PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Zawiera dane logowania i PIN rodzicielski</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Zastąp konfigurację z wersjonowanego pliku JSON</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Odtwarzacz list odtwarzania dostarczonych przez Ciebie.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -485,7 +485,7 @@
     <string name="ui_export_failed_1_s">Eksport nie powiódł się: %1$s</string>
     <string name="ui_import_failed_1_s">Import nie powiódł się: %1$s</string>
     <string name="ui_restore_failed_1_s">Przywracanie nie powiodło się: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Zamień listy odtwarzania (%1$d), przypisania przewodników, ulubione, historię oglądania, zablokowane kanały/grupy i ustawienia. Kanały i programy w pamięci podręcznej zostaną usunięte; odśwież playlisty po zaimportowaniu. Nagrania i przypomnienia pozostają. Rodzicielska PIN nie jest uwzględniona i pozostanie niezmieniona.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Zastępuje listy (%1$d), przypisania przewodnika, ulubione, historię, blokady, ustawienia i PIN rodzicielski. Zbuforowane kanały i audycje są usuwane; po tym odśwież listy. Nagrania i przypomnienia pozostają.</string>
     <string name="ui_rating_1_s">Ocena: %1$s</string>
     <string name="ui_cast_1_s">Obsada: %1$s</string>
     <string name="ui_director_1_s">Reżyseria: %1$s</string>
@@ -532,7 +532,7 @@
     <string name="ui_subtitles">Napisy</string>
     <string name="ui_playback_options">Opcje odtwarzania</string>
     <string name="ui_automatic">Automatyczny</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Kopia zapasowa wyeksportowana. Zachowaj ten plik jako prywatny: zawiera dane logowania do playlisty. Rodzicielski PIN jest wykluczony.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Kopię zapasową wyeksportowano. Chroń ten plik: zawiera dane logowania list i PIN rodzicielski.</string>
     <string name="ui_backup_is_too_large">Kopia zapasowa jest za duża</string>
     <string name="ui_replace_saved_configuration">Zastąpić zapisaną konfigurację?</string>
     <string name="ui_replace">Wymień</string>

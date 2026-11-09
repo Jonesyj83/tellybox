@@ -441,7 +441,7 @@
     <string name="ui_assign">Přiřadit</string>
     <string name="ui_guide_assigned">Průvodce přidělen</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Přidávejte, upravujte, obnovujte a odebírejte streamy</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Zahrnuje pověření; nezahrnuje rodičovskou PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Obsahuje přihlašovací údaje a rodičovský PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Nahraďte konfiguraci z verzovaného souboru JSON</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Vámi dodaný přehrávač pro seznamy skladeb.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -485,7 +485,7 @@
     <string name="ui_export_failed_1_s">Export se nezdařil: %1$s</string>
     <string name="ui_import_failed_1_s">Import se nezdařil: %1$s</string>
     <string name="ui_restore_failed_1_s">Obnovení se nezdařilo: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Nahraďte seznamy skladeb (%1$d), přiřazení průvodce, oblíbená videa, historii sledování, blokované kanály/skupiny a nastavení. Kanály a programy uložené v mezipaměti budou vymazány; po importu obnovit seznamy skladeb. Nahrávky a připomenutí zůstávají. Rodičovský PIN není součástí dodávky a zůstane nezměněn.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Nahradí playlisty (%1$d), přiřazení EPG, oblíbené, historii sledování, blokace, nastavení a rodičovský PIN. Mezipaměť kanálů a pořadů se vymaže; poté obnovte playlisty. Nahrávky a připomínky zůstávají.</string>
     <string name="ui_rating_1_s">Hodnocení: %1$s</string>
     <string name="ui_cast_1_s">Hrají: %1$s</string>
     <string name="ui_director_1_s">Režie: %1$s</string>
@@ -532,7 +532,7 @@
     <string name="ui_subtitles">titulky</string>
     <string name="ui_playback_options">Možnosti přehrávání</string>
     <string name="ui_automatic">Automaticky</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Záloha byla exportována. Udržujte tento soubor soukromý: obsahuje přihlašovací údaje k seznamu skladeb. Rodičovský PIN je vyloučen.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Záloha byla exportována. Chraňte tento soubor: obsahuje přihlašovací údaje playlistů a rodičovský PIN.</string>
     <string name="ui_backup_is_too_large">Záloha je příliš velká</string>
     <string name="ui_replace_saved_configuration">Nahradit uloženou konfiguraci?</string>
     <string name="ui_replace">Vyměňte</string>

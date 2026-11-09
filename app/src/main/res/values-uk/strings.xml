@@ -441,7 +441,7 @@
     <string name="ui_assign">Призначити</string>
     <string name="ui_guide_assigned">Керівництво призначено</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Додавайте, редагуйте, оновлюйте та видаляйте потоки</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Включає облікові дані; виключає батьківський PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Містить дані для входу та батьківський PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Замініть конфігурацію з версійного файлу JSON</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">Програвач для списків відтворення, наданий вами.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -485,7 +485,7 @@
     <string name="ui_export_failed_1_s">Помилка експорту: %1$s</string>
     <string name="ui_import_failed_1_s">Помилка імпорту: %1$s</string>
     <string name="ui_restore_failed_1_s">Не вдалося відновити: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Замініть списки відтворення (%1$d), призначення гідів, вибране, історію переглядів, заблоковані канали/групи та налаштування. Кешовані канали та програми будуть очищені; оновити списки відтворення після імпорту. Записи та нагадування залишаються. Батьківський PIN не включено та залишиться без змін.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Замінює списки (%1$d), прив\'язки програми, обране, історію, блокування, налаштування та батьківський PIN. Кешовані канали й передачі видаляються; потім оновіть списки. Записи й нагадування лишаються.</string>
     <string name="ui_rating_1_s">Рейтинг: %1$s</string>
     <string name="ui_cast_1_s">У ролях: %1$s</string>
     <string name="ui_director_1_s">Режисер: %1$s</string>
@@ -532,7 +532,7 @@
     <string name="ui_subtitles">Субтитри</string>
     <string name="ui_playback_options">Параметри відтворення</string>
     <string name="ui_automatic">Автоматичний</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Резервну копію експортовано. Зберігайте цей файл приватним: він містить облікові дані списку відтворення. Батьківський PIN виключається.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Резервну копію експортовано. Тримайте файл приватним: у ньому дані для входу списків і батьківський PIN.</string>
     <string name="ui_backup_is_too_large">Резервна копія завелика</string>
     <string name="ui_replace_saved_configuration">Замінити збережену конфігурацію?</string>
     <string name="ui_replace">Замінити</string>

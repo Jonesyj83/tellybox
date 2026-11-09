@@ -402,7 +402,7 @@
     <string name="ui_assign">分配</string>
     <string name="ui_guide_assigned">指派指导</string>
     <string name="ui_add_edit_refresh_and_remove_streams">添加、编辑、刷新和删除流</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">包括凭证；不包括父母 PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">包含凭据和家长密码</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">替换版本化 JSON 文件中的配置</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">您提供的播放列表的播放器。</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -446,7 +446,7 @@
     <string name="ui_export_failed_1_s">导出失败：%1$s</string>
     <string name="ui_import_failed_1_s">导入失败：%1$s</string>
     <string name="ui_restore_failed_1_s">恢复失败：%1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">替换播放列表 (%1$d)、指南分配、收藏夹、观看历史记录、阻止的频道/组和设置。缓存的频道和节目将被清除；导入后刷新播放列表。录音和提醒仍然存在。父母 PIN 不包括在内，并将保持不变。</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">替换播放列表（%1$d）、节目单绑定、收藏、观看历史、屏蔽项、设置和家长密码。缓存的频道和节目将被清除，之后请刷新播放列表。录制和提醒会保留。</string>
     <string name="ui_rating_1_s">评级：%1$s</string>
     <string name="ui_cast_1_s">主演：%1$s</string>
     <string name="ui_director_1_s">导演: %1$s</string>
@@ -493,7 +493,7 @@
     <string name="ui_subtitles">字幕</string>
     <string name="ui_playback_options">播放选项</string>
     <string name="ui_automatic">自动</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">备份导出。保持此文件的私密性：它包含播放列表凭据。父母 PIN 被排除在外。</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">备份已导出。请妥善保管此文件：其中包含播放列表凭据和家长密码。</string>
     <string name="ui_backup_is_too_large">备份太大</string>
     <string name="ui_replace_saved_configuration">替换保存的配置？</string>
     <string name="ui_replace">更换</string>

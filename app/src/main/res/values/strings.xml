@@ -413,7 +413,7 @@
     <string name="ui_assign">Assign</string>
     <string name="ui_guide_assigned">Guide assigned</string>
     <string name="ui_add_edit_refresh_and_remove_streams">Add, edit, refresh and remove streams</string>
-    <string name="ui_includes_credentials_excludes_parental_pin">Includes credentials; excludes parental PIN</string>
+    <string name="ui_includes_credentials_and_parental_pin">Includes credentials and your parental PIN</string>
     <string name="ui_replace_configuration_from_a_versioned_json_file">Replace configuration from a versioned JSON file</string>
     <string name="ui_a_player_for_playlists_supplied_by_you">A player for playlists supplied by you.</string>
     <string name="ui_androidx_media3_kotlin_coil_okhttp_and_retrofit">AndroidX · Media3 · Kotlin · Coil · OkHttp · Retrofit</string>
@@ -457,7 +457,7 @@
     <string name="ui_export_failed_1_s">Export failed: %1$s</string>
     <string name="ui_import_failed_1_s">Import failed: %1$s</string>
     <string name="ui_restore_failed_1_s">Restore failed: %1$s</string>
-    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Replace playlists (%1$d), guide assignments, favourites, watch history, blocked channels/groups and settings. Cached channels and programmes will be cleared; refresh playlists after importing. Recordings and reminders remain. The parental PIN is not included and will stay unchanged.</string>
+    <string name="ui_replace_playlists_1_d_guide_assignments_favourites_watch_history_block">Replace playlists (%1$d), guide assignments, favourites, watch history, blocks, settings and the parental PIN. Cached channels and programmes are cleared; refresh the playlists afterwards. Recordings and reminders remain.</string>
     <string name="ui_rating_1_s">Rating: %1$s</string>
     <string name="ui_cast_1_s">Cast: %1$s</string>
     <string name="ui_director_1_s">Director: %1$s</string>
@@ -504,7 +504,7 @@
     <string name="ui_subtitles">Subtitles</string>
     <string name="ui_playback_options">Playback options</string>
     <string name="ui_automatic">Automatic</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exported. Keep this file private: it contains playlist credentials. The parental PIN is excluded.</string>
+    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exported. Keep this file private: it holds playlist credentials and the parental PIN.</string>
     <string name="ui_backup_is_too_large">Backup is too large</string>
     <string name="ui_replace_saved_configuration">Replace saved configuration?</string>
     <string name="ui_replace">Replace</string>
