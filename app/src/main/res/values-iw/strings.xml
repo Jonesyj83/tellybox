@@ -580,4 +580,7 @@
     <string name="backup_problem_duplicate_entries">חלק מהמועדפים או מרשומות ההיסטוריה חוזרים על עצמם.</string>
     <string name="backup_problem_too_much_data">הוא מכיל יותר ממה שהאפליקציה תייבא.</string>
     <string name="backup_problem_incomplete">חלק מהקובץ חסר או אינו קריא.</string>
+    <string name="recording_limit_title">ארוך ממה שאנדרואיד מאפשר</string>
+    <string name="recording_limit_message">אנדרואיד מפסיק הקלטה ברקע אחרי שש שעות ביום, כך שזה יסתיים מוקדם.</string>
+    <string name="recording_limit_continue">הקלט בכל זאת</string>
 </resources>

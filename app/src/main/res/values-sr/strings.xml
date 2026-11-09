@@ -580,4 +580,7 @@
     <string name="backup_problem_duplicate_entries">Неки омиљени или уноси историје се понављају.</string>
     <string name="backup_problem_too_much_data">Садржи више него што ће апликација увести.</string>
     <string name="backup_problem_incomplete">Део датотеке недостаје или се не може прочитати.</string>
+    <string name="recording_limit_title">Дуже него што Android дозвољава</string>
+    <string name="recording_limit_message">Android прекида снимање у позадини после шест сати дневно, па ће се ово завршити раније.</string>
+    <string name="recording_limit_continue">Ипак сними</string>
 </resources>

@@ -544,4 +544,7 @@
     <string name="backup_problem_duplicate_entries">Một số mục yêu thích hoặc lịch sử bị lặp.</string>
     <string name="backup_problem_too_much_data">Nó chứa nhiều hơn mức ứng dụng sẽ nhập.</string>
     <string name="backup_problem_incomplete">Thiếu một phần tệp hoặc không đọc được.</string>
+    <string name="recording_limit_title">Dài hơn mức Android cho phép</string>
+    <string name="recording_limit_message">Android dừng ghi nền sau sáu giờ mỗi ngày, nên bản ghi này sẽ kết thúc sớm.</string>
+    <string name="recording_limit_continue">Vẫn ghi</string>
 </resources>

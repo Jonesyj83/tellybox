@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">ზოგიერთი რჩეული ან ისტორიის ჩანაწერი მეორდება.</string>
     <string name="backup_problem_too_much_data">შეიცავს უფრო მეტს, ვიდრე აპი შემოიტანს.</string>
     <string name="backup_problem_incomplete">ფაილის ნაწილი აკლია ან წაუკითხავია.</string>
+    <string name="recording_limit_title">უფრო გრძელი, ვიდრე Android იძლევა საშუალებას</string>
+    <string name="recording_limit_message">Android ფონურ ჩაწერას დღეში ექვსი საათის შემდეგ წყვეტს, ამიტომ ეს ადრე დასრულდება.</string>
+    <string name="recording_limit_continue">მაინც ჩაწერე</string>
 </resources>

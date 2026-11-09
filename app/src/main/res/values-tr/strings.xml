@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Bazı favoriler veya geçmiş kayıtları tekrarlanıyor.</string>
     <string name="backup_problem_too_much_data">Uygulamanın içe aktaracağından fazlasını içeriyor.</string>
     <string name="backup_problem_incomplete">Dosyanın bir kısmı eksik veya okunamıyor.</string>
+    <string name="recording_limit_title">Android\'in izin verdiğinden uzun</string>
+    <string name="recording_limit_message">Android arka planda kaydı günde altı saat sonra durdurur, bu yüzden bu kayıt erken bitecek.</string>
+    <string name="recording_limit_continue">Yine de kaydet</string>
 </resources>

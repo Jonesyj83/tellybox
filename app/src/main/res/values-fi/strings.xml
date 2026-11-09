@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Jotkin suosikit tai historia merkinnät toistuvat.</string>
     <string name="backup_problem_too_much_data">Siinä on enemmän kuin sovellus tuo.</string>
     <string name="backup_problem_incomplete">Osa tiedostosta puuttuu tai on lukukelvoton.</string>
+    <string name="recording_limit_title">Pidempi kuin Android sallii</string>
+    <string name="recording_limit_message">Android lopettaa taustatalleennuksen kuuden tunnin jälkeen vuorokaudessa, joten tämä päättyy aikaisin.</string>
+    <string name="recording_limit_continue">Tallenna silti</string>
 </resources>

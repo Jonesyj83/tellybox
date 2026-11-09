@@ -580,4 +580,7 @@
     <string name="backup_problem_duplicate_entries">Unele favorite sau intrări din istoric se repetă.</string>
     <string name="backup_problem_too_much_data">Conține mai mult decât va importa aplicația.</string>
     <string name="backup_problem_incomplete">O parte din fișier lipsește sau nu poate fi citită.</string>
+    <string name="recording_limit_title">Mai lung decât permite Android</string>
+    <string name="recording_limit_message">Android oprește înregistrarea din fundal după șase ore pe zi, așa că aceasta se va termina mai devreme.</string>
+    <string name="recording_limit_continue">Înregistrează totuși</string>
 </resources>

@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Einige Favoriten oder Verlaufseinträge sind doppelt.</string>
     <string name="backup_problem_too_much_data">Sie enthält mehr, als diese App importiert.</string>
     <string name="backup_problem_incomplete">Ein Teil der Datei fehlt oder ist unlesbar.</string>
+    <string name="recording_limit_title">Länger, als Android erlaubt</string>
+    <string name="recording_limit_message">Android beendet Hintergrundaufnahmen nach sechs Stunden pro Tag, daher endet diese Aufnahme früher.</string>
+    <string name="recording_limit_continue">Trotzdem aufnehmen</string>
 </resources>

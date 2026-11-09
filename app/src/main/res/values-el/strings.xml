@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Κάποια αγαπημένα ή καταχωρήσεις ιστορικού επαναλαμβάνονται.</string>
     <string name="backup_problem_too_much_data">Περιέχει περισσότερα από όσα θα εισαγάγει η εφαρμογή.</string>
     <string name="backup_problem_incomplete">Μέρος του αρχείου λείπει ή δεν διαβάζεται.</string>
+    <string name="recording_limit_title">Μεγαλύτερο από όσο επιτρέπει το Android</string>
+    <string name="recording_limit_message">Το Android σταματά την εγγραφή στο παρασκήνιο μετά από έξι ώρες την ημέρα, οπότε θα τελειώσει νωρίτερα.</string>
+    <string name="recording_limit_continue">Εγγραφή ούτως ή άλλως</string>
 </resources>

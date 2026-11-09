@@ -598,4 +598,7 @@
     <string name="backup_problem_duplicate_entries">Některé oblíbené položky nebo záznamy historie se opakují.</string>
     <string name="backup_problem_too_much_data">Obsahuje více, než aplikace naimportuje.</string>
     <string name="backup_problem_incomplete">Část souboru chybí nebo je nečitelná.</string>
+    <string name="recording_limit_title">Delší, než Android dovoluje</string>
+    <string name="recording_limit_message">Android po šesti hodinách denně zastaví nahrávání na pozadí, takže to skončí dřív.</string>
+    <string name="recording_limit_continue">Přesto nahrát</string>
 </resources>

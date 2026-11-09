@@ -598,4 +598,7 @@
     <string name="backup_problem_duplicate_entries">Деякі обрані або записи історії повторюються.</string>
     <string name="backup_problem_too_much_data">У ній більше, ніж застосунок імпортує.</string>
     <string name="backup_problem_incomplete">Частина файлу відсутня або не читається.</string>
+    <string name="recording_limit_title">Довше, ніж дозволяє Android</string>
+    <string name="recording_limit_message">Android зупиняє фоновий запис після шести годин на добу, тож цей запис завершиться раніше.</string>
+    <string name="recording_limit_continue">Все одно записати</string>
 </resources>

@@ -544,4 +544,7 @@
     <string name="backup_problem_duplicate_entries">部分收藏或历史记录重复了。</string>
     <string name="backup_problem_too_much_data">内容超过了本应用可导入的数量。</string>
     <string name="backup_problem_incomplete">文件有一部分缺失或无法读取。</string>
+    <string name="recording_limit_title">超过 Android 允许的时长</string>
+    <string name="recording_limit_message">Android 每天六小时后会停止后台录制，所以这次录制会提前结束。</string>
+    <string name="recording_limit_continue">仍然录制</string>
 </resources>

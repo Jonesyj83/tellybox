@@ -634,4 +634,7 @@
     <string name="backup_problem_duplicate_entries">بعض المفضلة أو سجل المشاهدة مكرر.</string>
     <string name="backup_problem_too_much_data">تحتوي على أكثر مما سيستورده التطبيق.</string>
     <string name="backup_problem_incomplete">جزء من الملف مفقود أو غير مقروء.</string>
+    <string name="recording_limit_title">أطول مما يسمح به أندرويد</string>
+    <string name="recording_limit_message">يوقف أندرويد التسجيل في الخلفية بعد ست ساعات في اليوم، لذا سينتهي هذا مبكرًا.</string>
+    <string name="recording_limit_continue">سجّل على أي حال</string>
 </resources>

@@ -598,4 +598,7 @@
     <string name="backup_problem_duplicate_entries">Kai kurie mėgstami ar istorijos įrašai kartojasi.</string>
     <string name="backup_problem_too_much_data">Joje daugiau, nei programa importuos.</string>
     <string name="backup_problem_incomplete">Dalis failo trūksta arba neperskaitoma.</string>
+    <string name="recording_limit_title">Ilgiau, nei leidžia Android</string>
+    <string name="recording_limit_message">Android sustabdo įrašymą fone po šešių valandų per dieną, todėl šis įrašas baigsis anksčiau.</string>
+    <string name="recording_limit_continue">Vis tiek įrašyti</string>
 </resources>

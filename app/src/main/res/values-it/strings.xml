@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Alcuni preferiti o voci della cronologia sono ripetuti.</string>
     <string name="backup_problem_too_much_data">Contiene più di quanto l\'app importerà.</string>
     <string name="backup_problem_incomplete">Parte del file manca o non è leggibile.</string>
+    <string name="recording_limit_title">Più lungo di quanto consenta Android</string>
+    <string name="recording_limit_message">Android interrompe la registrazione in background dopo sei ore al giorno, quindi questa finirà prima.</string>
+    <string name="recording_limit_continue">Registra comunque</string>
 </resources>

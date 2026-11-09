@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Néhány kedvenc vagy előzmény bejegyzés ismétlődik.</string>
     <string name="backup_problem_too_much_data">Többet tartalmaz, mint amit az alkalmazás importál.</string>
     <string name="backup_problem_incomplete">A fájl egy része hiányzik vagy olvashatatlan.</string>
+    <string name="recording_limit_title">Hosszabb, mint amit az Android enged</string>
+    <string name="recording_limit_message">Az Android napi hat óra után leállítja a háttérfelvételt, így ez korábban véget ér.</string>
+    <string name="recording_limit_continue">Felvétel mindenképp</string>
 </resources>

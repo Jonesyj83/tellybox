@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Някои любими или записи от историята се повтарят.</string>
     <string name="backup_problem_too_much_data">Съдържа повече, отколкото приложението ще внесе.</string>
     <string name="backup_problem_incomplete">Част от файла липсва или е нечетима.</string>
+    <string name="recording_limit_title">По-дълго от разрешеното от Android</string>
+    <string name="recording_limit_message">Android спира фоновото записване след шест часа на ден, затова това ще приключи по-рано.</string>
+    <string name="recording_limit_continue">Запиши въпреки това</string>
 </resources>

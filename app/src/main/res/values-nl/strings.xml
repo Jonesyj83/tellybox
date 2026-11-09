@@ -562,4 +562,7 @@
     <string name="backup_problem_duplicate_entries">Sommige favorieten of geschiedenisregels staan dubbel.</string>
     <string name="backup_problem_too_much_data">Er zit meer in dan deze app importeert.</string>
     <string name="backup_problem_incomplete">Een deel van het bestand ontbreekt of is onleesbaar.</string>
+    <string name="recording_limit_title">Langer dan Android toestaat</string>
+    <string name="recording_limit_message">Android stopt achtergrondopname na zes uur per dag, dus deze stopt eerder.</string>
+    <string name="recording_limit_continue">Toch opnemen</string>
 </resources>

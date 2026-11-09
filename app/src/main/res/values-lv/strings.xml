@@ -580,4 +580,7 @@
     <string name="backup_problem_duplicate_entries">Daži izlases vai vēstures ieraksti atkārtojas.</string>
     <string name="backup_problem_too_much_data">Tajā ir vairāk, nekā lietotne importēs.</string>
     <string name="backup_problem_incomplete">Daļa faila trūkst vai nav nolasāma.</string>
+    <string name="recording_limit_title">Ilgāk, nekā Android atļauj</string>
+    <string name="recording_limit_message">Android pārtrauc ierakstīšanu fonā pēc sešām stundām dienā, tāpēc šis beigsies agrāk.</string>
+    <string name="recording_limit_continue">Tomēr ierakstīt</string>
 </resources>

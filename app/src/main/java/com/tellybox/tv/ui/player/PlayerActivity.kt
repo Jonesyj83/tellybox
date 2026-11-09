@@ -1,6 +1,7 @@
 package com.tellybox.tv.ui.player
 
 import com.tellybox.tv.ui.parental.requestPin
+import com.tellybox.tv.ui.recording.confirmLongRecording
 import android.content.Context
 import android.content.Intent
 import android.app.PictureInPictureParams
@@ -609,16 +610,24 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             }
             AlertDialog.Builder(this@PlayerActivity).setTitle(R.string.instant_record_title)
                 .setItems(options.map { it.first }.toTypedArray()) { _, which ->
-                    lifecycleScope.launch {
-                        val title = program?.title ?: displayName(channel)
-                        val result = c.recordings.recordNow(channel, displayName(channel), title, options[which].second)
-                        val msg = result.fold(
-                            { getString(R.string.recording_started, title) },
-                            { getString(R.string.recording_failed_to_schedule, it.message) },
-                        )
-                        android.widget.Toast.makeText(this@PlayerActivity, msg, android.widget.Toast.LENGTH_LONG).show()
-                    }
+                    confirmLongRecording(options[which].second) { recordFor(channel, program, options[which].second) }
                 }.show()
+        }
+    }
+
+    private fun recordFor(
+        channel: com.tellybox.tv.data.db.ChannelEntity,
+        program: com.tellybox.tv.data.db.EpgProgramEntity?,
+        durationMs: Long,
+    ) {
+        lifecycleScope.launch {
+            val title = program?.title ?: displayName(channel)
+            val result = appContainer.recordings.recordNow(channel, displayName(channel), title, durationMs)
+            val message = result.fold(
+                { getString(R.string.recording_started, title) },
+                { getString(R.string.recording_failed_to_schedule, it.message) },
+            )
+            android.widget.Toast.makeText(this@PlayerActivity, message, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
