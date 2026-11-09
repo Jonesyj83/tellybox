@@ -106,6 +106,8 @@ responsible for having the right to watch what is on it.
 
 RTMP playback is compiled in but hasn't been tested against a real stream.
 
+What's coming next, and what isn't, is in [ROADMAP.md](ROADMAP.md).
+
 ## Remote control
 
 | Key | Channel list | Player |
