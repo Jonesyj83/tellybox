@@ -187,7 +187,7 @@ class TimeshiftSession internal constructor(
             while (buffer.writeSome(scratch, 1_000)) {
                 if (!full && buffer.head >= capacity) {
                     full = true
-                    Log.i(TAG, "${file.name} reached its cap of ${file.length()} bytes; overwriting the oldest from here")
+                    if (com.tellybox.tv.BuildConfig.DEBUG) Log.i(TAG, "${file.name} reached its cap of ${file.length()} bytes; overwriting the oldest from here")
                 }
                 val now = clock()
                 if (now - checkedAt >= SPACE_CHECK_MS) {
@@ -220,7 +220,7 @@ class TimeshiftSession internal constructor(
         val length = file.length()
         val target = if (file.renameTo(closedName)) closedName else file
         if (!target.delete() && target.exists()) Log.w(TAG, "Couldn't delete ${target.name}")
-        else Log.i(TAG, "Deleted ${file.name} ($length bytes, ${buffer.head} received)")
+        else if (com.tellybox.tv.BuildConfig.DEBUG) Log.i(TAG, "Deleted ${file.name} ($length bytes, ${buffer.head} received)")
         TimeshiftFiles.release(file)
     }
 
@@ -310,7 +310,7 @@ class TimeshiftSession internal constructor(
                 TimeshiftFiles.release(file)
                 return OpenResult.Unavailable(TimeshiftUnavailable.WriteFailed)
             }
-            Log.i(TAG, "Started ${file.name}: cap $capacity bytes, $free free")
+            if (com.tellybox.tv.BuildConfig.DEBUG) Log.i(TAG, "Started ${file.name}: cap $capacity bytes, $free free")
             session.start()
             return OpenResult.Opened(session)
         }

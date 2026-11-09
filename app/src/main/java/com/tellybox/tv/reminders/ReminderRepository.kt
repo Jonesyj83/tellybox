@@ -23,7 +23,7 @@ class ReminderRepository(
     suspend fun add(channel: ChannelEntity, channelName: String, title: String, start: Long, stop: Long): Result<ReminderEntity> {
         val now = System.currentTimeMillis()
         val at = ReminderPlan.remindAt(start, now, settings.get().reminderMinutes)
-            ?: return Result.failure(IllegalStateException("That programme has already started"))
+            ?: return Result.failure(IllegalStateException(app.getString(com.tellybox.tv.R.string.reminder_already_started)))
         val rec = ReminderEntity(
             playlistId = channel.playlistId, channelKey = channel.channelKey, channelName = channelName,
             title = title, programStart = start, programStop = stop, remindAt = at,

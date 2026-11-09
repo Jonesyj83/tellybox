@@ -8,7 +8,6 @@
     <string name="group_all">全部频道</string>
     <string name="group_search">搜索：%1$s</string>
     <string name="action_search">搜索</string>
-    <string name="action_playlists">播放列表</string>
     <string name="action_add_playlist">添加播放列表</string>
     <string name="empty_title">还没有播放列表</string>
     <string name="empty_body">添加 M3U 链接、Xtream Codes 账号或 Stalker 门户即可开始。</string>
@@ -121,14 +120,11 @@
     <string name="default_name_stalker">门户</string>
     <string name="player_error">无法播放此频道</string>
     <string name="player_retry">按 OK 重试</string>
-    <string name="player_connecting">正在连接…</string>
     <string name="error_http">服务器拒绝了此流（HTTP %1$d）。</string>
     <string name="error_network">无法连接服务器。请检查网络。</string>
     <string name="error_timeout">服务器响应超时。</string>
     <string name="error_format">不支持此流的格式。</string>
     <string name="error_decoder">此设备无法解码此流。</string>
-    <string name="now_next">正在播放：%1$s</string>
-    <string name="action_guide">节目指南</string>
     <string name="guide_no_info">暂无信息</string>
     <string name="guide_no_data">暂无节目数据</string>
     <string name="guide_empty">没有可显示的频道。</string>
@@ -137,10 +133,8 @@
     <string name="guide_no_catchup">此频道没有回看。</string>
     <string name="guide_watch_live">观看频道</string>
     <string name="guide_jump_now">跳到现在</string>
-    <string name="action_settings">设置</string>
     <string name="settings_title">设置</string>
     <string name="settings_player">播放器</string>
-    <string name="settings_guide">节目指南</string>
     <string name="setting_buffer">缓冲大小</string>
     <string name="buffer_small">小（启动最快）</string>
     <string name="buffer_medium">中</string>
@@ -208,7 +202,6 @@
     <plurals name="hours">
         <item quantity="other">%d 小时</item>
     </plurals>
-    <string name="action_recordings">录制</string>
     <string name="player_stream_stopped">流已停止响应。请重新选择频道或换一个。</string>
     <string name="player_reconnecting">流已中断，正在重连（%1$d/%2$d）…</string>
     <string name="action_record">● 录制</string>
@@ -275,7 +268,6 @@
     <string name="reminder_set">已设置提醒：%1$s</string>
     <string name="reminder_removed">提醒已移除</string>
     <string name="reminder_failed">无法设置提醒：%1$s</string>
-    <string name="settings_recording">录制和提醒</string>
     <string name="setting_pad_before">提前开始录制</string>
     <string name="setting_pad_after">结束后继续录制</string>
     <string name="setting_instant_length">即时录制时长</string>
@@ -493,7 +485,6 @@
     <string name="ui_subtitles">字幕</string>
     <string name="ui_playback_options">播放选项</string>
     <string name="ui_automatic">自动</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">备份已导出。请妥善保管此文件：其中包含播放列表凭据和家长密码。</string>
     <string name="ui_backup_is_too_large">备份太大</string>
     <string name="ui_replace_saved_configuration">替换保存的配置？</string>
     <string name="ui_replace">更换</string>
@@ -551,4 +542,32 @@
     <string name="ui_backup_saved_in_downloads">已保存到 Downloads/%1$s。请妥善保管此文件：其中包含播放列表凭据和家长密码。</string>
     <string name="ui_no_backups_in_downloads">Downloads 中没有备份文件。请先把备份文件复制到那里。</string>
     <string name="ui_choose_a_file">选择文件…</string>
+    <string name="http_error_code">服务器返回 HTTP %1$d</string>
+    <string name="http_empty_response">响应为空</string>
+    <string name="source_open_failed">无法打开 %1$s</string>
+    <string name="backup_storage_denied">备份未保存，因为存储权限被拒绝。请在应用设置中允许该权限后重试。</string>
+    <string name="recording_notification_title">录制</string>
+    <string name="recording_preparing">正在准备录制…</string>
+    <string name="channel_recording_name">正在录制</string>
+    <string name="channel_recording_result_name">录制问题</string>
+    <string name="channel_reminder_name">节目提醒</string>
+    <string name="reminder_already_started">该节目已经开始</string>
+    <string name="reminder_starting_soon">即将在 %1$s 播出</string>
+    <string name="recording_count">%1$d 个录制</string>
+    <string name="recording_failed_title">录制失败：%1$s</string>
+    <string name="rec_already_recording">该频道在此时段已在录制</string>
+    <string name="rec_no_duration">该节目没有时长信息</string>
+    <string name="rec_no_archive">节目已结束，该频道没有回看</string>
+    <string name="rec_archive_expired">该节目超出了频道 %1$d 天的回看范围</string>
+    <string name="rec_channel_missing">该频道已不在播放列表中</string>
+    <string name="rec_window_passed">已错过：录制时段已过</string>
+    <string name="rec_resumed_gap">中断后已续录，可能缺少一小段</string>
+    <string name="rec_ended_early">提前结束或有缺口：%1$s</string>
+    <string name="rec_interrupted">已中断：录制过程中设备或应用停止，缺少一部分</string>
+    <string name="rec_missed">已错过：设备关机或应用被停止</string>
+    <string name="rec_storage_low">可用空间不足（少于 200 MB）</string>
+    <string name="rec_stream_failed">无法获取流地址：%1$s</string>
+    <string name="rec_unexpected_stop">录制意外停止：%1$s</string>
+    <string name="rec_limit_stopped_early">提前停止：Android 将后台下载限制为每天 6 小时</string>
+    <string name="rec_background_denied">Android 不允许在后台开始录制。请在系统设置中允许 Tellybox 使用闹钟和提醒。</string>
 </resources>

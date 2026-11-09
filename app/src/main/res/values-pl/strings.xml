@@ -8,7 +8,6 @@
     <string name="group_all">Wszystkie kanały</string>
     <string name="group_search">Szukaj: %1$s</string>
     <string name="action_search">Szukaj</string>
-    <string name="action_playlists">Playlisty</string>
     <string name="action_add_playlist">Dodaj playlistę</string>
     <string name="empty_title">Brak playlist</string>
     <string name="empty_body">Dodaj link M3U, login Xtream Codes lub portal Stalker, aby zacząć.</string>
@@ -136,14 +135,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Nie można odtworzyć kanału</string>
     <string name="player_retry">Naciśnij OK, aby spróbować ponownie</string>
-    <string name="player_connecting">Łączenie…</string>
     <string name="error_http">Serwer odrzucił strumień (HTTP %1$d).</string>
     <string name="error_network">Brak połączenia z serwerem. Sprawdź sieć.</string>
     <string name="error_timeout">Serwer zbyt długo nie odpowiadał.</string>
     <string name="error_format">Format tego strumienia nie jest obsługiwany.</string>
     <string name="error_decoder">To urządzenie nie może zdekodować strumienia.</string>
-    <string name="now_next">Teraz: %1$s</string>
-    <string name="action_guide">Przewodnik TV</string>
     <string name="guide_no_info">Brak informacji</string>
     <string name="guide_no_data">Brak danych przewodnika</string>
     <string name="guide_empty">Brak kanałów do pokazania.</string>
@@ -152,10 +148,8 @@
     <string name="guide_no_catchup">Ten kanał nie ma catch-upu.</string>
     <string name="guide_watch_live">Oglądaj kanał</string>
     <string name="guide_jump_now">Przejdź do teraz</string>
-    <string name="action_settings">Ustawienia</string>
     <string name="settings_title">Ustawienia</string>
     <string name="settings_player">Odtwarzacz</string>
-    <string name="settings_guide">Przewodnik TV</string>
     <string name="setting_buffer">Rozmiar bufora</string>
     <string name="buffer_small">Mały (najszybszy start)</string>
     <string name="buffer_medium">Średni</string>
@@ -235,7 +229,6 @@
         <item quantity="many">%d godz.</item>
         <item quantity="other">%d godz.</item>
     </plurals>
-    <string name="action_recordings">Nagrania</string>
     <string name="player_stream_stopped">Strumień przestał odpowiadać. Wybierz kanał ponownie lub spróbuj innego.</string>
     <string name="player_reconnecting">Strumień przerwany, ponowne łączenie (%1$d/%2$d)…</string>
     <string name="action_record">● Nagraj</string>
@@ -311,7 +304,6 @@
     <string name="reminder_set">Ustawiono przypomnienie: %1$s</string>
     <string name="reminder_removed">Usunięto przypomnienie</string>
     <string name="reminder_failed">Nie można ustawić przypomnienia: %1$s</string>
-    <string name="settings_recording">Nagrywanie i przypomnienia</string>
     <string name="setting_pad_before">Zacznij nagrywać wcześniej</string>
     <string name="setting_pad_after">Nagrywaj dłużej po końcu</string>
     <string name="setting_instant_length">Długość szybkiego nagrania</string>
@@ -532,7 +524,6 @@
     <string name="ui_subtitles">Napisy</string>
     <string name="ui_playback_options">Opcje odtwarzania</string>
     <string name="ui_automatic">Automatyczny</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Kopię zapasową wyeksportowano. Chroń ten plik: zawiera dane logowania list i PIN rodzicielski.</string>
     <string name="ui_backup_is_too_large">Kopia zapasowa jest za duża</string>
     <string name="ui_replace_saved_configuration">Zastąpić zapisaną konfigurację?</string>
     <string name="ui_replace">Wymień</string>
@@ -605,4 +596,32 @@
     <string name="ui_backup_saved_in_downloads">Zapisano w Downloads/%1$s. Chroń ten plik: zawiera dane logowania list i PIN rodzicielski.</string>
     <string name="ui_no_backups_in_downloads">Brak kopii zapasowych w Downloads. Najpierw skopiuj tam plik.</string>
     <string name="ui_choose_a_file">Wybierz plik…</string>
+    <string name="http_error_code">Serwer zwrócił HTTP %1$d</string>
+    <string name="http_empty_response">Pusta odpowiedź</string>
+    <string name="source_open_failed">Nie można otworzyć %1$s</string>
+    <string name="backup_storage_denied">Kopia nie została zapisana, bo odmówiono dostępu do pamięci. Włącz go w ustawieniach aplikacji i spróbuj ponownie.</string>
+    <string name="recording_notification_title">Nagrywanie</string>
+    <string name="recording_preparing">Przygotowywanie nagrania…</string>
+    <string name="channel_recording_name">Trwa nagrywanie</string>
+    <string name="channel_recording_result_name">Problemy z nagrywaniem</string>
+    <string name="channel_reminder_name">Przypomnienia o audycjach</string>
+    <string name="reminder_already_started">Ta audycja już się zaczęła</string>
+    <string name="reminder_starting_soon">Zaczyna się wkrótce na %1$s</string>
+    <string name="recording_count">%1$d nagrań</string>
+    <string name="recording_failed_title">Nagrywanie nie powiodło się: %1$s</string>
+    <string name="rec_already_recording">Ten kanał jest już wtedy nagrywany</string>
+    <string name="rec_no_duration">Ta audycja nie ma czasu trwania</string>
+    <string name="rec_no_archive">Audycja się skończyła, a kanał nie ma archiwum</string>
+    <string name="rec_archive_expired">Audycja jest starsza niż %1$d-dniowe archiwum kanału</string>
+    <string name="rec_channel_missing">Kanału nie ma już na liście</string>
+    <string name="rec_window_passed">Pominięto: okno nagrywania minęło</string>
+    <string name="rec_resumed_gap">Wznowione po przerwie, więc może brakować krótkiego fragmentu</string>
+    <string name="rec_ended_early">Zakończone wcześniej lub z lukami: %1$s</string>
+    <string name="rec_interrupted">Przerwane: urządzenie lub aplikacja zatrzymały się podczas nagrywania, brakuje części</string>
+    <string name="rec_missed">Pominięto: urządzenie było wyłączone lub aplikacja zatrzymana</string>
+    <string name="rec_storage_low">Za mało miejsca (poniżej 200 MB)</string>
+    <string name="rec_stream_failed">Nie udało się pobrać adresu strumienia: %1$s</string>
+    <string name="rec_unexpected_stop">Nagrywanie zatrzymało się niespodziewanie: %1$s</string>
+    <string name="rec_limit_stopped_early">Zatrzymane wcześniej: Android ogranicza pobieranie w tle do 6 godzin dziennie</string>
+    <string name="rec_background_denied">Android nie zezwolił na nagrywanie w tle. Zezwól na alarmy i przypomnienia dla Tellybox w ustawieniach systemu.</string>
 </resources>

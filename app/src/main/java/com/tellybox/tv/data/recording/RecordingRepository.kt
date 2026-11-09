@@ -36,7 +36,11 @@ class RecordingRepository(
         val s = settings.get()
         val now = System.currentTimeMillis()
         val rec = when (val plan = RecordingPlan.forProgram(start, stop, now, s.recordPadBefore, s.recordPadAfter, channel.catchupDays)) {
-            is RecordingPlan.Plan.Refused -> return Result.failure(IllegalStateException(plan.reason))
+            is RecordingPlan.Plan.Refused -> return Result.failure(IllegalStateException(when (plan.reason) {
+                RecordingPlan.Refusal.NO_DURATION -> app.getString(com.tellybox.tv.R.string.rec_no_duration)
+                RecordingPlan.Refusal.NO_ARCHIVE -> app.getString(com.tellybox.tv.R.string.rec_no_archive)
+                RecordingPlan.Refusal.ARCHIVE_EXPIRED -> app.getString(com.tellybox.tv.R.string.rec_archive_expired, channel.catchupDays)
+            }))
             is RecordingPlan.Plan.Live -> RecordingEntity(
                 playlistId = channel.playlistId, channelKey = channel.channelKey, channelName = channelName,
                 title = title, programStart = start, programStop = stop, startAt = plan.startAt, stopAt = plan.stopAt,
@@ -65,7 +69,7 @@ class RecordingRepository(
 
     private suspend fun insertAndArm(rec: RecordingEntity): Result<RecordingEntity> {
         if (dao.activeOverlapping(rec.playlistId, rec.channelKey, rec.startAt, rec.stopAt).isNotEmpty()) {
-            return Result.failure(IllegalStateException("This channel is already being recorded at that time"))
+            return Result.failure(IllegalStateException(app.getString(com.tellybox.tv.R.string.rec_already_recording)))
         }
         val saved = rec.copy(id = dao.insert(rec))
         arm(saved, fromForeground = true)
@@ -123,9 +127,9 @@ class RecordingRepository(
                     val size = rec.filePath?.let { File(it).length() } ?: 0L
                     dao.update(
                         if (size > 0) rec.copy(status = RecordingStatus.COMPLETED, bytes = size,
-                            error = "Interrupted: the device or app stopped during the recording, so part of it is missing")
+                            error = app.getString(com.tellybox.tv.R.string.rec_interrupted))
                         else rec.copy(status = RecordingStatus.FAILED,
-                            error = "Missed: the device was off or the app was stopped when the recording was due"),
+                            error = app.getString(com.tellybox.tv.R.string.rec_missed)),
                     )
                 }
                 else -> arm(rec, fromForeground = false)

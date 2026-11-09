@@ -8,7 +8,6 @@
     <string name="group_all">Tất cả kênh</string>
     <string name="group_search">Tìm: %1$s</string>
     <string name="action_search">Tìm kiếm</string>
-    <string name="action_playlists">Danh sách phát</string>
     <string name="action_add_playlist">Thêm danh sách</string>
     <string name="empty_title">Chưa có danh sách phát</string>
     <string name="empty_body">Thêm liên kết M3U, tài khoản Xtream Codes hoặc cổng Stalker để bắt đầu.</string>
@@ -121,14 +120,11 @@
     <string name="default_name_stalker">Cổng</string>
     <string name="player_error">Không phát được kênh này</string>
     <string name="player_retry">Nhấn OK để thử lại</string>
-    <string name="player_connecting">Đang kết nối…</string>
     <string name="error_http">Máy chủ từ chối luồng (HTTP %1$d).</string>
     <string name="error_network">Không kết nối được máy chủ. Hãy kiểm tra mạng.</string>
     <string name="error_timeout">Máy chủ phản hồi quá lâu.</string>
     <string name="error_format">Định dạng luồng này không được hỗ trợ.</string>
     <string name="error_decoder">Thiết bị không giải mã được luồng này.</string>
-    <string name="now_next">Đang phát: %1$s</string>
-    <string name="action_guide">Lịch phát sóng</string>
     <string name="guide_no_info">Không có thông tin</string>
     <string name="guide_no_data">Không có dữ liệu lịch</string>
     <string name="guide_empty">Không có kênh để hiển thị.</string>
@@ -137,10 +133,8 @@
     <string name="guide_no_catchup">Kênh này không có xem lại.</string>
     <string name="guide_watch_live">Xem kênh</string>
     <string name="guide_jump_now">Về hiện tại</string>
-    <string name="action_settings">Cài đặt</string>
     <string name="settings_title">Cài đặt</string>
     <string name="settings_player">Trình phát</string>
-    <string name="settings_guide">Lịch phát sóng</string>
     <string name="setting_buffer">Dung lượng bộ đệm</string>
     <string name="buffer_small">Nhỏ (khởi động nhanh nhất)</string>
     <string name="buffer_medium">Vừa</string>
@@ -208,7 +202,6 @@
     <plurals name="hours">
         <item quantity="other">%d giờ</item>
     </plurals>
-    <string name="action_recordings">Bản ghi</string>
     <string name="player_stream_stopped">Luồng ngừng phản hồi. Hãy chọn lại kênh hoặc thử kênh khác.</string>
     <string name="player_reconnecting">Mất luồng, đang kết nối lại (%1$d/%2$d)…</string>
     <string name="action_record">● Ghi</string>
@@ -275,7 +268,6 @@
     <string name="reminder_set">Đã đặt lời nhắc cho %1$s</string>
     <string name="reminder_removed">Đã xóa lời nhắc</string>
     <string name="reminder_failed">Không thể đặt lời nhắc: %1$s</string>
-    <string name="settings_recording">Ghi và lời nhắc</string>
     <string name="setting_pad_before">Bắt đầu ghi sớm hơn</string>
     <string name="setting_pad_after">Ghi thêm sau khi kết thúc</string>
     <string name="setting_instant_length">Thời lượng ghi nhanh</string>
@@ -493,7 +485,6 @@
     <string name="ui_subtitles">phụ đề</string>
     <string name="ui_playback_options">Tùy chọn phát lại</string>
     <string name="ui_automatic">tự động</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Đã xuất bản sao lưu. Hãy giữ tệp này riêng tư: tệp chứa thông tin đăng nhập danh sách và mã PIN phụ huynh.</string>
     <string name="ui_backup_is_too_large">Bản sao lưu quá lớn</string>
     <string name="ui_replace_saved_configuration">Thay thế cấu hình đã lưu?</string>
     <string name="ui_replace">Thay thế</string>
@@ -551,4 +542,32 @@
     <string name="ui_backup_saved_in_downloads">Đã lưu vào Downloads/%1$s. Hãy giữ tệp này riêng tư: tệp chứa thông tin đăng nhập danh sách và mã PIN phụ huynh.</string>
     <string name="ui_no_backups_in_downloads">Không có bản sao lưu trong Downloads. Hãy sao chép một tệp vào đó trước.</string>
     <string name="ui_choose_a_file">Chọn tệp…</string>
+    <string name="http_error_code">Máy chủ trả về HTTP %1$d</string>
+    <string name="http_empty_response">Phản hồi rỗng</string>
+    <string name="source_open_failed">Không mở được %1$s</string>
+    <string name="backup_storage_denied">Không lưu được bản sao lưu vì quyền truy cập bộ nhớ bị từ chối. Hãy cấp quyền trong cài đặt ứng dụng rồi thử lại.</string>
+    <string name="recording_notification_title">Ghi hình</string>
+    <string name="recording_preparing">Đang chuẩn bị ghi hình…</string>
+    <string name="channel_recording_name">Đang ghi hình</string>
+    <string name="channel_recording_result_name">Sự cố ghi hình</string>
+    <string name="channel_reminder_name">Nhắc chương trình</string>
+    <string name="reminder_already_started">Chương trình này đã bắt đầu</string>
+    <string name="reminder_starting_soon">Sắp bắt đầu trên %1$s</string>
+    <string name="recording_count">%1$d bản ghi</string>
+    <string name="recording_failed_title">Ghi hình thất bại: %1$s</string>
+    <string name="rec_already_recording">Kênh này đã được ghi hình vào lúc đó</string>
+    <string name="rec_no_duration">Chương trình này không có thời lượng</string>
+    <string name="rec_no_archive">Chương trình đã kết thúc và kênh không có kho lưu</string>
+    <string name="rec_archive_expired">Chương trình cũ hơn kho lưu %1$d ngày của kênh</string>
+    <string name="rec_channel_missing">Kênh không còn trong danh sách</string>
+    <string name="rec_window_passed">Đã lỡ: khung giờ ghi hình đã qua</string>
+    <string name="rec_resumed_gap">Đã tiếp tục sau khi gián đoạn, nên có thể thiếu một đoạn ngắn</string>
+    <string name="rec_ended_early">Kết thúc sớm hoặc bị ngắt quãng: %1$s</string>
+    <string name="rec_interrupted">Bị ngắt: thiết bị hoặc ứng dụng dừng khi đang ghi, thiếu một phần</string>
+    <string name="rec_missed">Đã lỡ: thiết bị đã tắt hoặc ứng dụng bị dừng</string>
+    <string name="rec_storage_low">Không đủ dung lượng (dưới 200 MB)</string>
+    <string name="rec_stream_failed">Không lấy được địa chỉ luồng: %1$s</string>
+    <string name="rec_unexpected_stop">Ghi hình dừng đột ngột: %1$s</string>
+    <string name="rec_limit_stopped_early">Dừng sớm: Android giới hạn tải xuống nền 6 giờ mỗi ngày</string>
+    <string name="rec_background_denied">Android không cho phép ghi hình ở chế độ nền. Hãy cho phép báo thức và nhắc nhở cho Tellybox trong cài đặt hệ thống.</string>
 </resources>

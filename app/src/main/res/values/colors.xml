@@ -10,6 +10,5 @@
     <color name="text_primary">#FFECEFF4</color>
     <color name="text_secondary">#FF9AA3B2</color>
     <color name="error">#FFE5604D</color>
-    <color name="logo_bg">#FF2B3340</color>
     <color name="guide_past">#FF13161C</color>
 </resources>

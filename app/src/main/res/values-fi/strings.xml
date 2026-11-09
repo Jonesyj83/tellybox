@@ -8,7 +8,6 @@
     <string name="group_all">Kaikki kanavat</string>
     <string name="group_search">Haku: %1$s</string>
     <string name="action_search">Haku</string>
-    <string name="action_playlists">Soittolistat</string>
     <string name="action_add_playlist">Lisää soittolista</string>
     <string name="empty_title">Ei vielä soittolistoja</string>
     <string name="empty_body">Aloita lisäämällä M3U-linkki, Xtream Codes -tunnus tai Stalker-portaali.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portaali</string>
     <string name="player_error">Kanavaa ei voi toistaa</string>
     <string name="player_retry">Yritä uudelleen painamalla OK</string>
-    <string name="player_connecting">Yhdistetään…</string>
     <string name="error_http">Palvelin hylkäsi lähetyksen (HTTP %1$d).</string>
     <string name="error_network">Palvelimeen ei saatu yhteyttä. Tarkista yhteys.</string>
     <string name="error_timeout">Palvelin vastasi liian hitaasti.</string>
     <string name="error_format">Lähetyksen muotoa ei tueta.</string>
     <string name="error_decoder">Laite ei pysty purkamaan lähetystä.</string>
-    <string name="now_next">Nyt: %1$s</string>
-    <string name="action_guide">TV-opas</string>
     <string name="guide_no_info">Ei tietoja</string>
     <string name="guide_no_data">Ei opastietoja</string>
     <string name="guide_empty">Ei näytettäviä kanavia.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Kanavalla ei ole catch-upia.</string>
     <string name="guide_watch_live">Katso kanavaa</string>
     <string name="guide_jump_now">Siirry nykyhetkeen</string>
-    <string name="action_settings">Asetukset</string>
     <string name="settings_title">Asetukset</string>
     <string name="settings_player">Soitin</string>
-    <string name="settings_guide">TV-opas</string>
     <string name="setting_buffer">Puskurin koko</string>
     <string name="buffer_small">Pieni (nopein käynnistys)</string>
     <string name="buffer_medium">Keskikokoinen</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d tunti</item>
         <item quantity="other">%d tuntia</item>
     </plurals>
-    <string name="action_recordings">Tallenteet</string>
     <string name="player_stream_stopped">Lähetys lakkasi vastaamasta. Valitse kanava uudelleen tai kokeile toista.</string>
     <string name="player_reconnecting">Lähetys katkesi, yhdistetään (%1$d/%2$d)…</string>
     <string name="action_record">● Tallenna</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Muistutus asetettu: %1$s</string>
     <string name="reminder_removed">Muistutus poistettu</string>
     <string name="reminder_failed">Muistutusta ei voi asettaa: %1$s</string>
-    <string name="settings_recording">Tallennus ja muistutukset</string>
     <string name="setting_pad_before">Aloita tallennus aiemmin</string>
     <string name="setting_pad_after">Jatka tallennusta lopun jälkeen</string>
     <string name="setting_instant_length">Pikatallennuksen kesto</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Tekstitykset</string>
     <string name="ui_playback_options">Toistovaihtoehdot</string>
     <string name="ui_automatic">Automaattinen</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Varmuuskopio viety. Pidä tiedosto yksityisenä: se sisältää soittolistojen tunnukset ja lapsilukon PIN-koodin.</string>
     <string name="ui_backup_is_too_large">Varmuuskopio on liian suuri</string>
     <string name="ui_replace_saved_configuration">Korvataanko tallennettu kokoonpano?</string>
     <string name="ui_replace">Vaihda</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Tallennettu kansioon Downloads/%1$s. Pidä tiedosto yksityisenä: se sisältää soittolistojen tunnukset ja lapsilukon PIN-koodin.</string>
     <string name="ui_no_backups_in_downloads">Ei varmuuskopioita kansiossa Downloads. Kopioi tiedosto sinne ensin.</string>
     <string name="ui_choose_a_file">Valitse tiedosto…</string>
+    <string name="http_error_code">Palvelin vastasi HTTP %1$d</string>
+    <string name="http_empty_response">Tyhjä vastaus</string>
+    <string name="source_open_failed">Ei voi avata: %1$s</string>
+    <string name="backup_storage_denied">Varmuuskopiota ei tallennettu, koska tallennuslupa evättiin. Myönnä se sovelluksen asetuksissa ja yritä uudelleen.</string>
+    <string name="recording_notification_title">Tallennus</string>
+    <string name="recording_preparing">Valmistellaan tallennusta…</string>
+    <string name="channel_recording_name">Tallennus käynnissä</string>
+    <string name="channel_recording_result_name">Tallennusongelmat</string>
+    <string name="channel_reminder_name">Ohjelmamuistutukset</string>
+    <string name="reminder_already_started">Ohjelma on jo alkanut</string>
+    <string name="reminder_starting_soon">Alkaa pian kanavalla %1$s</string>
+    <string name="recording_count">%1$d tallennetta</string>
+    <string name="recording_failed_title">Tallennus epäonnistui: %1$s</string>
+    <string name="rec_already_recording">Tätä kanavaa tallennetaan jo tuolloin</string>
+    <string name="rec_no_duration">Ohjelmalla ei ole kestoa</string>
+    <string name="rec_no_archive">Ohjelma päättyi eikä kanavalla ole arkistoa</string>
+    <string name="rec_archive_expired">Ohjelma on vanhempi kuin kanavan %1$d päivän arkisto</string>
+    <string name="rec_channel_missing">Kanava ei ole enää soittolistassa</string>
+    <string name="rec_window_passed">Menetetty: tallennusaika on ohi</string>
+    <string name="rec_resumed_gap">Jatkui keskeytyksen jälkeen, joten lyhyt aukko on mahdollinen</string>
+    <string name="rec_ended_early">Päättyi aikaisin tai siinä on aukkoja: %1$s</string>
+    <string name="rec_interrupted">Keskeytyi: laite tai sovellus pysähtyi tallennuksen aikana, osa puuttuu</string>
+    <string name="rec_missed">Menetetty: laite oli pois päältä tai sovellus pysäytetty</string>
+    <string name="rec_storage_low">Ei tarpeeksi tilaa (alle 200 MB)</string>
+    <string name="rec_stream_failed">Suoratoisto-osoitetta ei saatu: %1$s</string>
+    <string name="rec_unexpected_stop">Tallennus pysähtyi odottamatta: %1$s</string>
+    <string name="rec_limit_stopped_early">Pysähtyi aikaisin: Android rajaa taustalataukset 6 tuntiin vuorokaudessa</string>
+    <string name="rec_background_denied">Android ei sallinut tallennusta taustalla. Salli herätykset ja muistutukset Tellyboxille järjestelmäasetuksissa.</string>
 </resources>

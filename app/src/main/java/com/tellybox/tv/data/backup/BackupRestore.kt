@@ -2,7 +2,6 @@ package com.tellybox.tv.data.backup
 
 import androidx.room.withTransaction
 import com.tellybox.tv.AppContainer
-import kotlinx.coroutines.flow.first
 
 /**
  * Applies a backup in full, or puts back what was there before.
@@ -40,8 +39,8 @@ object BackupRestore {
             BackupState(
                 version = 2,
                 playlists = db.playlists().getAll(),
-                guides = db.epg().observeSources().first(),
-                favorites = db.favorites().observeAll().first(),
+                guides = db.epg().all(),
+                favorites = db.favorites().all(),
                 history = db.history().getAll(),
                 blocks = container.parental.exportBlocks(),
                 parental = container.parental.exportConfiguration(),
@@ -54,7 +53,7 @@ object BackupRestore {
         val db = container.database
         db.withTransaction {
             db.playlists().getAll().forEach { db.playlists().delete(it.id) }
-            db.epg().observeSources().first().forEach { db.epg().deleteSource(it.id) }
+            db.epg().all().forEach { db.epg().deleteSource(it.id) }
             state.playlists.forEach { db.playlists().insert(it) }
             state.guides.forEach { db.epg().insertSource(it.copy(lastUpdated = 0, lastError = null)) }
             state.favorites.forEach { db.favorites().insert(it) }

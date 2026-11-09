@@ -8,7 +8,6 @@
     <string name="group_all">Всички канали</string>
     <string name="group_search">Търсене: %1$s</string>
     <string name="action_search">Търсене</string>
-    <string name="action_playlists">Плейлисти</string>
     <string name="action_add_playlist">Добави плейлист</string>
     <string name="empty_title">Още няма плейлисти</string>
     <string name="empty_body">Добавете M3U връзка, вход за Xtream Codes или портал Stalker, за да започнете.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Портал</string>
     <string name="player_error">Каналът не може да се пусне</string>
     <string name="player_retry">Натиснете OK за нов опит</string>
-    <string name="player_connecting">Свързване…</string>
     <string name="error_http">Сървърът отказа потока (HTTP %1$d).</string>
     <string name="error_network">Сървърът е недостъпен. Проверете връзката.</string>
     <string name="error_timeout">Сървърът отговаря твърде бавно.</string>
     <string name="error_format">Форматът на този поток не се поддържа.</string>
     <string name="error_decoder">Устройството не може да декодира потока.</string>
-    <string name="now_next">Сега: %1$s</string>
-    <string name="action_guide">ТВ справочник</string>
     <string name="guide_no_info">Няма информация</string>
     <string name="guide_no_data">Няма данни в справочника</string>
     <string name="guide_empty">Няма канали за показване.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Този канал няма архив.</string>
     <string name="guide_watch_live">Гледай канала</string>
     <string name="guide_jump_now">Към сега</string>
-    <string name="action_settings">Настройки</string>
     <string name="settings_title">Настройки</string>
     <string name="settings_player">Плейър</string>
-    <string name="settings_guide">ТВ справочник</string>
     <string name="setting_buffer">Размер на буфера</string>
     <string name="buffer_small">Малък (най-бърз старт)</string>
     <string name="buffer_medium">Среден</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d час</item>
         <item quantity="other">%d часа</item>
     </plurals>
-    <string name="action_recordings">Записи</string>
     <string name="player_stream_stopped">Потокът спря да отговаря. Изберете канала пак или опитайте друг.</string>
     <string name="player_reconnecting">Потокът прекъсна, повторно свързване (%1$d/%2$d)…</string>
     <string name="action_record">● Запис</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Напомняне за %1$s</string>
     <string name="reminder_removed">Напомнянето е премахнато</string>
     <string name="reminder_failed">Напомнянето е невъзможно: %1$s</string>
-    <string name="settings_recording">Запис и напомняния</string>
     <string name="setting_pad_before">Започвай записа по-рано</string>
     <string name="setting_pad_after">Продължавай записа след края</string>
     <string name="setting_instant_length">Продължителност на бърз запис</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">субтитри</string>
     <string name="ui_playback_options">Опции за възпроизвеждане</string>
     <string name="ui_automatic">Автоматично</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Архивът е експортиран. Пазете файла поверителен: съдържа данните за вход на плейлистите и родителския PIN.</string>
     <string name="ui_backup_is_too_large">Резервното копие е твърде голямо</string>
     <string name="ui_replace_saved_configuration">Замяна на запазената конфигурация?</string>
     <string name="ui_replace">Сменете</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Запазено в Downloads/%1$s. Пазете файла поверителен: съдържа данните за вход на плейлистите и родителския PIN.</string>
     <string name="ui_no_backups_in_downloads">Няма архиви в Downloads. Първо копирайте файл там.</string>
     <string name="ui_choose_a_file">Избор на файл…</string>
+    <string name="http_error_code">Сървърът върна HTTP %1$d</string>
+    <string name="http_empty_response">Празен отговор</string>
+    <string name="source_open_failed">Не може да се отвори %1$s</string>
+    <string name="backup_storage_denied">Архивът не беше запазен, защото разрешението за хранилище е отказано. Разрешете го в настройките на приложението и опитайте отново.</string>
+    <string name="recording_notification_title">Запис</string>
+    <string name="recording_preparing">Подготовка за запис…</string>
+    <string name="channel_recording_name">Изпълнява се запис</string>
+    <string name="channel_recording_result_name">Проблеми със записа</string>
+    <string name="channel_reminder_name">Напомняния за предавания</string>
+    <string name="reminder_already_started">Предаването вече е започнало</string>
+    <string name="reminder_starting_soon">Започва скоро по %1$s</string>
+    <string name="recording_count">%1$d записа</string>
+    <string name="recording_failed_title">Записът е неуспешен: %1$s</string>
+    <string name="rec_already_recording">Този канал вече се записва по това време</string>
+    <string name="rec_no_duration">Това предаване няма времетраене</string>
+    <string name="rec_no_archive">Предаването приключи, а каналът няма архив</string>
+    <string name="rec_archive_expired">Предаването е по-старо от %1$d-дневния архив на канала</string>
+    <string name="rec_channel_missing">Каналът вече не е в плейлистата си</string>
+    <string name="rec_window_passed">Пропуснато: времето за запис е минало</string>
+    <string name="rec_resumed_gap">Продължено след прекъсване, така че може да има кратка пауза</string>
+    <string name="rec_ended_early">Приключи преждевременно или с пропуски: %1$s</string>
+    <string name="rec_interrupted">Прекъснато: устройството или приложението спря по време на записа, затова липсва част</string>
+    <string name="rec_missed">Пропуснато: устройството беше изключено или приложението спряно</string>
+    <string name="rec_storage_low">Няма достатъчно място (под 200 MB)</string>
+    <string name="rec_stream_failed">Не може да се получи адресът на потока: %1$s</string>
+    <string name="rec_unexpected_stop">Записът спря неочаквано: %1$s</string>
+    <string name="rec_limit_stopped_early">Спряно по-рано: Android ограничава фоновото изтегляне до 6 часа на ден</string>
+    <string name="rec_background_denied">Android не позволи запис във фонов режим. Разрешете аларми и напомняния за Tellybox в системните настройки.</string>
 </resources>

@@ -61,7 +61,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 /**
@@ -470,9 +469,15 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
     }
 
     /** Takes the shared player for this screen, creating it if needed, and shows it in the tile. */
-    private fun attachPlayer(): Player {
+    private suspend fun attachPlayer(): Player? {
         previewPlayer?.let { return it }
-        val config = (appContainer.settings.current() ?: runBlocking { appContainer.settings.get() }).playerConfig
+        val cached = appContainer.settings.current()
+        return startWith(cached ?: appContainer.settings.get())
+    }
+
+    private fun startWith(settings: com.tellybox.tv.data.settings.AppSettings): Player? {
+        if (isFinishing || isDestroyed || !lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return null
+        val config = settings.playerConfig
         val p = appContainer.playback.acquire(config, this)
         p.exo.addListener(previewListener)
         binding.previewPlayer.player = p.exo
@@ -508,7 +513,7 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
             }
             previewChannel = channel
             updateNowPlaying()
-            val player = attachPlayer()
+            val player = attachPlayer() ?: return@launch
             val playback = appContainer.playback
             if (playback.key == PlayerActivity.channelKey(channelId) &&
                 player.exo.playbackState != androidx.media3.common.Player.STATE_IDLE) {

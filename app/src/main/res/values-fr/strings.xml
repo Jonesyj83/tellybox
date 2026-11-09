@@ -8,7 +8,6 @@
     <string name="group_all">Toutes les chaînes</string>
     <string name="group_search">Recherche : %1$s</string>
     <string name="action_search">Rechercher</string>
-    <string name="action_playlists">Playlists</string>
     <string name="action_add_playlist">Ajouter une playlist</string>
     <string name="empty_title">Aucune playlist</string>
     <string name="empty_body">Ajoutez un lien M3U, un compte Xtream Codes ou un portail Stalker pour commencer.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portail</string>
     <string name="player_error">Impossible de lire cette chaîne</string>
     <string name="player_retry">Appuyez sur OK pour réessayer</string>
-    <string name="player_connecting">Connexion…</string>
     <string name="error_http">Le serveur a refusé le flux (HTTP %1$d).</string>
     <string name="error_network">Serveur injoignable. Vérifiez la connexion.</string>
     <string name="error_timeout">Le serveur a mis trop de temps à répondre.</string>
     <string name="error_format">Le format de ce flux n\'est pas pris en charge.</string>
     <string name="error_decoder">Cet appareil ne peut pas décoder ce flux.</string>
-    <string name="now_next">En cours : %1$s</string>
-    <string name="action_guide">Guide TV</string>
     <string name="guide_no_info">Aucune information</string>
     <string name="guide_no_data">Pas de données de guide</string>
     <string name="guide_empty">Aucune chaîne à afficher.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Pas de replay pour cette chaîne.</string>
     <string name="guide_watch_live">Regarder la chaîne</string>
     <string name="guide_jump_now">Aller à maintenant</string>
-    <string name="action_settings">Paramètres</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_player">Lecteur</string>
-    <string name="settings_guide">Guide TV</string>
     <string name="setting_buffer">Taille du tampon</string>
     <string name="buffer_small">Petit (démarrage rapide)</string>
     <string name="buffer_medium">Moyen</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d heure</item>
         <item quantity="other">%d heures</item>
     </plurals>
-    <string name="action_recordings">Enregistrements</string>
     <string name="player_stream_stopped">Le flux ne répond plus. Choisissez à nouveau la chaîne ou essayez-en une autre.</string>
     <string name="player_reconnecting">Flux coupé, reconnexion (%1$d/%2$d)…</string>
     <string name="action_record">● Enregistrer</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Rappel programmé pour %1$s</string>
     <string name="reminder_removed">Rappel supprimé</string>
     <string name="reminder_failed">Rappel impossible : %1$s</string>
-    <string name="settings_recording">Enregistrements et rappels</string>
     <string name="setting_pad_before">Commencer plus tôt</string>
     <string name="setting_pad_after">Continuer après la fin</string>
     <string name="setting_instant_length">Durée d\'enregistrement immédiat</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Sous-titres</string>
     <string name="ui_playback_options">Options de lecture</string>
     <string name="ui_automatic">Automatique</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Sauvegarde exportée. Gardez ce fichier privé : il contient les identifiants des listes et le code PIN parental.</string>
     <string name="ui_backup_is_too_large">La sauvegarde est trop volumineuse</string>
     <string name="ui_replace_saved_configuration">Remplacer la configuration enregistrée ?</string>
     <string name="ui_replace">Remplacer</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Enregistré dans Downloads/%1$s. Gardez ce fichier privé : il contient les identifiants des listes et le code PIN parental.</string>
     <string name="ui_no_backups_in_downloads">Aucune sauvegarde dans Downloads. Copiez d\'abord un fichier à cet endroit.</string>
     <string name="ui_choose_a_file">Choisir un fichier…</string>
+    <string name="http_error_code">Le serveur a renvoyé HTTP %1$d</string>
+    <string name="http_empty_response">Réponse vide</string>
+    <string name="source_open_failed">Impossible d\'ouvrir %1$s</string>
+    <string name="backup_storage_denied">La sauvegarde n\'a pas été enregistrée, l\'autorisation de stockage ayant été refusée. Accordez-la dans les réglages de l\'application et réessayez.</string>
+    <string name="recording_notification_title">Enregistrement</string>
+    <string name="recording_preparing">Préparation de l\'enregistrement…</string>
+    <string name="channel_recording_name">Enregistrement en cours</string>
+    <string name="channel_recording_result_name">Problèmes d\'enregistrement</string>
+    <string name="channel_reminder_name">Rappels de programmes</string>
+    <string name="reminder_already_started">Ce programme a déjà commencé</string>
+    <string name="reminder_starting_soon">Commence bientôt sur %1$s</string>
+    <string name="recording_count">%1$d enregistrements</string>
+    <string name="recording_failed_title">Échec de l\'enregistrement : %1$s</string>
+    <string name="rec_already_recording">Cette chaîne est déjà en cours d\'enregistrement à ce moment</string>
+    <string name="rec_no_duration">Ce programme n\'a pas de durée</string>
+    <string name="rec_no_archive">Le programme est terminé et la chaîne n\'a pas d\'archive</string>
+    <string name="rec_archive_expired">Le programme dépasse l\'archive de %1$d jours de la chaîne</string>
+    <string name="rec_channel_missing">La chaîne n\'est plus dans sa liste</string>
+    <string name="rec_window_passed">Manqué : la plage d\'enregistrement est passée</string>
+    <string name="rec_resumed_gap">Repris après une interruption, il peut donc manquer un court passage</string>
+    <string name="rec_ended_early">Terminé plus tôt ou avec des trous : %1$s</string>
+    <string name="rec_interrupted">Interrompu : l\'appareil ou l\'application s\'est arrêté pendant l\'enregistrement, il manque une partie</string>
+    <string name="rec_missed">Manqué : appareil éteint ou application arrêtée</string>
+    <string name="rec_storage_low">Pas assez d\'espace (moins de 200 Mo)</string>
+    <string name="rec_stream_failed">Adresse du flux introuvable : %1$s</string>
+    <string name="rec_unexpected_stop">L\'enregistrement s\'est arrêté de façon inattendue : %1$s</string>
+    <string name="rec_limit_stopped_early">Arrêté plus tôt : Android limite les téléchargements en arrière-plan à 6 heures par jour</string>
+    <string name="rec_background_denied">Android n\'a pas autorisé l\'enregistrement en arrière-plan. Autorisez les alarmes et rappels pour Tellybox dans les réglages système.</string>
 </resources>

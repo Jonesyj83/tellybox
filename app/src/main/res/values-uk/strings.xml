@@ -8,7 +8,6 @@
     <string name="group_all">Усі канали</string>
     <string name="group_search">Пошук: %1$s</string>
     <string name="action_search">Пошук</string>
-    <string name="action_playlists">Плейлисти</string>
     <string name="action_add_playlist">Додати плейлист</string>
     <string name="empty_title">Плейлистів ще немає</string>
     <string name="empty_body">Додайте посилання M3U, логін Xtream Codes або портал Stalker, щоб почати.</string>
@@ -136,14 +135,11 @@
     <string name="default_name_stalker">Портал</string>
     <string name="player_error">Не вдається відтворити канал</string>
     <string name="player_retry">Натисніть OK, щоб повторити</string>
-    <string name="player_connecting">Підключення…</string>
     <string name="error_http">Сервер відхилив потік (HTTP %1$d).</string>
     <string name="error_network">Сервер недоступний. Перевірте з’єднання.</string>
     <string name="error_timeout">Сервер надто довго не відповідав.</string>
     <string name="error_format">Формат цього потоку не підтримується.</string>
     <string name="error_decoder">Пристрій не може декодувати потік.</string>
-    <string name="now_next">Зараз: %1$s</string>
-    <string name="action_guide">Телегід</string>
     <string name="guide_no_info">Немає інформації</string>
     <string name="guide_no_data">Немає даних телегіду</string>
     <string name="guide_empty">Немає каналів для показу.</string>
@@ -152,10 +148,8 @@
     <string name="guide_no_catchup">Для цього каналу немає архіву.</string>
     <string name="guide_watch_live">Дивитися канал</string>
     <string name="guide_jump_now">До поточного часу</string>
-    <string name="action_settings">Налаштування</string>
     <string name="settings_title">Налаштування</string>
     <string name="settings_player">Плеєр</string>
-    <string name="settings_guide">Телегід</string>
     <string name="setting_buffer">Розмір буфера</string>
     <string name="buffer_small">Малий (швидкий старт)</string>
     <string name="buffer_medium">Середній</string>
@@ -235,7 +229,6 @@
         <item quantity="many">%d годин</item>
         <item quantity="other">%d години</item>
     </plurals>
-    <string name="action_recordings">Записи</string>
     <string name="player_stream_stopped">Потік перестав відповідати. Виберіть канал знову або спробуйте інший.</string>
     <string name="player_reconnecting">Потік перервався, перепідключення (%1$d/%2$d)…</string>
     <string name="action_record">● Запис</string>
@@ -311,7 +304,6 @@
     <string name="reminder_set">Нагадування встановлено: %1$s</string>
     <string name="reminder_removed">Нагадування видалено</string>
     <string name="reminder_failed">Не вдається створити нагадування: %1$s</string>
-    <string name="settings_recording">Запис і нагадування</string>
     <string name="setting_pad_before">Починати запис раніше</string>
     <string name="setting_pad_after">Продовжувати запис після кінця</string>
     <string name="setting_instant_length">Тривалість швидкого запису</string>
@@ -532,7 +524,6 @@
     <string name="ui_subtitles">Субтитри</string>
     <string name="ui_playback_options">Параметри відтворення</string>
     <string name="ui_automatic">Автоматичний</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Резервну копію експортовано. Тримайте файл приватним: у ньому дані для входу списків і батьківський PIN.</string>
     <string name="ui_backup_is_too_large">Резервна копія завелика</string>
     <string name="ui_replace_saved_configuration">Замінити збережену конфігурацію?</string>
     <string name="ui_replace">Замінити</string>
@@ -605,4 +596,32 @@
     <string name="ui_backup_saved_in_downloads">Збережено в Downloads/%1$s. Тримайте файл приватним: у ньому дані для входу списків і батьківський PIN.</string>
     <string name="ui_no_backups_in_downloads">У Downloads немає резервних копій. Спершу скопіюйте туди файл.</string>
     <string name="ui_choose_a_file">Вибрати файл…</string>
+    <string name="http_error_code">Сервер повернув HTTP %1$d</string>
+    <string name="http_empty_response">Порожня відповідь</string>
+    <string name="source_open_failed">Не вдається відкрити %1$s</string>
+    <string name="backup_storage_denied">Резервну копію не збережено, бо доступ до пам\'яті відхилено. Дозвольте його в налаштуваннях застосунку та спробуйте ще раз.</string>
+    <string name="recording_notification_title">Запис</string>
+    <string name="recording_preparing">Підготовка запису…</string>
+    <string name="channel_recording_name">Триває запис</string>
+    <string name="channel_recording_result_name">Проблеми із записом</string>
+    <string name="channel_reminder_name">Нагадування про передачі</string>
+    <string name="reminder_already_started">Ця передача вже почалася</string>
+    <string name="reminder_starting_soon">Незабаром на %1$s</string>
+    <string name="recording_count">%1$d записів</string>
+    <string name="recording_failed_title">Запис не вдався: %1$s</string>
+    <string name="rec_already_recording">Цей канал уже записується в цей час</string>
+    <string name="rec_no_duration">Ця передача не має тривалості</string>
+    <string name="rec_no_archive">Передача завершилася, а архіву на каналі немає</string>
+    <string name="rec_archive_expired">Передача старша за %1$d-денний архів каналу</string>
+    <string name="rec_channel_missing">Каналу більше немає у списку</string>
+    <string name="rec_window_passed">Пропущено: час запису минув</string>
+    <string name="rec_resumed_gap">Продовжено після збою, тож можлива коротка прогалина</string>
+    <string name="rec_ended_early">Завершилося раніше або з пропусками: %1$s</string>
+    <string name="rec_interrupted">Перервано: пристрій або застосунок зупинилися під час запису, частини бракує</string>
+    <string name="rec_missed">Пропущено: пристрій був вимкнений або застосунок зупинено</string>
+    <string name="rec_storage_low">Недостатньо місця (менше 200 МБ)</string>
+    <string name="rec_stream_failed">Не вдалося отримати адресу потоку: %1$s</string>
+    <string name="rec_unexpected_stop">Запис несподівано зупинився: %1$s</string>
+    <string name="rec_limit_stopped_early">Зупинено раніше: Android обмежує фонові завантаження 6 годинами на добу</string>
+    <string name="rec_background_denied">Android не дозволив запис у фоні. Дозвольте будильники й нагадування для Tellybox у налаштуваннях системи.</string>
 </resources>

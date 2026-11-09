@@ -8,7 +8,6 @@
     <string name="group_all">Tüm kanallar</string>
     <string name="group_search">Ara: %1$s</string>
     <string name="action_search">Ara</string>
-    <string name="action_playlists">Listeler</string>
     <string name="action_add_playlist">Liste ekle</string>
     <string name="empty_title">Henüz liste yok</string>
     <string name="empty_body">Başlamak için bir M3U bağlantısı, Xtream Codes girişi ya da Stalker portalı ekleyin.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Bu kanal oynatılamıyor</string>
     <string name="player_retry">Yeniden denemek için OK\'ye basın</string>
-    <string name="player_connecting">Bağlanıyor…</string>
     <string name="error_http">Sunucu yayını reddetti (HTTP %1$d).</string>
     <string name="error_network">Sunucuya ulaşılamadı. Bağlantıyı kontrol edin.</string>
     <string name="error_timeout">Sunucu çok geç yanıt verdi.</string>
     <string name="error_format">Bu yayının biçimi desteklenmiyor.</string>
     <string name="error_decoder">Bu cihaz yayının kodunu çözemiyor.</string>
-    <string name="now_next">Şimdi: %1$s</string>
-    <string name="action_guide">TV rehberi</string>
     <string name="guide_no_info">Bilgi yok</string>
     <string name="guide_no_data">Rehber verisi yok</string>
     <string name="guide_empty">Gösterilecek kanal yok.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Bu kanalda geriye dönük izleme yok.</string>
     <string name="guide_watch_live">Kanalı izle</string>
     <string name="guide_jump_now">Şimdiye git</string>
-    <string name="action_settings">Ayarlar</string>
     <string name="settings_title">Ayarlar</string>
     <string name="settings_player">Oynatıcı</string>
-    <string name="settings_guide">TV rehberi</string>
     <string name="setting_buffer">Arabellek boyutu</string>
     <string name="buffer_small">Küçük (en hızlı başlar)</string>
     <string name="buffer_medium">Orta</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d saat</item>
         <item quantity="other">%d saat</item>
     </plurals>
-    <string name="action_recordings">Kayıtlar</string>
     <string name="player_stream_stopped">Yayın yanıt vermiyor. Kanalı yeniden seçin ya da başka birini deneyin.</string>
     <string name="player_reconnecting">Yayın koptu, yeniden bağlanıyor (%1$d/%2$d)…</string>
     <string name="action_record">● Kaydet</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Hatırlatıcı kuruldu: %1$s</string>
     <string name="reminder_removed">Hatırlatıcı kaldırıldı</string>
     <string name="reminder_failed">Hatırlatıcı kurulamıyor: %1$s</string>
-    <string name="settings_recording">Kayıt ve hatırlatıcılar</string>
     <string name="setting_pad_before">Kayda erken başla</string>
     <string name="setting_pad_after">Bitişten sonra kayda devam et</string>
     <string name="setting_instant_length">Anlık kayıt süresi</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Altyazılar</string>
     <string name="ui_playback_options">Oynatma seçenekleri</string>
     <string name="ui_automatic">Otomatik</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Yedek dışa aktarıldı. Bu dosyayı gizli tutun: liste giriş bilgilerini ve ebeveyn PIN kodunu içerir.</string>
     <string name="ui_backup_is_too_large">Yedekleme çok büyük</string>
     <string name="ui_replace_saved_configuration">Kaydedilen yapılandırma değiştirilsin mi?</string>
     <string name="ui_replace">Değiştir</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Downloads/%1$s konumuna kaydedildi. Bu dosyayı gizli tutun: liste giriş bilgilerini ve ebeveyn PIN kodunu içerir.</string>
     <string name="ui_no_backups_in_downloads">Downloads klasöründe yedek yok. Önce oraya bir dosya kopyalayın.</string>
     <string name="ui_choose_a_file">Dosya seç…</string>
+    <string name="http_error_code">Sunucu HTTP %1$d döndürdü</string>
+    <string name="http_empty_response">Boş yanıt</string>
+    <string name="source_open_failed">%1$s açılamıyor</string>
+    <string name="backup_storage_denied">Yedek kaydedilemedi çünkü depolama izni verilmedi. Uygulama ayarlarından izin verip yeniden deneyin.</string>
+    <string name="recording_notification_title">Kayıt</string>
+    <string name="recording_preparing">Kayıt hazırlanıyor…</string>
+    <string name="channel_recording_name">Kayıt sürüyor</string>
+    <string name="channel_recording_result_name">Kayıt sorunları</string>
+    <string name="channel_reminder_name">Program hatırlatıcıları</string>
+    <string name="reminder_already_started">Bu program başladı bile</string>
+    <string name="reminder_starting_soon">Yakında %1$s kanalında</string>
+    <string name="recording_count">%1$d kayıt</string>
+    <string name="recording_failed_title">Kayıt başarısız: %1$s</string>
+    <string name="rec_already_recording">Bu kanal o saatte zaten kaydediliyor</string>
+    <string name="rec_no_duration">Bu programın süresi yok</string>
+    <string name="rec_no_archive">Program bitti ve kanalın arşivi yok</string>
+    <string name="rec_archive_expired">Program kanalın %1$d günlük arşivinden eski</string>
+    <string name="rec_channel_missing">Kanal artık listesinde değil</string>
+    <string name="rec_window_passed">Kaçırıldı: kayıt zamanı geçti</string>
+    <string name="rec_resumed_gap">Kesintiden sonra devam etti, kısa bir boşluk olabilir</string>
+    <string name="rec_ended_early">Erken bitti veya boşluklar var: %1$s</string>
+    <string name="rec_interrupted">Kesildi: cihaz veya uygulama kayıt sırasında durdu, bir kısmı eksik</string>
+    <string name="rec_missed">Kaçırıldı: cihaz kapalıydı veya uygulama durdurulmuştu</string>
+    <string name="rec_storage_low">Yeterli alan yok (200 MB\'ın altında)</string>
+    <string name="rec_stream_failed">Yayın adresi alınamadı: %1$s</string>
+    <string name="rec_unexpected_stop">Kayıt beklenmedik şekilde durdu: %1$s</string>
+    <string name="rec_limit_stopped_early">Erken durdu: Android arka plan indirmelerini günde 6 saatle sınırlıyor</string>
+    <string name="rec_background_denied">Android arka planda kayda izin vermedi. Sistem ayarlarından Tellybox için alarmlara ve hatırlatıcılara izin verin.</string>
 </resources>

@@ -53,7 +53,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 @OptIn(UnstableApi::class)
@@ -116,8 +115,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     /**
      * Where the picture sat behind live when it was last paused or resumed, and when that was.
      * A paused picture falls behind by exactly one second per second, so the bar can be driven
-     * from the clock instead of the buffer's chunky byte counts — which is why it stopped
-     * moving unevenly.
+     * from the clock instead of the buffer's chunky byte counts.
      */
     private var behindAnchorMs = 0L
     private var behindAnchorAt = 0L
@@ -303,7 +301,17 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     override fun onStart() {
         super.onStart()
-        val settings = appContainer.settings.current() ?: runBlocking { appContainer.settings.get() }
+        started = true
+        val cached = appContainer.settings.current()
+        if (cached != null) startWith(cached)
+        else startJob = lifecycleScope.launch { startWith(appContainer.settings.get()) }
+    }
+
+    private var started = false
+    private var startJob: Job? = null
+
+    private fun startWith(settings: com.tellybox.tv.data.settings.AppSettings) {
+        if (isFinishing || isDestroyed || !started) return
         nameTokens = settings.channelNameTokens
         backgroundPlayback = settings.backgroundPlayback
         timeshiftMode = settings.timeshift
@@ -362,6 +370,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     private var protectionJob: Job? = null
     override fun onStop() {
+        started = false
+        startJob?.cancel()
         mainHandler.removeCallbacks(watchdog)
         handler.removeCallbacks(timeshiftTick)
         handler.removeCallbacks(commitSeek)
@@ -511,9 +521,9 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
                 container.playback.liveChannelId =
                     channel.id.takeIf { !catchup && !isVod && intent.getLongExtra("episode_id", -1) < 0 }
                 if (container.playback.liveChannelId != null) container.lastChannel.save(channel)
-                val resume = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
+                val startAt = if (catchup) archivePosition else if (isVod && !intent.getBooleanExtra("from_beginning", false))
                     container.database.history().get(channel.playlistId, channel.channelKey)?.positionMs ?: 0L else 0L
-                if (resume > 0) player?.exo?.seekTo(resume)
+                if (startAt > 0) player?.exo?.seekTo(startAt)
                 intent.removeExtra("from_beginning")
             } catch (e: CancellationException) {
                 throw e
@@ -648,7 +658,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
             return
         }
         reconnects++
-        val keep = if (catchup || fileMode) archivePosition else 0L
+        val keep = if (catchup || fileMode) player?.exo?.currentPosition ?: archivePosition else 0L
         binding.errorDetail.text = getString(R.string.player_reconnecting, reconnects, MAX_RECONNECTS)
         binding.errorBox.visibility = View.VISIBLE
         lifecycleScope.launch {
@@ -800,11 +810,6 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (liveFocused && !behind) binding.tsPause.requestFocus()
     }
 
-/**
-     * The bar and its label, redrawn on a short tick while it's on screen. Without this it only
-     * moved when the banner refreshed, which read as jumping about rather than flowing.
-     */
-
     /** How far behind the buffer's live edge the picture is right now, startup delay removed. */
     private fun measuredBehind(): Long {
         val p = player ?: return 0L
@@ -865,12 +870,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         refreshBanner()
     }
 
-    /**
-     * Rewind or skip by [deltaMs]. Presses in quick succession add up, and playback moves
-     * once they stop, so holding the button doesn't restart the decoder every time.
-     */
-    /** Menu, or the first arrow press: bring the overlay up with the scrub line in focus. */
-    /** OK and Menu both bring the overlay up; pressing again puts it away. */
+    /** OK and Menu toggle the overlay. */
     private fun toggleControls() {
         if (binding.banner.visibility == View.VISIBLE) {
             hideBanner.run()
@@ -1015,8 +1015,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // Anything pressed while the banner is up counts as using it, so the banner stays until the
-        // viewer stops. Without this the bar vanished four seconds after it appeared — mid-press,
-        // on a remote that has to travel from the playback row up to Sleep and Record.
+        // viewer stops, including while navigating to Sleep and Record.
         if (event.action == KeyEvent.ACTION_DOWN && binding.banner.visibility == View.VISIBLE) {
             handler.removeCallbacks(hideBanner)
             handler.postDelayed(hideBanner, BANNER_MS)
@@ -1070,16 +1069,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         return super.dispatchKeyEvent(event)
     }
 
-/**
-     * Up and down inside the timeshift controls move between the scrub line and the buttons.
-     * Returns true when the key belonged to the controls and must not zap.
-     */
-
-    /**
-     * Up from the scrub controls moves to the buttons in the corner, and Down comes back.
-     * Before this the only way to reach Record and Sleep was to press Left or Right until
-     * focus fell out of the overlay, which isn't how a D-pad should behave.
-     */
+    /** Up moves from scrub controls to corner buttons; Down returns to the scrub controls. */
     private fun overlayVerticalNav(keyCode: Int): Boolean {
         if (binding.banner.visibility != View.VISIBLE) return false
         val focus = currentFocus ?: return false
@@ -1134,7 +1124,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         return false
     }
 
-/**
+    /**
      * Back closes the overlay before it leaves the channel. Only when nothing is showing does
      * it hand control back to the home screen.
      */
@@ -1163,14 +1153,19 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         typedNumber.append(digit)
         binding.banner.visibility = View.VISIBLE
         binding.bannerNumber.text = typedNumber.toString()
+        handler.removeCallbacks(hideBanner)
         handler.removeCallbacks(numberCommit)
         handler.postDelayed(numberCommit, 1_500)
         return true
     }
 
     private fun commitTypedNumber() {
-        val wanted = typedNumber.toString().toIntOrNull() ?: return
+        val wanted = typedNumber.toString().toIntOrNull()
         typedNumber.setLength(0)
+        binding.bannerNumber.text = current?.number?.toString().orEmpty()
+        handler.removeCallbacks(hideBanner)
+        handler.postDelayed(hideBanner, BANNER_MS)
+        if (wanted == null) return
         lifecycleScope.launch {
             val id = appContainer.database.channels().idForNumber(wanted, channelIds.toList()) ?: return@launch
             channelIds.indexOf(id).takeIf { it >= 0 }?.let { loadChannel(it) }
@@ -1323,7 +1318,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         private const val LONG_PRESS_MS = 500L
 
         /** Remotes disagree about which code the menu button is; accept the common ones. */
-        private val MENU_KEYS = intArrayOf(KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_TV_CONTENTS_MENU, KeyEvent.KEYCODE_INFO)
+        private val MENU_KEYS = intArrayOf(KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_TV_CONTENTS_MENU)
 
         /** Quiet time after the last rewind or skip press before playback moves. */
         private const val SEEK_SETTLE_MS = 700L

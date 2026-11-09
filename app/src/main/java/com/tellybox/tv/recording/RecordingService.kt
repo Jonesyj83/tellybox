@@ -92,7 +92,7 @@ class RecordingService : Service() {
             } catch (e: Exception) {
                 appContainer.database.recordings().get(id)?.let {
                     finish(it.copy(status = if (it.bytes > 0) RecordingStatus.COMPLETED else RecordingStatus.FAILED,
-                        error = "Recording stopped unexpectedly: ${e.message ?: e.javaClass.simpleName}"))
+                        error = getString(com.tellybox.tv.R.string.rec_unexpected_stop, e.message ?: e.javaClass.simpleName)))
                 }
             }
         }
@@ -125,7 +125,7 @@ class RecordingService : Service() {
             val size = rec.filePath?.let { File(it).length() } ?: 0L
             dao.update(
                 if (size > 0) rec.copy(status = RecordingStatus.COMPLETED, bytes = size)
-                else rec.copy(status = RecordingStatus.FAILED, error = "Missed: the recording window had already passed"),
+                else rec.copy(status = RecordingStatus.FAILED, error = getString(com.tellybox.tv.R.string.rec_window_passed)),
             )
             return
         }
@@ -138,7 +138,7 @@ class RecordingService : Service() {
         fun failure(reason: String) = rec.copy(status = RecordingStatus.FAILED, error = reason)
         val channel = c.database.channels().findByKey(rec.playlistId, rec.channelKey)
         if (channel == null) {
-            finish(failure("The channel is no longer in its playlist"))
+            finish(failure(getString(com.tellybox.tv.R.string.rec_channel_missing)))
             return
         }
         val url = try {
@@ -147,12 +147,12 @@ class RecordingService : Service() {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            finish(failure("Couldn't get the stream address: ${e.message ?: e.javaClass.simpleName}"))
+            finish(failure(getString(com.tellybox.tv.R.string.rec_stream_failed, e.message ?: e.javaClass.simpleName)))
             return
         }
         val dir = c.recordings.directory()
         if (dir.usableSpace < MIN_FREE_BYTES) {
-            finish(failure("Not enough free storage (less than 200 MB left)"))
+            finish(failure(getString(com.tellybox.tv.R.string.rec_storage_low)))
             return
         }
         // Picking up a recording the system or a reboot cut short: the gap can't be filled.
@@ -190,9 +190,9 @@ class RecordingService : Service() {
 
         val latest = dao.get(id) ?: return // deleted while recording
         val note = when {
-            timedOut -> "Stopped early: Android limits background downloads to 6 hours a day"
-            result.bytes > 0 && result.error != null -> "Ended early or has gaps: ${result.error}"
-            resumed && result.bytes > 0 -> "Resumed after an interruption, so there may be a short gap"
+            timedOut -> getString(com.tellybox.tv.R.string.rec_limit_stopped_early)
+            result.bytes > 0 && result.error != null -> getString(com.tellybox.tv.R.string.rec_ended_early, result.error)
+            resumed && result.bytes > 0 -> getString(com.tellybox.tv.R.string.rec_resumed_gap)
             else -> result.error
         }
         finish(
@@ -216,13 +216,13 @@ class RecordingService : Service() {
         if (!nm.areNotificationsEnabled()) return
         val n = NotificationCompat.Builder(this, Notifications.CHANNEL_RECORDING_RESULT)
             .setSmallIcon(R.drawable.ic_stat_tellybox)
-            .setContentTitle("Recording failed: ${rec.title}")
+            .setContentTitle(getString(com.tellybox.tv.R.string.recording_failed_title, rec.title))
             .setContentText(rec.error)
             .setStyle(NotificationCompat.BigTextStyle().bigText(rec.error))
             .setContentIntent(openList())
             .setAutoCancel(true)
             .build()
-        try { nm.notify(FAILURE_BASE + rec.id.toInt(), n) } catch (_: SecurityException) { }
+        try { nm.notify("rec_fail", rec.id.toInt(), n) } catch (_: SecurityException) { }
     }
 
     private fun openList() = PendingIntent.getActivity(
@@ -232,13 +232,13 @@ class RecordingService : Service() {
 
     private fun goForeground() {
         val text = when (titles.size) {
-            0 -> "Preparing recording…"
+            0 -> getString(com.tellybox.tv.R.string.recording_preparing)
             1 -> titles.values.first()
-            else -> "${titles.size} recordings"
+            else -> getString(com.tellybox.tv.R.string.recording_count, titles.size)
         }
         val n: Notification = NotificationCompat.Builder(this, Notifications.CHANNEL_RECORDING)
             .setSmallIcon(R.drawable.ic_stat_tellybox)
-            .setContentTitle("Recording")
+            .setContentTitle(getString(com.tellybox.tv.R.string.recording_notification_title))
             .setContentText(text)
             .setOngoing(true)
             .setContentIntent(openList())
@@ -285,7 +285,6 @@ class RecordingService : Service() {
         private const val ACTION_STOP = "com.tellybox.tv.recording.STOP"
         private const val EXTRA_ID = "recording_id"
         private const val NOTIFICATION_ID = 4100
-        private const val FAILURE_BASE = 5000
         private const val MIN_FREE_BYTES = 200L * 1024 * 1024
 
         fun start(context: Context, id: Long) {

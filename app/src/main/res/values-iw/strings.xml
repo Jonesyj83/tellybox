@@ -8,7 +8,6 @@
     <string name="group_all">כל הערוצים</string>
     <string name="group_search">חיפוש: %1$s</string>
     <string name="action_search">חיפוש</string>
-    <string name="action_playlists">רשימות</string>
     <string name="action_add_playlist">הוספת רשימה</string>
     <string name="empty_title">אין עדיין רשימות</string>
     <string name="empty_body">כדי להתחיל, מוסיפים קישור M3U, חשבון Xtream Codes או פורטל Stalker.</string>
@@ -131,14 +130,11 @@
     <string name="default_name_stalker">פורטל</string>
     <string name="player_error">לא ניתן להפעיל את הערוץ</string>
     <string name="player_retry">לוחצים OK כדי לנסות שוב</string>
-    <string name="player_connecting">מתחבר…</string>
     <string name="error_http">השרת דחה את השידור (HTTP %1$d).</string>
     <string name="error_network">אין גישה לשרת. יש לבדוק את החיבור.</string>
     <string name="error_timeout">לשרת לקח יותר מדי זמן להגיב.</string>
     <string name="error_format">הפורמט של השידור הזה לא נתמך.</string>
     <string name="error_decoder">המכשיר לא יכול לפענח את השידור.</string>
-    <string name="now_next">עכשיו: %1$s</string>
-    <string name="action_guide">מדריך טלוויזיה</string>
     <string name="guide_no_info">אין מידע</string>
     <string name="guide_no_data">אין נתוני מדריך</string>
     <string name="guide_empty">אין ערוצים להצגה.</string>
@@ -147,10 +143,8 @@
     <string name="guide_no_catchup">לערוץ הזה אין צפייה חוזרת.</string>
     <string name="guide_watch_live">צפייה בערוץ</string>
     <string name="guide_jump_now">מעבר לעכשיו</string>
-    <string name="action_settings">הגדרות</string>
     <string name="settings_title">הגדרות</string>
     <string name="settings_player">נגן</string>
-    <string name="settings_guide">מדריך טלוויזיה</string>
     <string name="setting_buffer">גודל מאגר</string>
     <string name="buffer_small">קטן (הפעלה מהירה)</string>
     <string name="buffer_medium">בינוני</string>
@@ -226,7 +220,6 @@
         <item quantity="two">%d שעות</item>
         <item quantity="other">%d שעות</item>
     </plurals>
-    <string name="action_recordings">הקלטות</string>
     <string name="player_stream_stopped">השידור הפסיק להגיב. בוחרים שוב את הערוץ או מנסים ערוץ אחר.</string>
     <string name="player_reconnecting">השידור נותק, מתחבר מחדש (%1$d/%2$d)…</string>
     <string name="action_record">● הקלטה</string>
@@ -299,7 +292,6 @@
     <string name="reminder_set">הוגדרה תזכורת ל-%1$s</string>
     <string name="reminder_removed">התזכורת הוסרה</string>
     <string name="reminder_failed">לא ניתן להגדיר תזכורת: %1$s</string>
-    <string name="settings_recording">הקלטות ותזכורות</string>
     <string name="setting_pad_before">להתחיל להקליט מוקדם</string>
     <string name="setting_pad_after">להמשיך להקליט אחרי הסוף</string>
     <string name="setting_instant_length">אורך הקלטה מיידית</string>
@@ -519,7 +511,6 @@
     <string name="ui_subtitles">כתוביות</string>
     <string name="ui_playback_options">אפשרויות השמעה</string>
     <string name="ui_automatic">אוטומטי</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">הגיבוי יוצא. שמור את הקובץ פרטי: הוא מכיל פרטי התחברות לפלייליסטים ואת קוד ההורים.</string>
     <string name="ui_backup_is_too_large">הגיבוי גדול מדי</string>
     <string name="ui_replace_saved_configuration">להחליף תצורה שמורה?</string>
     <string name="ui_replace">החלף</string>
@@ -587,4 +578,32 @@
     <string name="ui_backup_saved_in_downloads">נשמר ב-Downloads/%1$s. שמור את הקובץ פרטי: הוא מכיל פרטי התחברות לפלייליסטים ואת קוד ההורים.</string>
     <string name="ui_no_backups_in_downloads">אין גיבויים ב-Downloads. העתק קודם קובץ לשם.</string>
     <string name="ui_choose_a_file">בחר קובץ…</string>
+    <string name="http_error_code">השרת החזיר HTTP %1$d</string>
+    <string name="http_empty_response">תגובה ריקה</string>
+    <string name="source_open_failed">לא ניתן לפתוח את %1$s</string>
+    <string name="backup_storage_denied">הגיבוי לא נשמר כי הרשאת האחסון נדחתה. אשר אותה בהגדרות האפליקציה ונסה שוב.</string>
+    <string name="recording_notification_title">הקלטה</string>
+    <string name="recording_preparing">מכין הקלטה…</string>
+    <string name="channel_recording_name">הקלטה מתבצעת</string>
+    <string name="channel_recording_result_name">בעיות הקלטה</string>
+    <string name="channel_reminder_name">תזכורות לתוכניות</string>
+    <string name="reminder_already_started">התוכנית כבר התחילה</string>
+    <string name="reminder_starting_soon">מתחיל בקרוב ב-%1$s</string>
+    <string name="recording_count">%1$d הקלטות</string>
+    <string name="recording_failed_title">ההקלטה נכשלה: %1$s</string>
+    <string name="rec_already_recording">הערוץ הזה כבר מוקלט בשעה הזו</string>
+    <string name="rec_no_duration">לתוכנית אין משך</string>
+    <string name="rec_no_archive">התוכנית הסתיימה ולערוץ אין ארכיון</string>
+    <string name="rec_archive_expired">התוכנית ישנה מארכיון %1$d הימים של הערוץ</string>
+    <string name="rec_channel_missing">הערוץ כבר לא בפלייליסט שלו</string>
+    <string name="rec_window_passed">הוחמץ: חלון ההקלטה עבר</string>
+    <string name="rec_resumed_gap">הוקלט מחדש לאחר הפרעה, ייתכן פער קצר</string>
+    <string name="rec_ended_early">הסתיים מוקדם או עם פערים: %1$s</string>
+    <string name="rec_interrupted">הופסק: המכשיר או האפליקציה נעצרו במהלך ההקלטה, חלק חסר</string>
+    <string name="rec_missed">הוחמץ: המכשיר היה כבוי או האפליקציה נעצרה</string>
+    <string name="rec_storage_low">אין מספיק מקום (מתחת ל-200 MB)</string>
+    <string name="rec_stream_failed">לא ניתן לקבל את כתובת הזרם: %1$s</string>
+    <string name="rec_unexpected_stop">ההקלטה נעצרה באופן בלתי צפוי: %1$s</string>
+    <string name="rec_limit_stopped_early">נעצר מוקדם: אנדרואיד מגביל הורדות ברקע ל-6 שעות ביום</string>
+    <string name="rec_background_denied">אנדרואיד לא אפשר הקלטה ברקע. אשר שעונים ותזכורות ל-Tellybox בהגדרות המערכת.</string>
 </resources>

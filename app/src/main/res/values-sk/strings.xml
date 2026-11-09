@@ -8,7 +8,6 @@
     <string name="group_all">Všetky kanály</string>
     <string name="group_search">Hľadať: %1$s</string>
     <string name="action_search">Hľadať</string>
-    <string name="action_playlists">Playlisty</string>
     <string name="action_add_playlist">Pridať playlist</string>
     <string name="empty_title">Zatiaľ žiadne playlisty</string>
     <string name="empty_body">Začnite pridaním odkazu M3U, prihlásenia Xtream Codes alebo portálu Stalker.</string>
@@ -136,14 +135,11 @@
     <string name="default_name_stalker">Portál</string>
     <string name="player_error">Kanál nemožno prehrať</string>
     <string name="player_retry">Stlačte OK a skúste znova</string>
-    <string name="player_connecting">Pripája sa…</string>
     <string name="error_http">Server stream odmietol (HTTP %1$d).</string>
     <string name="error_network">Server je nedostupný. Skontrolujte pripojenie.</string>
     <string name="error_timeout">Server odpovedal príliš dlho.</string>
     <string name="error_format">Formát tohto streamu nie je podporovaný.</string>
     <string name="error_decoder">Toto zariadenie nevie stream dekódovať.</string>
-    <string name="now_next">Teraz: %1$s</string>
-    <string name="action_guide">TV sprievodca</string>
     <string name="guide_no_info">Bez informácií</string>
     <string name="guide_no_data">Žiadne dáta sprievodcu</string>
     <string name="guide_empty">Žiadne kanály na zobrazenie.</string>
@@ -152,10 +148,8 @@
     <string name="guide_no_catchup">Tento kanál nemá catch-up.</string>
     <string name="guide_watch_live">Pozerať kanál</string>
     <string name="guide_jump_now">Prejsť na teraz</string>
-    <string name="action_settings">Nastavenia</string>
     <string name="settings_title">Nastavenia</string>
     <string name="settings_player">Prehrávač</string>
-    <string name="settings_guide">TV sprievodca</string>
     <string name="setting_buffer">Veľkosť vyrovnávacej pamäte</string>
     <string name="buffer_small">Malá (najrýchlejší štart)</string>
     <string name="buffer_medium">Stredná</string>
@@ -235,7 +229,6 @@
         <item quantity="many">%d hodiny</item>
         <item quantity="other">%d hodín</item>
     </plurals>
-    <string name="action_recordings">Nahrávky</string>
     <string name="player_stream_stopped">Stream prestal odpovedať. Vyberte kanál znova alebo skúste iný.</string>
     <string name="player_reconnecting">Stream vypadol, znova sa pripája (%1$d/%2$d)…</string>
     <string name="action_record">● Nahrať</string>
@@ -311,7 +304,6 @@
     <string name="reminder_set">Pripomienka nastavená: %1$s</string>
     <string name="reminder_removed">Pripomienka odstránená</string>
     <string name="reminder_failed">Pripomienku nemožno nastaviť: %1$s</string>
-    <string name="settings_recording">Nahrávanie a pripomienky</string>
     <string name="setting_pad_before">Začať nahrávať skôr</string>
     <string name="setting_pad_after">Nahrávať aj po skončení</string>
     <string name="setting_instant_length">Dĺžka okamžitého nahrávania</string>
@@ -532,7 +524,6 @@
     <string name="ui_subtitles">titulky</string>
     <string name="ui_playback_options">Možnosti prehrávania</string>
     <string name="ui_automatic">Automaticky</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Záloha bola exportovaná. Chráňte tento súbor: obsahuje prihlasovacie údaje playlistov a rodičovský PIN.</string>
     <string name="ui_backup_is_too_large">Záloha je príliš veľká</string>
     <string name="ui_replace_saved_configuration">Chcete nahradiť uloženú konfiguráciu?</string>
     <string name="ui_replace">Nahradiť</string>
@@ -605,4 +596,32 @@
     <string name="ui_backup_saved_in_downloads">Uložené do Downloads/%1$s. Chráňte tento súbor: obsahuje prihlasovacie údaje playlistov a rodičovský PIN.</string>
     <string name="ui_no_backups_in_downloads">V priečinku Downloads nie sú žiadne zálohy. Najprv tam skopírujte súbor.</string>
     <string name="ui_choose_a_file">Vybrať súbor…</string>
+    <string name="http_error_code">Server vrátil HTTP %1$d</string>
+    <string name="http_empty_response">Prázdna odpoveď</string>
+    <string name="source_open_failed">Nedá sa otvoriť %1$s</string>
+    <string name="backup_storage_denied">Záloha sa neuložila, pretože bolo odmietnuté povolenie na úložisko. Povoľte ho v nastaveniach aplikácie a skúste to znova.</string>
+    <string name="recording_notification_title">Nahrávanie</string>
+    <string name="recording_preparing">Príprava nahrávania…</string>
+    <string name="channel_recording_name">Prebieha nahrávanie</string>
+    <string name="channel_recording_result_name">Problémy s nahrávaním</string>
+    <string name="channel_reminder_name">Pripomienky relácií</string>
+    <string name="reminder_already_started">Táto relácia už začala</string>
+    <string name="reminder_starting_soon">Čoskoro začína na %1$s</string>
+    <string name="recording_count">%1$d nahrávok</string>
+    <string name="recording_failed_title">Nahrávanie zlyhalo: %1$s</string>
+    <string name="rec_already_recording">Tento kanál sa v tom čase už nahráva</string>
+    <string name="rec_no_duration">Táto relácia nemá trvanie</string>
+    <string name="rec_no_archive">Relácia sa skončila a kanál nemá archív</string>
+    <string name="rec_archive_expired">Relácia je staršia ako %1$d-dňový archív kanála</string>
+    <string name="rec_channel_missing">Kanál už nie je v zozname</string>
+    <string name="rec_window_passed">Zmeškané: čas nahrávania už uplynul</string>
+    <string name="rec_resumed_gap">Pokračovalo po prerušení, preto môže chýbať krátky úsek</string>
+    <string name="rec_ended_early">Skončilo skôr alebo má medzery: %1$s</string>
+    <string name="rec_interrupted">Prerušené: zariadenie alebo aplikácia sa počas nahrávania zastavili, časť chýba</string>
+    <string name="rec_missed">Zmeškané: zariadenie bolo vypnuté alebo aplikácia zastavená</string>
+    <string name="rec_storage_low">Málo miesta (menej ako 200 MB)</string>
+    <string name="rec_stream_failed">Nepodarilo sa získať adresu streamu: %1$s</string>
+    <string name="rec_unexpected_stop">Nahrávanie sa nečakane zastavilo: %1$s</string>
+    <string name="rec_limit_stopped_early">Zastavené skôr: Android obmedzuje sťahovanie na pozadí na 6 hodín denne</string>
+    <string name="rec_background_denied">Android nepovolil nahrávanie na pozadí. Povoľte budíky a pripomienky pre Tellybox v nastaveniach systému.</string>
 </resources>

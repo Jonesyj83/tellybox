@@ -27,7 +27,7 @@ class TranslationsTest {
     }
 
     @Test
-    fun `every locale has exactly the default keys`() {
+    fun `every locale has the expected keys`() {
         val problems = locales.mapNotNull { dir ->
             val keys = parse(File(dir, "strings.xml")).keys
             val missing = default.keys - keys

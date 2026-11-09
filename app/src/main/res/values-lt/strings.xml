@@ -8,7 +8,6 @@
     <string name="group_all">Visi kanalai</string>
     <string name="group_search">Paieška: %1$s</string>
     <string name="action_search">Paieška</string>
-    <string name="action_playlists">Grojaraščiai</string>
     <string name="action_add_playlist">Pridėti grojaraštį</string>
     <string name="empty_title">Grojaraščių dar nėra</string>
     <string name="empty_body">Pridėkite M3U nuorodą, Xtream Codes prisijungimą arba Stalker portalą.</string>
@@ -136,14 +135,11 @@
     <string name="default_name_stalker">Portalas</string>
     <string name="player_error">Nepavyksta paleisti kanalo</string>
     <string name="player_retry">Paspauskite OK, kad bandytumėte vėl</string>
-    <string name="player_connecting">Jungiamasi…</string>
     <string name="error_http">Serveris atmetė srautą (HTTP %1$d).</string>
     <string name="error_network">Nepavyko pasiekti serverio. Patikrinkite ryšį.</string>
     <string name="error_timeout">Serveris per ilgai neatsakė.</string>
     <string name="error_format">Šio srauto formatas nepalaikomas.</string>
     <string name="error_decoder">Įrenginys negali iškoduoti srauto.</string>
-    <string name="now_next">Dabar: %1$s</string>
-    <string name="action_guide">TV programa</string>
     <string name="guide_no_info">Nėra informacijos</string>
     <string name="guide_no_data">Nėra programos duomenų</string>
     <string name="guide_empty">Nėra rodomų kanalų.</string>
@@ -152,10 +148,8 @@
     <string name="guide_no_catchup">Šis kanalas neturi archyvo.</string>
     <string name="guide_watch_live">Žiūrėti kanalą</string>
     <string name="guide_jump_now">Į dabartį</string>
-    <string name="action_settings">Nustatymai</string>
     <string name="settings_title">Nustatymai</string>
     <string name="settings_player">Grotuvas</string>
-    <string name="settings_guide">TV programa</string>
     <string name="setting_buffer">Buferio dydis</string>
     <string name="buffer_small">Mažas (greičiausia pradžia)</string>
     <string name="buffer_medium">Vidutinis</string>
@@ -235,7 +229,6 @@
         <item quantity="many">%d valandos</item>
         <item quantity="other">%d valandų</item>
     </plurals>
-    <string name="action_recordings">Įrašai</string>
     <string name="player_stream_stopped">Srautas nebeatsako. Pasirinkite kanalą iš naujo arba bandykite kitą.</string>
     <string name="player_reconnecting">Srautas nutrūko, jungiamasi iš naujo (%1$d/%2$d)…</string>
     <string name="action_record">● Įrašyti</string>
@@ -311,7 +304,6 @@
     <string name="reminder_set">Priminimas nustatytas: %1$s</string>
     <string name="reminder_removed">Priminimas pašalintas</string>
     <string name="reminder_failed">Negalima nustatyti priminimo: %1$s</string>
-    <string name="settings_recording">Įrašymas ir priminimai</string>
     <string name="setting_pad_before">Pradėti įrašyti anksčiau</string>
     <string name="setting_pad_after">Įrašyti ir po pabaigos</string>
     <string name="setting_instant_length">Greito įrašo trukmė</string>
@@ -532,7 +524,6 @@
     <string name="ui_subtitles">Subtitrai</string>
     <string name="ui_playback_options">Atkūrimo parinktys</string>
     <string name="ui_automatic">Automatinis</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Atsarginė kopija eksportuota. Saugokite failą: jame yra grojaraščių prisijungimo duomenys ir tėvų PIN.</string>
     <string name="ui_backup_is_too_large">Atsarginė kopija per didelė</string>
     <string name="ui_replace_saved_configuration">Pakeisti išsaugotą konfigūraciją?</string>
     <string name="ui_replace">Pakeiskite</string>
@@ -605,4 +596,32 @@
     <string name="ui_backup_saved_in_downloads">Išsaugota Downloads/%1$s. Saugokite failą: jame yra grojaraščių prisijungimo duomenys ir tėvų PIN.</string>
     <string name="ui_no_backups_in_downloads">Downloads aplanke nėra atsarginių kopijų. Pirmiausia nukopijuokite failą ten.</string>
     <string name="ui_choose_a_file">Pasirinkti failą…</string>
+    <string name="http_error_code">Serveris grąžino HTTP %1$d</string>
+    <string name="http_empty_response">Tuščias atsakymas</string>
+    <string name="source_open_failed">Nepavyksta atidaryti %1$s</string>
+    <string name="backup_storage_denied">Atsarginė kopija neišsaugota, nes atminties leidimas atmestas. Suteikite jį programos nustatymuose ir bandykite dar kartą.</string>
+    <string name="recording_notification_title">Įrašymas</string>
+    <string name="recording_preparing">Ruošiamas įrašymas…</string>
+    <string name="channel_recording_name">Vyksta įrašymas</string>
+    <string name="channel_recording_result_name">Įrašymo problemos</string>
+    <string name="channel_reminder_name">Laidų priminimai</string>
+    <string name="reminder_already_started">Ši laida jau prasidėjo</string>
+    <string name="reminder_starting_soon">Netrukus prasideda per %1$s</string>
+    <string name="recording_count">%1$d įrašų</string>
+    <string name="recording_failed_title">Įrašymas nepavyko: %1$s</string>
+    <string name="rec_already_recording">Šis kanalas tuo metu jau įrašomas</string>
+    <string name="rec_no_duration">Ši laida neturi trukmės</string>
+    <string name="rec_no_archive">Laida baigėsi, o kanalas neturi archyvo</string>
+    <string name="rec_archive_expired">Laida senesnė už kanalo %1$d dienų archyvą</string>
+    <string name="rec_channel_missing">Kanalo nebėra grojaraštyje</string>
+    <string name="rec_window_passed">Praleista: įrašymo laikas jau praėjo</string>
+    <string name="rec_resumed_gap">Tęsėsi po pertraukimo, todėl gali trūkti trumpos atkarpos</string>
+    <string name="rec_ended_early">Baigėsi anksčiau arba yra spragų: %1$s</string>
+    <string name="rec_interrupted">Nutraukta: įrenginys ar programa sustojo įrašymo metu, dalies trūksta</string>
+    <string name="rec_missed">Praleista: įrenginys buvo išjungtas arba programa sustabdyta</string>
+    <string name="rec_storage_low">Nepakanka vietos (mažiau nei 200 MB)</string>
+    <string name="rec_stream_failed">Nepavyksta gauti srauto adreso: %1$s</string>
+    <string name="rec_unexpected_stop">Įrašymas netikėtai sustojo: %1$s</string>
+    <string name="rec_limit_stopped_early">Sustabdyta anksčiau: Android riboja foninius atsisiuntimus iki 6 valandų per dieną</string>
+    <string name="rec_background_denied">Android neleido įrašyti fone. Leiskite žadintuvus ir priminimus „Tellybox“ sistemos nustatymuose.</string>
 </resources>

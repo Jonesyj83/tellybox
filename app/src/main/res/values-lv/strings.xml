@@ -8,7 +8,6 @@
     <string name="group_all">Visi kanāli</string>
     <string name="group_search">Meklēt: %1$s</string>
     <string name="action_search">Meklēt</string>
-    <string name="action_playlists">Atskaņošanas saraksti</string>
     <string name="action_add_playlist">Pievienot sarakstu</string>
     <string name="empty_title">Vēl nav sarakstu</string>
     <string name="empty_body">Pievienojiet M3U saiti, Xtream Codes pieteikšanos vai Stalker portālu.</string>
@@ -131,14 +130,11 @@
     <string name="default_name_stalker">Portāls</string>
     <string name="player_error">Nevar atskaņot kanālu</string>
     <string name="player_retry">Nospiediet OK, lai mēģinātu vēlreiz</string>
-    <string name="player_connecting">Savienojas…</string>
     <string name="error_http">Serveris noraidīja straumi (HTTP %1$d).</string>
     <string name="error_network">Serveris nav sasniedzams. Pārbaudiet savienojumu.</string>
     <string name="error_timeout">Serveris atbildēja pārāk ilgi.</string>
     <string name="error_format">Šīs straumes formāts netiek atbalstīts.</string>
     <string name="error_decoder">Ierīce nevar dekodēt straumi.</string>
-    <string name="now_next">Tagad: %1$s</string>
-    <string name="action_guide">TV ceļvedis</string>
     <string name="guide_no_info">Nav informācijas</string>
     <string name="guide_no_data">Nav ceļveža datu</string>
     <string name="guide_empty">Nav rādāmu kanālu.</string>
@@ -147,10 +143,8 @@
     <string name="guide_no_catchup">Šim kanālam nav arhīva.</string>
     <string name="guide_watch_live">Skatīties kanālu</string>
     <string name="guide_jump_now">Uz tagadni</string>
-    <string name="action_settings">Iestatījumi</string>
     <string name="settings_title">Iestatījumi</string>
     <string name="settings_player">Atskaņotājs</string>
-    <string name="settings_guide">TV ceļvedis</string>
     <string name="setting_buffer">Bufera izmērs</string>
     <string name="buffer_small">Mazs (ātrākais starts)</string>
     <string name="buffer_medium">Vidējs</string>
@@ -226,7 +220,6 @@
         <item quantity="one">%d stundas</item>
         <item quantity="other">%d stundām</item>
     </plurals>
-    <string name="action_recordings">Ieraksti</string>
     <string name="player_stream_stopped">Straume pārstāja atbildēt. Izvēlieties kanālu vēlreiz vai mēģiniet citu.</string>
     <string name="player_reconnecting">Straume pārtrūka, savienojas no jauna (%1$d/%2$d)…</string>
     <string name="action_record">● Ierakstīt</string>
@@ -299,7 +292,6 @@
     <string name="reminder_set">Atgādinājums iestatīts: %1$s</string>
     <string name="reminder_removed">Atgādinājums noņemts</string>
     <string name="reminder_failed">Nevar iestatīt atgādinājumu: %1$s</string>
-    <string name="settings_recording">Ierakstīšana un atgādinājumi</string>
     <string name="setting_pad_before">Sākt ierakstu agrāk</string>
     <string name="setting_pad_after">Turpināt ierakstu pēc beigām</string>
     <string name="setting_instant_length">Ātrā ieraksta ilgums</string>
@@ -519,7 +511,6 @@
     <string name="ui_subtitles">Subtitri</string>
     <string name="ui_playback_options">Atskaņošanas iespējas</string>
     <string name="ui_automatic">Automātiski</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Dublējums eksportēts. Glabājiet failu privāti: tajā ir atskaņošanas sarakstu pieteikšanās dati un vecāku PIN.</string>
     <string name="ui_backup_is_too_large">Dublējums ir pārāk liels</string>
     <string name="ui_replace_saved_configuration">Vai aizstāt saglabāto konfigurāciju?</string>
     <string name="ui_replace">Aizstāt</string>
@@ -587,4 +578,32 @@
     <string name="ui_backup_saved_in_downloads">Saglabāts Downloads/%1$s. Glabājiet failu privāti: tajā ir atskaņošanas sarakstu pieteikšanās dati un vecāku PIN.</string>
     <string name="ui_no_backups_in_downloads">Downloads mapē nav dublējumu. Vispirms iekopējiet tur failu.</string>
     <string name="ui_choose_a_file">Izvēlēties failu…</string>
+    <string name="http_error_code">Serveris atgrieza HTTP %1$d</string>
+    <string name="http_empty_response">Tukša atbilde</string>
+    <string name="source_open_failed">Nevar atvērt %1$s</string>
+    <string name="backup_storage_denied">Dublējums netika saglabāts, jo atmiņas atļauja noraidīta. Piešķiriet to lietotnes iestatījumos un mēģiniet vēlreiz.</string>
+    <string name="recording_notification_title">Ieraksts</string>
+    <string name="recording_preparing">Sagatavo ierakstu…</string>
+    <string name="channel_recording_name">Notiek ieraksts</string>
+    <string name="channel_recording_result_name">Ieraksta problēmas</string>
+    <string name="channel_reminder_name">Raidījumu atgādinājumi</string>
+    <string name="reminder_already_started">Šis raidījums jau sācies</string>
+    <string name="reminder_starting_soon">Drīz sāksies kanālā %1$s</string>
+    <string name="recording_count">%1$d ierakstu</string>
+    <string name="recording_failed_title">Ieraksts neizdevās: %1$s</string>
+    <string name="rec_already_recording">Šis kanāls tajā laikā jau tiek ierakstīts</string>
+    <string name="rec_no_duration">Šim raidījumam nav ilguma</string>
+    <string name="rec_no_archive">Raidījums beidzies, un kanālam nav arhīva</string>
+    <string name="rec_archive_expired">Raidījums ir vecāks par kanāla %1$d dienu arhīvu</string>
+    <string name="rec_channel_missing">Kanāls vairs nav tā sarakstā</string>
+    <string name="rec_window_passed">Nokavēts: ieraksta laiks pagājis</string>
+    <string name="rec_resumed_gap">Turpināts pēc pārtraukuma, tāpēc var būt īsa iztrūkums</string>
+    <string name="rec_ended_early">Beidzās agrāk vai ir iztrūkumi: %1$s</string>
+    <string name="rec_interrupted">Pārtraukts: ierīce vai lietotne apstājās ieraksta laikā, daļa trūkst</string>
+    <string name="rec_missed">Nokavēts: ierīce bija izslēgta vai lietotne apturēta</string>
+    <string name="rec_storage_low">Nepietiek vietas (mazāk par 200 MB)</string>
+    <string name="rec_stream_failed">Nevar iegūt straumes adresi: %1$s</string>
+    <string name="rec_unexpected_stop">Ieraksts negaidīti apstājās: %1$s</string>
+    <string name="rec_limit_stopped_early">Apturēts agrāk: Android ierobežo fona lejupielādes līdz 6 stundām dienā</string>
+    <string name="rec_background_denied">Android neļāva ierakstīt fonā. Atļaujiet modinātājus un atgādinājumus Tellybox sistēmas iestatījumos.</string>
 </resources>

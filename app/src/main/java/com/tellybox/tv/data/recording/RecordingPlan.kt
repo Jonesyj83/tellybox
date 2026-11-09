@@ -13,8 +13,10 @@ object RecordingPlan {
         /** Download the provider's archive of this span now. */
         data class Catchup(val start: Long, val stop: Long) : Plan()
 
-        data class Refused(val reason: String) : Plan()
+        data class Refused(val reason: Refusal) : Plan()
     }
+
+    enum class Refusal { NO_DURATION, NO_ARCHIVE, ARCHIVE_EXPIRED }
 
     private const val MINUTE = 60_000L
 
@@ -29,7 +31,7 @@ object RecordingPlan {
         padAfterMinutes: Int,
         catchupDays: Int,
     ): Plan {
-        if (stop <= start) return Plan.Refused("This programme has no running time")
+        if (stop <= start) return Plan.Refused(Refusal.NO_DURATION)
         val paddedStart = start - padBeforeMinutes.coerceAtLeast(0) * MINUTE
         val paddedStop = stop + padAfterMinutes.coerceAtLeast(0) * MINUTE
         if (stop <= now) {
@@ -39,8 +41,8 @@ object RecordingPlan {
                 .firstOrNull { (from, to) -> CatchupUrls.available(catchupDays, from, to, now) }
             return when {
                 window != null -> Plan.Catchup(window.first, window.second)
-                catchupDays <= 0 -> Plan.Refused("This programme has ended and the channel has no catch-up archive")
-                else -> Plan.Refused("This programme is older than the channel's $catchupDays-day archive")
+                catchupDays <= 0 -> Plan.Refused(Refusal.NO_ARCHIVE)
+                else -> Plan.Refused(Refusal.ARCHIVE_EXPIRED)
             }
         }
         return Plan.Live(maxOf(paddedStart, now), paddedStop)

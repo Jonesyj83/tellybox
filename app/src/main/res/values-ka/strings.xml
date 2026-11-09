@@ -8,7 +8,6 @@
     <string name="group_all">ყველა არხი</string>
     <string name="group_search">ძიება: %1$s</string>
     <string name="action_search">ძიება</string>
-    <string name="action_playlists">სიები</string>
     <string name="action_add_playlist">სიის დამატება</string>
     <string name="empty_title">სიები ჯერ არ არის</string>
     <string name="empty_body">დასაწყებად დაამატეთ M3U ბმული, Xtream Codes ანგარიში ან Stalker პორტალი.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">პორტალი</string>
     <string name="player_error">არხის ჩართვა ვერ ხერხდება</string>
     <string name="player_retry">თავიდან საცდელად დააჭირეთ OK</string>
-    <string name="player_connecting">დაკავშირება…</string>
     <string name="error_http">სერვერმა ნაკადი უარყო (HTTP %1$d).</string>
     <string name="error_network">სერვერთან კავშირი ვერ დამყარდა. შეამოწმეთ ქსელი.</string>
     <string name="error_timeout">სერვერი ძალიან დიდხანს პასუხობდა.</string>
     <string name="error_format">ამ ნაკადის ფორმატი არ არის მხარდაჭერილი.</string>
     <string name="error_decoder">მოწყობილობა ვერ შიფრავს ნაკადს.</string>
-    <string name="now_next">ახლა: %1$s</string>
-    <string name="action_guide">ტელეგიდი</string>
     <string name="guide_no_info">ინფორმაცია არ არის</string>
     <string name="guide_no_data">გიდის მონაცემები არ არის</string>
     <string name="guide_empty">საჩვენებელი არხები არ არის.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">ამ არხს არქივი არ აქვს.</string>
     <string name="guide_watch_live">არხის ყურება</string>
     <string name="guide_jump_now">ახლანდელზე გადასვლა</string>
-    <string name="action_settings">პარამეტრები</string>
     <string name="settings_title">პარამეტრები</string>
     <string name="settings_player">ფლეერი</string>
-    <string name="settings_guide">ტელეგიდი</string>
     <string name="setting_buffer">ბუფერის ზომა</string>
     <string name="buffer_small">პატარა (სწრაფი დაწყება)</string>
     <string name="buffer_medium">საშუალო</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d საათში</item>
         <item quantity="other">%d საათში</item>
     </plurals>
-    <string name="action_recordings">ჩანაწერები</string>
     <string name="player_stream_stopped">ნაკადი აღარ პასუხობს. ხელახლა აირჩიეთ არხი ან სცადეთ სხვა.</string>
     <string name="player_reconnecting">ნაკადი გაწყდა, ხელახლა დაკავშირება (%1$d/%2$d)…</string>
     <string name="action_record">● ჩაწერა</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">შეხსენება დაყენდა: %1$s</string>
     <string name="reminder_removed">შეხსენება წაიშალა</string>
     <string name="reminder_failed">შეხსენება ვერ დაყენდა: %1$s</string>
-    <string name="settings_recording">ჩაწერა და შეხსენებები</string>
     <string name="setting_pad_before">ჩაწერის ადრე დაწყება</string>
     <string name="setting_pad_after">ჩაწერა დასრულების შემდეგაც</string>
     <string name="setting_instant_length">სწრაფი ჩაწერის ხანგრძლივობა</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">სუბტიტრები</string>
     <string name="ui_playback_options">დაკვრის პარამეტრები</string>
     <string name="ui_automatic">ავტომატური</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">სარეზერვო ასლი ექსპორტირდა. შეინახეთ ფაილი დაცულად: მასშია დაკვრის სიების მონაცემები და მშობლის PIN.</string>
     <string name="ui_backup_is_too_large">სარეზერვო ასლი ძალიან დიდია</string>
     <string name="ui_replace_saved_configuration">გსურთ შენახული კონფიგურაციის შეცვლა?</string>
     <string name="ui_replace">ჩანაცვლება</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">შენახულია Downloads/%1$s. შეინახეთ ფაილი დაცულად: მასშია დაკვრის სიების მონაცემები და მშობლის PIN.</string>
     <string name="ui_no_backups_in_downloads">Downloads-ში სარეზერვო ასლები არ არის. ჯერ ფაილი იქ დააკოპირეთ.</string>
     <string name="ui_choose_a_file">ფაილის არჩევა…</string>
+    <string name="http_error_code">სერვერმა დააბრუნა HTTP %1$d</string>
+    <string name="http_empty_response">ცარიელი პასუხი</string>
+    <string name="source_open_failed">%1$s ვერ გაიხსნა</string>
+    <string name="backup_storage_denied">სარეზერვო ასლი არ შეინახა, რადგან საცავის ნებართვა უარყოფილია. მიეცით ის აპის პარამეტრებში და სცადეთ ხელახლა.</string>
+    <string name="recording_notification_title">ჩაწერა</string>
+    <string name="recording_preparing">ჩაწერის მომზადება…</string>
+    <string name="channel_recording_name">მიმდინარეობს ჩაწერა</string>
+    <string name="channel_recording_result_name">ჩაწერის პრობლემები</string>
+    <string name="channel_reminder_name">გადაცემების შეხსენებები</string>
+    <string name="reminder_already_started">გადაცემა უკვე დაიწყო</string>
+    <string name="reminder_starting_soon">მალე დაიწყება %1$s-ზე</string>
+    <string name="recording_count">%1$d ჩანაწერი</string>
+    <string name="recording_failed_title">ჩაწერა ვერ მოხერხდა: %1$s</string>
+    <string name="rec_already_recording">ამ არხს უკვე იწერს იმ დროს</string>
+    <string name="rec_no_duration">გადაცემას ხანგრძლივობა არ აქვს</string>
+    <string name="rec_no_archive">გადაცემა დასრულდა და არხს არქივი არ აქვს</string>
+    <string name="rec_archive_expired">გადაცემა არხის %1$d-დღიან არქივზე ძველია</string>
+    <string name="rec_channel_missing">არხი აღარ არის თავის სიაში</string>
+    <string name="rec_window_passed">გამოტოვდა: ჩაწერის დრო გავიდა</string>
+    <string name="rec_resumed_gap">გაგრძელდა შეწყვეტის შემდეგ, ამიტომ შეიძლება მოკლე შუალედი აკლდეს</string>
+    <string name="rec_ended_early">დასრულდა ადრე ან აქვს შუალედები: %1$s</string>
+    <string name="rec_interrupted">შეწყდა: მოწყობილობა ან აპი შეჩერდა ჩაწერის დროს, ნაწილი აკლია</string>
+    <string name="rec_missed">გამოტოვდა: მოწყობილობა გამორთული იყო ან აპი შეჩერებული</string>
+    <string name="rec_storage_low">არ არის საკმარისი ადგილი (200 MB-ზე ნაკლები)</string>
+    <string name="rec_stream_failed">ნაკადის მისამართი ვერ მოიძებნა: %1$s</string>
+    <string name="rec_unexpected_stop">ჩაწერა მოულოდნელად შეწყდა: %1$s</string>
+    <string name="rec_limit_stopped_early">შეჩერდა ადრე: Android ფონურ ჩამოტვირთვას დღეში 6 საათით ზღუდავს</string>
+    <string name="rec_background_denied">Android-მა ფონში ჩაწერა არ დაუშვა. დაუშვით მაღვიძარები და შეხსენებები Tellybox-ისთვის სისტემის პარამეტრებში.</string>
 </resources>

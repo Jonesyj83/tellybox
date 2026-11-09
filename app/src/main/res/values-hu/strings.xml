@@ -8,7 +8,6 @@
     <string name="group_all">Összes csatorna</string>
     <string name="group_search">Keresés: %1$s</string>
     <string name="action_search">Keresés</string>
-    <string name="action_playlists">Lejátszási listák</string>
     <string name="action_add_playlist">Lista hozzáadása</string>
     <string name="empty_title">Még nincs lista</string>
     <string name="empty_body">Kezdésként adjon meg egy M3U linket, Xtream Codes belépést vagy Stalker portált.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portál</string>
     <string name="player_error">A csatorna nem játszható le</string>
     <string name="player_retry">Nyomja meg az OK-t az újrapróbáláshoz</string>
-    <string name="player_connecting">Csatlakozás…</string>
     <string name="error_http">A szerver elutasította az adást (HTTP %1$d).</string>
     <string name="error_network">A szerver nem érhető el. Ellenőrizze a kapcsolatot.</string>
     <string name="error_timeout">A szerver túl lassan válaszolt.</string>
     <string name="error_format">Az adás formátuma nem támogatott.</string>
     <string name="error_decoder">Az eszköz nem tudja dekódolni az adást.</string>
-    <string name="now_next">Most: %1$s</string>
-    <string name="action_guide">Műsorújság</string>
     <string name="guide_no_info">Nincs információ</string>
     <string name="guide_no_data">Nincs műsoradat</string>
     <string name="guide_empty">Nincs megjeleníthető csatorna.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Ehhez a csatornához nincs visszanézés.</string>
     <string name="guide_watch_live">Csatorna nézése</string>
     <string name="guide_jump_now">Ugrás a mostra</string>
-    <string name="action_settings">Beállítások</string>
     <string name="settings_title">Beállítások</string>
     <string name="settings_player">Lejátszó</string>
-    <string name="settings_guide">Műsorújság</string>
     <string name="setting_buffer">Puffer mérete</string>
     <string name="buffer_small">Kicsi (leggyorsabb indulás)</string>
     <string name="buffer_medium">Közepes</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d óránként</item>
         <item quantity="other">%d óránként</item>
     </plurals>
-    <string name="action_recordings">Felvételek</string>
     <string name="player_stream_stopped">Az adás nem válaszol. Válassza újra a csatornát, vagy próbáljon másikat.</string>
     <string name="player_reconnecting">Az adás megszakadt, újracsatlakozás (%1$d/%2$d)…</string>
     <string name="action_record">● Felvétel</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Emlékeztető beállítva: %1$s</string>
     <string name="reminder_removed">Emlékeztető törölve</string>
     <string name="reminder_failed">Emlékeztető nem állítható be: %1$s</string>
-    <string name="settings_recording">Felvétel és emlékeztetők</string>
     <string name="setting_pad_before">Felvétel korábbi indítása</string>
     <string name="setting_pad_after">Felvétel folytatása a vége után</string>
     <string name="setting_instant_length">Azonnali felvétel hossza</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Feliratok</string>
     <string name="ui_playback_options">Lejátszási lehetőségek</string>
     <string name="ui_automatic">Automatikus</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Biztonsági mentés exportálva. Tartsa privátan a fájlt: lejátszólisták belépési adatait és a szülői PIN-kódot tartalmazza.</string>
     <string name="ui_backup_is_too_large">A biztonsági másolat túl nagy</string>
     <string name="ui_replace_saved_configuration">Lecseréli a mentett konfigurációt?</string>
     <string name="ui_replace">Cserélje ki</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Mentve ide: Downloads/%1$s. Tartsa privátan a fájlt: lejátszólisták belépési adatait és a szülői PIN-kódot tartalmazza.</string>
     <string name="ui_no_backups_in_downloads">Nincs biztonsági mentés a Downloads mappában. Először másoljon oda egy fájlt.</string>
     <string name="ui_choose_a_file">Fájl kiválasztása…</string>
+    <string name="http_error_code">A kiszolgáló HTTP %1$d választ adott</string>
+    <string name="http_empty_response">Üres válasz</string>
+    <string name="source_open_failed">%1$s nem nyitható meg</string>
+    <string name="backup_storage_denied">A biztonsági mentés nem készült el, mert a tárhelyengedélyt elutasította. Engedélyezze az alkalmazás beállításaiban, majd próbálja újra.</string>
+    <string name="recording_notification_title">Felvétel</string>
+    <string name="recording_preparing">Felvétel előkészítése…</string>
+    <string name="channel_recording_name">Felvétel folyamatban</string>
+    <string name="channel_recording_result_name">Felvételi problémák</string>
+    <string name="channel_reminder_name">Műsoremlékeztetők</string>
+    <string name="reminder_already_started">Ez a műsor már elkezdődött</string>
+    <string name="reminder_starting_soon">Hamarosan kezdődik: %1$s</string>
+    <string name="recording_count">%1$d felvétel</string>
+    <string name="recording_failed_title">A felvétel nem sikerült: %1$s</string>
+    <string name="rec_already_recording">Ezt a csatornát akkor már rögzíti</string>
+    <string name="rec_no_duration">Ennek a műsornak nincs hossza</string>
+    <string name="rec_no_archive">A műsor véget ért, a csatornán nincs archívum</string>
+    <string name="rec_archive_expired">A műsor régebbi, mint a csatorna %1$d napos archívuma</string>
+    <string name="rec_channel_missing">A csatorna már nincs a listáján</string>
+    <string name="rec_window_passed">Elmaradt: a felvételi idő elmúlt</string>
+    <string name="rec_resumed_gap">Megszakítás után folytatódott, ezért rövid hiány lehet</string>
+    <string name="rec_ended_early">Korábban ért véget vagy hézagok vannak: %1$s</string>
+    <string name="rec_interrupted">Megszakadt: a készülék vagy az alkalmazás leállt a felvétel alatt, így hiányzik egy rész</string>
+    <string name="rec_missed">Elmaradt: a készülék ki volt kapcsolva vagy az alkalmazás leállt</string>
+    <string name="rec_storage_low">Nincs elég hely (200 MB alatt)</string>
+    <string name="rec_stream_failed">A stream címe nem kérhető le: %1$s</string>
+    <string name="rec_unexpected_stop">A felvétel váratlanul leállt: %1$s</string>
+    <string name="rec_limit_stopped_early">Korábban leállt: az Android napi 6 órára korlátozza a háttérletöltéseket</string>
+    <string name="rec_background_denied">Az Android nem engedte a háttérben való felvételt. Engedélyezze az ébresztéseket és emlékeztetőket a Tellyboxnak a rendszerbeállításokban.</string>
 </resources>

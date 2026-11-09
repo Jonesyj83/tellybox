@@ -9,7 +9,6 @@ import com.tellybox.tv.appContainer
 import com.tellybox.tv.ui.parental.requestPin
 import com.tellybox.tv.data.backup.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -24,8 +23,8 @@ internal fun SettingsActivity.exportBackup() = lifecycleScope.launch {
     val result = runCatching {
         val c = appContainer
         val db = c.database
-        val state = db.withTransaction { BackupState(version = 2, playlists = db.playlists().getAll(), guides = db.epg().observeSources().first(),
-            favorites = db.favorites().observeAll().first(), history = db.history().getAll(), blocks = c.parental.exportBlocks(), parental = c.parental.exportConfiguration(), settings = c.settings.get()) }
+        val state = db.withTransaction { BackupState(version = 2, playlists = db.playlists().getAll(), guides = db.epg().all(),
+            favorites = db.favorites().all(), history = db.history().getAll(), blocks = c.parental.exportBlocks(), parental = c.parental.exportConfiguration(), settings = c.settings.get()) }
         withContext(Dispatchers.IO) { BackupFiles.save(this@exportBackup, name, BackupCodec.encode(state)) }
     }
     AlertDialog.Builder(this@exportBackup)

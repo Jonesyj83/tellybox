@@ -8,7 +8,6 @@
     <string name="group_all">Todos los canales</string>
     <string name="group_search">Buscar: %1$s</string>
     <string name="action_search">Buscar</string>
-    <string name="action_playlists">Listas</string>
     <string name="action_add_playlist">Añadir lista</string>
     <string name="empty_title">Aún no hay listas</string>
     <string name="empty_body">Añade un enlace M3U, un acceso Xtream Codes o un portal Stalker para empezar.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">No se puede reproducir este canal</string>
     <string name="player_retry">Pulsa OK para reintentar</string>
-    <string name="player_connecting">Conectando…</string>
     <string name="error_http">El servidor rechazó la emisión (HTTP %1$d).</string>
     <string name="error_network">No se pudo contactar con el servidor. Revisa la conexión.</string>
     <string name="error_timeout">El servidor tardó demasiado en responder.</string>
     <string name="error_format">El formato de esta emisión no es compatible.</string>
     <string name="error_decoder">Este dispositivo no puede decodificar la emisión.</string>
-    <string name="now_next">Ahora: %1$s</string>
-    <string name="action_guide">Guía de TV</string>
     <string name="guide_no_info">Sin información</string>
     <string name="guide_no_data">Sin datos de guía</string>
     <string name="guide_empty">No hay canales que mostrar.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Este canal no tiene catch-up.</string>
     <string name="guide_watch_live">Ver canal</string>
     <string name="guide_jump_now">Ir a ahora</string>
-    <string name="action_settings">Ajustes</string>
     <string name="settings_title">Ajustes</string>
     <string name="settings_player">Reproductor</string>
-    <string name="settings_guide">Guía de TV</string>
     <string name="setting_buffer">Tamaño del búfer</string>
     <string name="buffer_small">Pequeño (inicio más rápido)</string>
     <string name="buffer_medium">Medio</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d hora</item>
         <item quantity="other">%d horas</item>
     </plurals>
-    <string name="action_recordings">Grabaciones</string>
     <string name="player_stream_stopped">La emisión dejó de responder. Elige el canal de nuevo o prueba otro.</string>
     <string name="player_reconnecting">Emisión caída, reconectando (%1$d/%2$d)…</string>
     <string name="action_record">● Grabar</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Recordatorio para %1$s</string>
     <string name="reminder_removed">Recordatorio eliminado</string>
     <string name="reminder_failed">No se puede crear el recordatorio: %1$s</string>
-    <string name="settings_recording">Grabación y recordatorios</string>
     <string name="setting_pad_before">Empezar a grabar antes</string>
     <string name="setting_pad_after">Seguir grabando tras el final</string>
     <string name="setting_instant_length">Duración de grabación inmediata</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Subtítulos</string>
     <string name="ui_playback_options">Opciones de reproducción</string>
     <string name="ui_automatic">Automático</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Copia exportada. Mantén este archivo privado: contiene credenciales de listas y el PIN parental.</string>
     <string name="ui_backup_is_too_large">La copia de seguridad es demasiado grande</string>
     <string name="ui_replace_saved_configuration">¿Reemplazar la configuración guardada?</string>
     <string name="ui_replace">Reemplazar</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Guardado en Downloads/%1$s. Mantén este archivo privado: contiene credenciales de listas y el PIN parental.</string>
     <string name="ui_no_backups_in_downloads">No hay copias en Downloads. Copia antes un archivo allí.</string>
     <string name="ui_choose_a_file">Elegir un archivo…</string>
+    <string name="http_error_code">El servidor devolvió HTTP %1$d</string>
+    <string name="http_empty_response">Respuesta vacía</string>
+    <string name="source_open_failed">No se puede abrir %1$s</string>
+    <string name="backup_storage_denied">La copia no se guardó porque se denegó el permiso de almacenamiento. Concédelo en los ajustes de la app e inténtalo de nuevo.</string>
+    <string name="recording_notification_title">Grabación</string>
+    <string name="recording_preparing">Preparando la grabación…</string>
+    <string name="channel_recording_name">Grabación en curso</string>
+    <string name="channel_recording_result_name">Problemas de grabación</string>
+    <string name="channel_reminder_name">Recordatorios de programas</string>
+    <string name="reminder_already_started">Ese programa ya ha empezado</string>
+    <string name="reminder_starting_soon">Empieza pronto en %1$s</string>
+    <string name="recording_count">%1$d grabaciones</string>
+    <string name="recording_failed_title">La grabación falló: %1$s</string>
+    <string name="rec_already_recording">Ese canal ya se está grabando a esa hora</string>
+    <string name="rec_no_duration">Este programa no tiene duración</string>
+    <string name="rec_no_archive">El programa terminó y el canal no tiene archivo</string>
+    <string name="rec_archive_expired">El programa es más antiguo que el archivo de %1$d días del canal</string>
+    <string name="rec_channel_missing">El canal ya no está en su lista</string>
+    <string name="rec_window_passed">Perdido: el horario de grabación ya pasó</string>
+    <string name="rec_resumed_gap">Se reanudó tras una interrupción, así que puede faltar un tramo corto</string>
+    <string name="rec_ended_early">Terminó antes o tiene huecos: %1$s</string>
+    <string name="rec_interrupted">Interrumpida: el dispositivo o la app se detuvieron durante la grabación, falta una parte</string>
+    <string name="rec_missed">Perdido: el dispositivo estaba apagado o la app detenida</string>
+    <string name="rec_storage_low">No hay espacio suficiente (menos de 200 MB)</string>
+    <string name="rec_stream_failed">No se pudo obtener la dirección del canal: %1$s</string>
+    <string name="rec_unexpected_stop">La grabación se detuvo inesperadamente: %1$s</string>
+    <string name="rec_limit_stopped_early">Detenida antes: Android limita las descargas en segundo plano a 6 horas al día</string>
+    <string name="rec_background_denied">Android no permitió grabar en segundo plano. Permite alarmas y recordatorios para Tellybox en los ajustes del sistema.</string>
 </resources>

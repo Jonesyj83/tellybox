@@ -8,7 +8,6 @@
     <string name="group_all">Alle Sender</string>
     <string name="group_search">Suche: %1$s</string>
     <string name="action_search">Suche</string>
-    <string name="action_playlists">Playlists</string>
     <string name="action_add_playlist">Playlist hinzufügen</string>
     <string name="empty_title">Noch keine Playlists</string>
     <string name="empty_body">Füge einen M3U-Link, einen Xtream-Codes-Login oder ein Stalker-Portal hinzu.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Sender kann nicht abgespielt werden</string>
     <string name="player_retry">OK drücken für neuen Versuch</string>
-    <string name="player_connecting">Verbinde…</string>
     <string name="error_http">Der Server hat den Stream abgelehnt (HTTP %1$d).</string>
     <string name="error_network">Server nicht erreichbar. Prüfe die Verbindung.</string>
     <string name="error_timeout">Der Server hat zu lange gebraucht.</string>
     <string name="error_format">Das Format dieses Streams wird nicht unterstützt.</string>
     <string name="error_decoder">Dieses Gerät kann den Stream nicht decodieren.</string>
-    <string name="now_next">Jetzt: %1$s</string>
-    <string name="action_guide">TV-Programm</string>
     <string name="guide_no_info">Keine Informationen</string>
     <string name="guide_no_data">Keine Programmdaten</string>
     <string name="guide_empty">Keine Sender vorhanden.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Für diesen Sender gibt es kein Catch-up.</string>
     <string name="guide_watch_live">Sender ansehen</string>
     <string name="guide_jump_now">Zu jetzt springen</string>
-    <string name="action_settings">Einstellungen</string>
     <string name="settings_title">Einstellungen</string>
     <string name="settings_player">Player</string>
-    <string name="settings_guide">TV-Programm</string>
     <string name="setting_buffer">Puffergröße</string>
     <string name="buffer_small">Klein (startet am schnellsten)</string>
     <string name="buffer_medium">Mittel</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d Stunde</item>
         <item quantity="other">%d Stunden</item>
     </plurals>
-    <string name="action_recordings">Aufnahmen</string>
     <string name="player_stream_stopped">Der Stream reagiert nicht mehr. Wähle den Sender erneut oder einen anderen.</string>
     <string name="player_reconnecting">Stream unterbrochen, verbinde neu (%1$d/%2$d)…</string>
     <string name="action_record">● Aufnehmen</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Erinnerung für %1$s gesetzt</string>
     <string name="reminder_removed">Erinnerung entfernt</string>
     <string name="reminder_failed">Erinnerung nicht möglich: %1$s</string>
-    <string name="settings_recording">Aufnahmen und Erinnerungen</string>
     <string name="setting_pad_before">Aufnahme früher starten</string>
     <string name="setting_pad_after">Nach dem Ende weiter aufnehmen</string>
     <string name="setting_instant_length">Dauer der Sofortaufnahme</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Untertitel</string>
     <string name="ui_playback_options">Wiedergabeoptionen</string>
     <string name="ui_automatic">Automatisch</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Sicherung exportiert. Halten Sie die Datei privat: Sie enthält Playlist-Zugangsdaten und die Eltern-PIN.</string>
     <string name="ui_backup_is_too_large">Das Backup ist zu groß</string>
     <string name="ui_replace_saved_configuration">Gespeicherte Konfiguration ersetzen?</string>
     <string name="ui_replace">Ersetzen</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Gespeichert in Downloads/%1$s. Halten Sie die Datei privat: Sie enthält Playlist-Zugangsdaten und die Eltern-PIN.</string>
     <string name="ui_no_backups_in_downloads">Keine Sicherungen in Downloads. Kopieren Sie zuerst eine Datei dorthin.</string>
     <string name="ui_choose_a_file">Datei auswählen…</string>
+    <string name="http_error_code">Server antwortete mit HTTP %1$d</string>
+    <string name="http_empty_response">Leere Antwort</string>
+    <string name="source_open_failed">%1$s lässt sich nicht öffnen</string>
+    <string name="backup_storage_denied">Die Sicherung wurde nicht gespeichert, weil der Speicherzugriff abgelehnt wurde. Erlauben Sie ihn in den App-Einstellungen und versuchen Sie es erneut.</string>
+    <string name="recording_notification_title">Aufnahme</string>
+    <string name="recording_preparing">Aufnahme wird vorbereitet…</string>
+    <string name="channel_recording_name">Aufnahme läuft</string>
+    <string name="channel_recording_result_name">Aufnahmeprobleme</string>
+    <string name="channel_reminder_name">Sendungserinnerungen</string>
+    <string name="reminder_already_started">Diese Sendung hat bereits begonnen</string>
+    <string name="reminder_starting_soon">Beginnt gleich auf %1$s</string>
+    <string name="recording_count">%1$d Aufnahmen</string>
+    <string name="recording_failed_title">Aufnahme fehlgeschlagen: %1$s</string>
+    <string name="rec_already_recording">Dieser Sender wird zu der Zeit bereits aufgenommen</string>
+    <string name="rec_no_duration">Diese Sendung hat keine Laufzeit</string>
+    <string name="rec_no_archive">Die Sendung ist vorbei und der Sender hat kein Archiv</string>
+    <string name="rec_archive_expired">Die Sendung ist älter als das %1$d-Tage-Archiv des Senders</string>
+    <string name="rec_channel_missing">Der Sender ist nicht mehr in seiner Playlist</string>
+    <string name="rec_window_passed">Verpasst: der Aufnahmezeitraum ist vorbei</string>
+    <string name="rec_resumed_gap">Nach einer Unterbrechung fortgesetzt, daher kann eine kurze Lücke bleiben</string>
+    <string name="rec_ended_early">Vorzeitig beendet oder mit Lücken: %1$s</string>
+    <string name="rec_interrupted">Unterbrochen: Gerät oder App wurden während der Aufnahme beendet, ein Teil fehlt</string>
+    <string name="rec_missed">Verpasst: Gerät war aus oder die App wurde beendet</string>
+    <string name="rec_storage_low">Nicht genug Speicher (weniger als 200 MB)</string>
+    <string name="rec_stream_failed">Stream-Adresse nicht abrufbar: %1$s</string>
+    <string name="rec_unexpected_stop">Aufnahme unerwartet beendet: %1$s</string>
+    <string name="rec_limit_stopped_early">Vorzeitig beendet: Android begrenzt Hintergrund-Downloads auf 6 Stunden pro Tag</string>
+    <string name="rec_background_denied">Android hat die Aufnahme im Hintergrund nicht erlaubt. Erlauben Sie Wecker und Erinnerungen für Tellybox in den Systemeinstellungen.</string>
 </resources>

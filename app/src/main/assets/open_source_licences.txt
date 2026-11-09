@@ -1,4 +1,4 @@
-OpenStream TV library credits
+Tellybox TV library credits
 
 AndroidX (Core, AppCompat, Activity, Fragment, RecyclerView, Lifecycle, Room, DataStore, WorkManager) and Media3
 The Android Open Source Project / Google contributors

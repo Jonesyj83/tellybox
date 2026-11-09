@@ -8,7 +8,6 @@
     <string name="group_all">Alla kanaler</string>
     <string name="group_search">Sök: %1$s</string>
     <string name="action_search">Sök</string>
-    <string name="action_playlists">Spellistor</string>
     <string name="action_add_playlist">Lägg till spellista</string>
     <string name="empty_title">Inga spellistor än</string>
     <string name="empty_body">Lägg till en M3U-länk, en Xtream Codes-inloggning eller en Stalker-portal för att komma igång.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Kan inte spela den här kanalen</string>
     <string name="player_retry">Tryck på OK för att försöka igen</string>
-    <string name="player_connecting">Ansluter…</string>
     <string name="error_http">Servern nekade strömmen (HTTP %1$d).</string>
     <string name="error_network">Kunde inte nå servern. Kontrollera anslutningen.</string>
     <string name="error_timeout">Servern tog för lång tid att svara.</string>
     <string name="error_format">Strömmens format stöds inte.</string>
     <string name="error_decoder">Enheten kan inte avkoda strömmen.</string>
-    <string name="now_next">Nu: %1$s</string>
-    <string name="action_guide">Tv-guide</string>
     <string name="guide_no_info">Ingen information</string>
     <string name="guide_no_data">Ingen guidedata</string>
     <string name="guide_empty">Inga kanaler att visa.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Ingen catch-up för den här kanalen.</string>
     <string name="guide_watch_live">Titta på kanalen</string>
     <string name="guide_jump_now">Gå till nu</string>
-    <string name="action_settings">Inställningar</string>
     <string name="settings_title">Inställningar</string>
     <string name="settings_player">Spelare</string>
-    <string name="settings_guide">Tv-guide</string>
     <string name="setting_buffer">Buffertstorlek</string>
     <string name="buffer_small">Liten (startar snabbast)</string>
     <string name="buffer_medium">Medel</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d timme</item>
         <item quantity="other">%d timmar</item>
     </plurals>
-    <string name="action_recordings">Inspelningar</string>
     <string name="player_stream_stopped">Strömmen svarar inte längre. Välj kanalen igen eller prova en annan.</string>
     <string name="player_reconnecting">Strömmen bröts, ansluter igen (%1$d/%2$d)…</string>
     <string name="action_record">● Spela in</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Påminnelse inställd för %1$s</string>
     <string name="reminder_removed">Påminnelsen borttagen</string>
     <string name="reminder_failed">Kan inte ställa in påminnelse: %1$s</string>
-    <string name="settings_recording">Inspelning och påminnelser</string>
     <string name="setting_pad_before">Börja spela in tidigare</string>
     <string name="setting_pad_after">Fortsätt spela in efter slutet</string>
     <string name="setting_instant_length">Längd på snabbinspelning</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Undertexter</string>
     <string name="ui_playback_options">Uppspelningsalternativ</string>
     <string name="ui_automatic">Automatisk</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Säkerhetskopia exporterad. Håll filen privat: den innehåller inloggningsuppgifter för spellistor och föräldra-PIN.</string>
     <string name="ui_backup_is_too_large">Säkerhetskopieringen är för stor</string>
     <string name="ui_replace_saved_configuration">Vill du byta ut sparad konfiguration?</string>
     <string name="ui_replace">Byt ut</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Sparat i Downloads/%1$s. Håll filen privat: den innehåller inloggningsuppgifter för spellistor och föräldra-PIN.</string>
     <string name="ui_no_backups_in_downloads">Inga säkerhetskopior i Downloads. Kopiera en fil dit först.</string>
     <string name="ui_choose_a_file">Välj en fil…</string>
+    <string name="http_error_code">Servern svarade HTTP %1$d</string>
+    <string name="http_empty_response">Tomt svar</string>
+    <string name="source_open_failed">Kan inte öppna %1$s</string>
+    <string name="backup_storage_denied">Säkerhetskopian sparades inte eftersom lagringsbehörigheten nekades. Ge den i appens inställningar och försök igen.</string>
+    <string name="recording_notification_title">Inspelning</string>
+    <string name="recording_preparing">Förbereder inspelning…</string>
+    <string name="channel_recording_name">Inspelning pågår</string>
+    <string name="channel_recording_result_name">Problem med inspelning</string>
+    <string name="channel_reminder_name">Programpåminnelser</string>
+    <string name="reminder_already_started">Programmet har redan börjat</string>
+    <string name="reminder_starting_soon">Börjar snart på %1$s</string>
+    <string name="recording_count">%1$d inspelningar</string>
+    <string name="recording_failed_title">Inspelningen misslyckades: %1$s</string>
+    <string name="rec_already_recording">Den kanalen spelas redan in då</string>
+    <string name="rec_no_duration">Programmet har ingen längd</string>
+    <string name="rec_no_archive">Programmet är slut och kanalen har inget arkiv</string>
+    <string name="rec_archive_expired">Programmet är äldre än kanalens %1$d-dagarsarkiv</string>
+    <string name="rec_channel_missing">Kanalen finns inte kvar i listan</string>
+    <string name="rec_window_passed">Missat: inspelningsfönstret har passerat</string>
+    <string name="rec_resumed_gap">Återupptogs efter ett avbrott, så en kort lucka kan finnas</string>
+    <string name="rec_ended_early">Avslutades tidigt eller har luckor: %1$s</string>
+    <string name="rec_interrupted">Avbröts: enheten eller appen stoppade under inspelningen, en del saknas</string>
+    <string name="rec_missed">Missat: enheten var avstängd eller appen stoppad</string>
+    <string name="rec_storage_low">Inte tillräckligt med utrymme (under 200 MB)</string>
+    <string name="rec_stream_failed">Kunde inte hämta strömadressen: %1$s</string>
+    <string name="rec_unexpected_stop">Inspelningen stoppade oväntat: %1$s</string>
+    <string name="rec_limit_stopped_early">Stoppades tidigt: Android begränsar nedladdningar i bakgrunden till 6 timmar per dag</string>
+    <string name="rec_background_denied">Android tillät inte inspelning i bakgrunden. Tillåt larm och påminnelser för Tellybox i systeminställningarna.</string>
 </resources>

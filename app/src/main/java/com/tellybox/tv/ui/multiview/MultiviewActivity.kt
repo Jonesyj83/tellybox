@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
+import com.tellybox.tv.data.settings.AppSettings
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.PlaybackException
@@ -56,7 +57,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 /**
  * Several live channels at once, beside the shared rail. Opening it explains that every screen
@@ -165,7 +166,13 @@ class MultiviewActivity : SectionActivity() {
 
     override fun onStart() {
         super.onStart()
-        val settings = runBlocking { appContainer.settings.get() }
+        val cached = appContainer.settings.current()
+        if (cached != null) startWith(cached) else lifecycleScope.launch { startWith(appContainer.settings.get()) }
+    }
+
+    /** Everything onStart needs, once the settings are known. */
+    private fun startWith(settings: AppSettings) {
+        if (isFinishing || isDestroyed) return
         nameTokens = settings.channelNameTokens
         // No tunneling (one tunnel per device), no audio focus fights between tiles, HD at most
         // so two or more decoders keep up, and a modest buffer to keep memory in check.

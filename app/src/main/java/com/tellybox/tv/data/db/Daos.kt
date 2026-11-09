@@ -182,6 +182,9 @@ interface EpgDao {
     @Query("SELECT * FROM epg_sources ORDER BY priority, id")
     fun observeSources(): Flow<List<EpgSourceEntity>>
 
+    @Query("SELECT * FROM epg_sources ORDER BY priority, id")
+    suspend fun all(): List<EpgSourceEntity>
+
     @Query("SELECT * FROM epg_sources WHERE enabled = 1 ORDER BY priority, id")
     suspend fun getEnabledSources(): List<EpgSourceEntity>
 
@@ -282,6 +285,9 @@ interface EpgDao {
 interface FavoriteDao {
     @Query("SELECT * FROM favorites ORDER BY sortOrder, addedAt")
     fun observeAll(): Flow<List<FavoriteEntity>>
+
+    @Query("SELECT * FROM favorites ORDER BY sortOrder, addedAt")
+    suspend fun all(): List<FavoriteEntity>
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE playlistId = :playlistId AND channelKey = :key)")
     suspend fun isFavorite(playlistId: Long, key: String): Boolean

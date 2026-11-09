@@ -8,7 +8,6 @@
     <string name="group_all">Svi kanali</string>
     <string name="group_search">Traži: %1$s</string>
     <string name="action_search">Traži</string>
-    <string name="action_playlists">Popisi</string>
     <string name="action_add_playlist">Dodaj popis</string>
     <string name="empty_title">Još nema popisa</string>
     <string name="empty_body">Za početak dodajte M3U poveznicu, Xtream Codes prijavu ili Stalker portal.</string>
@@ -131,14 +130,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Kanal nije moguće reproducirati</string>
     <string name="player_retry">Pritisnite OK za ponovni pokušaj</string>
-    <string name="player_connecting">Povezivanje…</string>
     <string name="error_http">Poslužitelj je odbio stream (HTTP %1$d).</string>
     <string name="error_network">Poslužitelj nije dostupan. Provjerite vezu.</string>
     <string name="error_timeout">Poslužitelj je predugo odgovarao.</string>
     <string name="error_format">Format ovog streama nije podržan.</string>
     <string name="error_decoder">Uređaj ne može dekodirati stream.</string>
-    <string name="now_next">Sada: %1$s</string>
-    <string name="action_guide">TV vodič</string>
     <string name="guide_no_info">Nema informacija</string>
     <string name="guide_no_data">Nema podataka vodiča</string>
     <string name="guide_empty">Nema kanala za prikaz.</string>
@@ -147,10 +143,8 @@
     <string name="guide_no_catchup">Ovaj kanal nema catch-up.</string>
     <string name="guide_watch_live">Gledaj kanal</string>
     <string name="guide_jump_now">Skoči na sada</string>
-    <string name="action_settings">Postavke</string>
     <string name="settings_title">Postavke</string>
     <string name="settings_player">Player</string>
-    <string name="settings_guide">TV vodič</string>
     <string name="setting_buffer">Veličina međuspremnika</string>
     <string name="buffer_small">Mali (najbrži početak)</string>
     <string name="buffer_medium">Srednji</string>
@@ -226,7 +220,6 @@
         <item quantity="few">%d sata</item>
         <item quantity="other">%d sati</item>
     </plurals>
-    <string name="action_recordings">Snimke</string>
     <string name="player_stream_stopped">Stream više ne odgovara. Ponovno odaberite kanal ili pokušajte drugi.</string>
     <string name="player_reconnecting">Stream je prekinut, ponovno povezivanje (%1$d/%2$d)…</string>
     <string name="action_record">● Snimi</string>
@@ -299,7 +292,6 @@
     <string name="reminder_set">Podsjetnik postavljen: %1$s</string>
     <string name="reminder_removed">Podsjetnik uklonjen</string>
     <string name="reminder_failed">Podsjetnik nije moguće postaviti: %1$s</string>
-    <string name="settings_recording">Snimanje i podsjetnici</string>
     <string name="setting_pad_before">Počni snimati ranije</string>
     <string name="setting_pad_after">Snimaj i nakon kraja</string>
     <string name="setting_instant_length">Trajanje trenutnog snimanja</string>
@@ -519,7 +511,6 @@
     <string name="ui_subtitles">titlovi</string>
     <string name="ui_playback_options">Opcije reprodukcije</string>
     <string name="ui_automatic">Automatski</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Sigurnosna kopija je izvezena. Čuvajte datoteku privatnom: sadrži podatke za prijavu popisa i roditeljski PIN.</string>
     <string name="ui_backup_is_too_large">Sigurnosna kopija je prevelika</string>
     <string name="ui_replace_saved_configuration">Zamijeniti spremljenu konfiguraciju?</string>
     <string name="ui_replace">zamijeniti</string>
@@ -587,4 +578,32 @@
     <string name="ui_backup_saved_in_downloads">Spremljeno u Downloads/%1$s. Čuvajte datoteku privatnom: sadrži podatke za prijavu popisa i roditeljski PIN.</string>
     <string name="ui_no_backups_in_downloads">Nema sigurnosnih kopija u Downloads. Prvo kopirajte datoteku tamo.</string>
     <string name="ui_choose_a_file">Odaberi datoteku…</string>
+    <string name="http_error_code">Poslužitelj je vratio HTTP %1$d</string>
+    <string name="http_empty_response">Prazan odgovor</string>
+    <string name="source_open_failed">Ne može otvoriti %1$s</string>
+    <string name="backup_storage_denied">Sigurnosna kopija nije spremljena jer je dopuštenje za pohranu odbijeno. Odobrite ga u postavkama aplikacije i pokušajte ponovno.</string>
+    <string name="recording_notification_title">Snimanje</string>
+    <string name="recording_preparing">Priprema snimanja…</string>
+    <string name="channel_recording_name">Snimanje u tijeku</string>
+    <string name="channel_recording_result_name">Problemi sa snimanjem</string>
+    <string name="channel_reminder_name">Podsjetnici za emisije</string>
+    <string name="reminder_already_started">Ta emisija je već počela</string>
+    <string name="reminder_starting_soon">Uskoro počinje na %1$s</string>
+    <string name="recording_count">%1$d snimki</string>
+    <string name="recording_failed_title">Snimanje nije uspjelo: %1$s</string>
+    <string name="rec_already_recording">Ovaj se kanal već snima u to vrijeme</string>
+    <string name="rec_no_duration">Ova emisija nema trajanje</string>
+    <string name="rec_no_archive">Emisija je završila, a kanal nema arhivu</string>
+    <string name="rec_archive_expired">Emisija je starija od %1$d-dnevnog arhiva kanala</string>
+    <string name="rec_channel_missing">Kanal više nije na svom popisu</string>
+    <string name="rec_window_passed">Propušteno: vrijeme snimanja je prošlo</string>
+    <string name="rec_resumed_gap">Nastavljeno nakon prekida, pa može nedostajati kratak dio</string>
+    <string name="rec_ended_early">Završilo prerano ili s prazninama: %1$s</string>
+    <string name="rec_interrupted">Prekinuto: uređaj ili aplikacija su stale tijekom snimanja, dio nedostaje</string>
+    <string name="rec_missed">Propušteno: uređaj je bio isključen ili je aplikacija zaustavljena</string>
+    <string name="rec_storage_low">Nema dovoljno prostora (manje od 200 MB)</string>
+    <string name="rec_stream_failed">Ne može se dobiti adresa strujanja: %1$s</string>
+    <string name="rec_unexpected_stop">Snimanje se neočekivano zaustavilo: %1$s</string>
+    <string name="rec_limit_stopped_early">Zaustavljeno prerano: Android ograničava preuzimanja u pozadini na 6 sati dnevno</string>
+    <string name="rec_background_denied">Android nije dopustio snimanje u pozadini. Dopustite alarme i podsjetnike za Tellybox u postavkama sustava.</string>
 </resources>

@@ -36,11 +36,11 @@ class ChannelRepository(
 
     suspend fun get(id: Long): ChannelEntity? = db.channels().get(id)
 
-    /** Looks up channels by id, keeping the order of [ids] and skipping any that are gone. */
     /** Follows a specific set of rows, for a guide opened from a filtered list. */
     fun observeByIds(ids: List<Long>): kotlinx.coroutines.flow.Flow<List<ChannelEntity>> =
         db.channels().observeByIds(ids).map { parental.visible(it, db) }
 
+    /** Looks up channels by id, keeping the order of [ids] and skipping any that are gone. */
     suspend fun getByIds(ids: LongArray): List<ChannelEntity> {
         val found = HashMap<Long, ChannelEntity>()
         ids.toList().chunked(900).forEach { chunk -> db.channels().getByIds(chunk).forEach { found[it.id] = it } }

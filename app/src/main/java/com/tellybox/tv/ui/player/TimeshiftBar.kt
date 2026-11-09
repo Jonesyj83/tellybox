@@ -8,18 +8,7 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import com.tellybox.tv.R
 
-/**
- * A thin line under the channel banner. The whole width is what the buffer can hold; the
- * filled part, which ends at the right edge (live), is what has been buffered so far; the
- * marker is the picture on screen. It is the only sign of how far back the viewer can go.
- */
-/**
- * Where the play head sits along the bar, as a fraction of the buffered window.
- *
- * The window is what the buffer actually holds, not what it could hold: scaling against the
- * capacity made a two-minute buffer occupy a sliver of the bar, so a thirty-second skip moved
- * the marker a few pixels and every arriving chunk twitched the buffered edge.
- */
+/** Where the play head sits as a fraction of the currently buffered window. */
 internal fun markerFraction(windowMs: Long, behindMs: Long): Float {
     if (windowMs <= 0L) return 1f
     val held = windowMs - behindMs.coerceIn(0L, windowMs)

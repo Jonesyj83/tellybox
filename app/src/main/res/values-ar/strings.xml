@@ -8,7 +8,6 @@
     <string name="group_all">كل القنوات</string>
     <string name="group_search">بحث: %1$s</string>
     <string name="action_search">بحث</string>
-    <string name="action_playlists">القوائم</string>
     <string name="action_add_playlist">إضافة قائمة</string>
     <string name="empty_title">لا توجد قوائم بعد</string>
     <string name="empty_body">أضف رابط M3U أو حساب Xtream Codes أو بوابة Stalker للبدء.</string>
@@ -146,14 +145,11 @@
     <string name="default_name_stalker">بوابة</string>
     <string name="player_error">تعذّر تشغيل هذه القناة</string>
     <string name="player_retry">اضغط OK لإعادة المحاولة</string>
-    <string name="player_connecting">جارٍ الاتصال…</string>
     <string name="error_http">رفض الخادم البث (HTTP %1$d).</string>
     <string name="error_network">تعذّر الوصول إلى الخادم. تحقق من الاتصال.</string>
     <string name="error_timeout">استغرق الخادم وقتًا طويلًا للرد.</string>
     <string name="error_format">صيغة هذا البث غير مدعومة.</string>
     <string name="error_decoder">لا يستطيع هذا الجهاز فك ترميز البث.</string>
-    <string name="now_next">الآن: %1$s</string>
-    <string name="action_guide">دليل التلفزيون</string>
     <string name="guide_no_info">لا توجد معلومات</string>
     <string name="guide_no_data">لا توجد بيانات دليل</string>
     <string name="guide_empty">لا توجد قنوات لعرضها.</string>
@@ -162,10 +158,8 @@
     <string name="guide_no_catchup">لا يتوفر أرشيف لهذه القناة.</string>
     <string name="guide_watch_live">مشاهدة القناة</string>
     <string name="guide_jump_now">الانتقال إلى الآن</string>
-    <string name="action_settings">الإعدادات</string>
     <string name="settings_title">الإعدادات</string>
     <string name="settings_player">المشغّل</string>
-    <string name="settings_guide">دليل التلفزيون</string>
     <string name="setting_buffer">حجم التخزين المؤقت</string>
     <string name="buffer_small">صغير (أسرع بدء)</string>
     <string name="buffer_medium">متوسط</string>
@@ -253,7 +247,6 @@
         <item quantity="many">%d ساعة</item>
         <item quantity="other">%d ساعة</item>
     </plurals>
-    <string name="action_recordings">التسجيلات</string>
     <string name="player_stream_stopped">توقف البث عن الاستجابة. اختر القناة مجددًا أو جرّب أخرى.</string>
     <string name="player_reconnecting">انقطع البث، جارٍ إعادة الاتصال (%1$d/%2$d)…</string>
     <string name="action_record">● تسجيل</string>
@@ -335,7 +328,6 @@
     <string name="reminder_set">تم ضبط تذكير لـ %1$s</string>
     <string name="reminder_removed">أُزيل التذكير</string>
     <string name="reminder_failed">تعذّر ضبط التذكير: %1$s</string>
-    <string name="settings_recording">التسجيل والتذكيرات</string>
     <string name="setting_pad_before">بدء التسجيل مبكرًا</string>
     <string name="setting_pad_after">متابعة التسجيل بعد النهاية</string>
     <string name="setting_instant_length">مدة التسجيل الفوري</string>
@@ -558,7 +550,6 @@
     <string name="ui_subtitles">الترجمة</string>
     <string name="ui_playback_options">خيارات التشغيل</string>
     <string name="ui_automatic">تلقائي</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">تم تصدير النسخة الاحتياطية. احتفظ بهذا الملف خاصًا: فهو يحتوي على بيانات اعتماد القوائم ورمز PIN للرقابة الأبوية.</string>
     <string name="ui_backup_is_too_large">النسخة الاحتياطية كبيرة جدًا</string>
     <string name="ui_replace_saved_configuration">هل تريد استبدال التكوين المحفوظ؟</string>
     <string name="ui_replace">استبدال</string>
@@ -641,4 +632,32 @@
     <string name="ui_backup_saved_in_downloads">تم الحفظ في Downloads/%1$s. احتفظ بالملف خاصًا: يحتوي على بيانات اعتماد القوائم ورمز PIN للرقابة الأبوية.</string>
     <string name="ui_no_backups_in_downloads">لا توجد نسخ احتياطية في Downloads. انسخ ملف نسخة احتياطية إلى هناك أولًا.</string>
     <string name="ui_choose_a_file">اختر ملفًا…</string>
+    <string name="http_error_code">أعاد الخادم رمز HTTP %1$d</string>
+    <string name="http_empty_response">استجابة فارغة</string>
+    <string name="source_open_failed">تعذّر فتح %1$s</string>
+    <string name="backup_storage_denied">لم تُحفظ النسخة الاحتياطية لأن إذن التخزين مرفوض. امنحه من إعدادات التطبيق ثم أعد المحاولة.</string>
+    <string name="recording_notification_title">تسجيل</string>
+    <string name="recording_preparing">جارٍ تحضير التسجيل…</string>
+    <string name="channel_recording_name">تسجيل جارٍ</string>
+    <string name="channel_recording_result_name">مشاكل التسجيل</string>
+    <string name="channel_reminder_name">تذكيرات البرامج</string>
+    <string name="reminder_already_started">هذا البرنامج بدأ بالفعل</string>
+    <string name="reminder_starting_soon">يبدأ قريبًا على %1$s</string>
+    <string name="recording_count">%1$d تسجيل</string>
+    <string name="recording_failed_title">فشل التسجيل: %1$s</string>
+    <string name="rec_already_recording">هذه القناة تُسجَّل بالفعل في ذلك الوقت</string>
+    <string name="rec_no_duration">هذا البرنامج بلا مدة تشغيل</string>
+    <string name="rec_no_archive">انتهى هذا البرنامج ولا أرشيف للمشاهدة المتأخرة على القناة</string>
+    <string name="rec_archive_expired">هذا البرنامج أقدم من أرشيف القناة البالغ %1$d يومًا</string>
+    <string name="rec_channel_missing">القناة لم تعد في قائمتها</string>
+    <string name="rec_window_passed">فائت: مرّ وقت التسجيل</string>
+    <string name="rec_resumed_gap">استُؤنف بعد انقطاع، فقد تكون هناك فجوة قصيرة</string>
+    <string name="rec_ended_early">انتهى مبكرًا أو به فجوات: %1$s</string>
+    <string name="rec_interrupted">انقطع: توقّف الجهاز أو التطبيق أثناء التسجيل، لذا ينقص جزء منه</string>
+    <string name="rec_missed">فائت: كان الجهاز مغلقًا أو التطبيق متوقفًا وقت التسجيل</string>
+    <string name="rec_storage_low">لا توجد مساحة كافية (أقل من 200 ميغابايت)</string>
+    <string name="rec_stream_failed">تعذّر الحصول على عنوان البث: %1$s</string>
+    <string name="rec_unexpected_stop">توقّف التسجيل بشكل غير متوقع: %1$s</string>
+    <string name="rec_limit_stopped_early">توقّف مبكرًا: يحدّ Android من التنزيلات في الخلفية إلى 6 ساعات يوميًا</string>
+    <string name="rec_background_denied">لم يسمح Android ببدء التسجيل في الخلفية. اسمح بالمنبهات والتذكيرات لتطبيق Tellybox من إعدادات النظام.</string>
 </resources>

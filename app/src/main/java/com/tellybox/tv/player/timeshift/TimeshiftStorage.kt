@@ -92,7 +92,7 @@ object TimeshiftFiles {
             val gone = synchronized(open) { f.name !in open && (if (f.isDirectory) f.deleteRecursively() else f.delete()) }
             if (gone) deleted++
         }
-        if (deleted > 0) android.util.Log.i("Timeshift", "Swept $deleted leftover buffer file(s)")
+        if (deleted > 0) if (com.tellybox.tv.BuildConfig.DEBUG) android.util.Log.i("Timeshift", "Swept $deleted leftover buffer file(s)")
         return deleted
     }
 }

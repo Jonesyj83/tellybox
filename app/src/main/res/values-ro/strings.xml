@@ -8,7 +8,6 @@
     <string name="group_all">Toate canalele</string>
     <string name="group_search">Căutare: %1$s</string>
     <string name="action_search">Căutare</string>
-    <string name="action_playlists">Playlisturi</string>
     <string name="action_add_playlist">Adaugă playlist</string>
     <string name="empty_title">Încă nu există playlisturi</string>
     <string name="empty_body">Adaugă un link M3U, un cont Xtream Codes sau un portal Stalker pentru a începe.</string>
@@ -131,14 +130,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Canalul nu poate fi redat</string>
     <string name="player_retry">Apasă OK pentru a reîncerca</string>
-    <string name="player_connecting">Se conectează…</string>
     <string name="error_http">Serverul a refuzat fluxul (HTTP %1$d).</string>
     <string name="error_network">Serverul nu poate fi accesat. Verifică conexiunea.</string>
     <string name="error_timeout">Serverul a răspuns prea greu.</string>
     <string name="error_format">Formatul acestui flux nu este acceptat.</string>
     <string name="error_decoder">Dispozitivul nu poate decoda fluxul.</string>
-    <string name="now_next">Acum: %1$s</string>
-    <string name="action_guide">Ghid TV</string>
     <string name="guide_no_info">Fără informații</string>
     <string name="guide_no_data">Fără date de ghid</string>
     <string name="guide_empty">Niciun canal de afișat.</string>
@@ -147,10 +143,8 @@
     <string name="guide_no_catchup">Canalul nu are catch-up.</string>
     <string name="guide_watch_live">Vizionează canalul</string>
     <string name="guide_jump_now">Salt la acum</string>
-    <string name="action_settings">Setări</string>
     <string name="settings_title">Setări</string>
     <string name="settings_player">Player</string>
-    <string name="settings_guide">Ghid TV</string>
     <string name="setting_buffer">Dimensiune buffer</string>
     <string name="buffer_small">Mic (pornire rapidă)</string>
     <string name="buffer_medium">Mediu</string>
@@ -226,7 +220,6 @@
         <item quantity="few">%d ore</item>
         <item quantity="other">%d de ore</item>
     </plurals>
-    <string name="action_recordings">Înregistrări</string>
     <string name="player_stream_stopped">Fluxul nu mai răspunde. Alege din nou canalul sau încearcă altul.</string>
     <string name="player_reconnecting">Flux întrerupt, reconectare (%1$d/%2$d)…</string>
     <string name="action_record">● Înregistrează</string>
@@ -299,7 +292,6 @@
     <string name="reminder_set">Memento setat pentru %1$s</string>
     <string name="reminder_removed">Memento eliminat</string>
     <string name="reminder_failed">Nu se poate seta mementoul: %1$s</string>
-    <string name="settings_recording">Înregistrare și mementouri</string>
     <string name="setting_pad_before">Începe înregistrarea mai devreme</string>
     <string name="setting_pad_after">Continuă după final</string>
     <string name="setting_instant_length">Durata înregistrării rapide</string>
@@ -519,7 +511,6 @@
     <string name="ui_subtitles">Subtitrări</string>
     <string name="ui_playback_options">Opțiuni de redare</string>
     <string name="ui_automatic">automată</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Copie de rezervă exportată. Păstrați fișierul privat: conține datele de conectare ale listelor și PIN-ul parental.</string>
     <string name="ui_backup_is_too_large">Backup-ul este prea mare</string>
     <string name="ui_replace_saved_configuration">Înlocuiți configurația salvată?</string>
     <string name="ui_replace">Înlocuiește</string>
@@ -587,4 +578,32 @@
     <string name="ui_backup_saved_in_downloads">Salvat în Downloads/%1$s. Păstrați fișierul privat: conține datele de conectare ale listelor și PIN-ul parental.</string>
     <string name="ui_no_backups_in_downloads">Nu există copii de rezervă în Downloads. Copiați mai întâi un fișier acolo.</string>
     <string name="ui_choose_a_file">Alege un fișier…</string>
+    <string name="http_error_code">Serverul a răspuns HTTP %1$d</string>
+    <string name="http_empty_response">Răspuns gol</string>
+    <string name="source_open_failed">Nu se poate deschide %1$s</string>
+    <string name="backup_storage_denied">Copia nu a fost salvată pentru că permisiunea de stocare a fost refuzată. Acordați-o din setările aplicației și încercați din nou.</string>
+    <string name="recording_notification_title">Înregistrare</string>
+    <string name="recording_preparing">Se pregătește înregistrarea…</string>
+    <string name="channel_recording_name">Înregistrare în curs</string>
+    <string name="channel_recording_result_name">Probleme la înregistrare</string>
+    <string name="channel_reminder_name">Memento pentru emisiuni</string>
+    <string name="reminder_already_started">Emisiunea a început deja</string>
+    <string name="reminder_starting_soon">Începe în curând pe %1$s</string>
+    <string name="recording_count">%1$d înregistrări</string>
+    <string name="recording_failed_title">Înregistrarea a eșuat: %1$s</string>
+    <string name="rec_already_recording">Acest canal este deja înregistrat la acea oră</string>
+    <string name="rec_no_duration">Această emisiune nu are durată</string>
+    <string name="rec_no_archive">Emisiunea s-a terminat, iar canalul nu are arhivă</string>
+    <string name="rec_archive_expired">Emisiunea e mai veche decât arhiva de %1$d zile a canalului</string>
+    <string name="rec_channel_missing">Canalul nu mai este în listă</string>
+    <string name="rec_window_passed">Ratat: intervalul de înregistrare a trecut</string>
+    <string name="rec_resumed_gap">Reluată după o întrerupere, așa că poate lipsi o porțiune scurtă</string>
+    <string name="rec_ended_early">S-a terminat mai devreme sau are goluri: %1$s</string>
+    <string name="rec_interrupted">Întreruptă: dispozitivul sau aplicația s-au oprit în timpul înregistrării, lipsește o parte</string>
+    <string name="rec_missed">Ratat: dispozitivul era oprit sau aplicația oprită</string>
+    <string name="rec_storage_low">Spațiu insuficient (sub 200 MB)</string>
+    <string name="rec_stream_failed">Nu s-a putut obține adresa streamului: %1$s</string>
+    <string name="rec_unexpected_stop">Înregistrarea s-a oprit neașteptat: %1$s</string>
+    <string name="rec_limit_stopped_early">Oprit mai devreme: Android limitează descărcările din fundal la 6 ore pe zi</string>
+    <string name="rec_background_denied">Android nu a permis înregistrarea în fundal. Permiteți alarme și memento-uri pentru Tellybox în setările sistemului.</string>
 </resources>

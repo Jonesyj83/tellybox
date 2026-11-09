@@ -8,7 +8,6 @@
     <string name="group_all">Όλα τα κανάλια</string>
     <string name="group_search">Αναζήτηση: %1$s</string>
     <string name="action_search">Αναζήτηση</string>
-    <string name="action_playlists">Λίστες</string>
     <string name="action_add_playlist">Προσθήκη λίστας</string>
     <string name="empty_title">Δεν υπάρχουν λίστες ακόμα</string>
     <string name="empty_body">Προσθέστε έναν σύνδεσμο M3U, στοιχεία Xtream Codes ή μια πύλη Stalker για να ξεκινήσετε.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Πύλη</string>
     <string name="player_error">Αδύνατη η αναπαραγωγή του καναλιού</string>
     <string name="player_retry">Πατήστε OK για νέα προσπάθεια</string>
-    <string name="player_connecting">Σύνδεση…</string>
     <string name="error_http">Ο διακομιστής απέρριψε τη ροή (HTTP %1$d).</string>
     <string name="error_network">Ο διακομιστής δεν είναι προσβάσιμος. Ελέγξτε τη σύνδεση.</string>
     <string name="error_timeout">Ο διακομιστής άργησε πολύ να απαντήσει.</string>
     <string name="error_format">Η μορφή αυτής της ροής δεν υποστηρίζεται.</string>
     <string name="error_decoder">Η συσκευή δεν μπορεί να αποκωδικοποιήσει τη ροή.</string>
-    <string name="now_next">Τώρα: %1$s</string>
-    <string name="action_guide">Οδηγός TV</string>
     <string name="guide_no_info">Χωρίς πληροφορίες</string>
     <string name="guide_no_data">Χωρίς δεδομένα οδηγού</string>
     <string name="guide_empty">Δεν υπάρχουν κανάλια.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Δεν υπάρχει catch-up για αυτό το κανάλι.</string>
     <string name="guide_watch_live">Προβολή καναλιού</string>
     <string name="guide_jump_now">Μετάβαση στο τώρα</string>
-    <string name="action_settings">Ρυθμίσεις</string>
     <string name="settings_title">Ρυθμίσεις</string>
     <string name="settings_player">Αναπαραγωγή</string>
-    <string name="settings_guide">Οδηγός TV</string>
     <string name="setting_buffer">Μέγεθος buffer</string>
     <string name="buffer_small">Μικρό (ταχύτερη έναρξη)</string>
     <string name="buffer_medium">Μεσαίο</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d ώρα</item>
         <item quantity="other">%d ώρες</item>
     </plurals>
-    <string name="action_recordings">Εγγραφές</string>
     <string name="player_stream_stopped">Η ροή σταμάτησε να αποκρίνεται. Επιλέξτε ξανά το κανάλι ή δοκιμάστε άλλο.</string>
     <string name="player_reconnecting">Η ροή διακόπηκε, επανασύνδεση (%1$d/%2$d)…</string>
     <string name="action_record">● Εγγραφή</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Υπενθύμιση για %1$s</string>
     <string name="reminder_removed">Η υπενθύμιση αφαιρέθηκε</string>
     <string name="reminder_failed">Αδύνατη η υπενθύμιση: %1$s</string>
-    <string name="settings_recording">Εγγραφή και υπενθυμίσεις</string>
     <string name="setting_pad_before">Έναρξη εγγραφής νωρίτερα</string>
     <string name="setting_pad_after">Συνέχεια μετά το τέλος</string>
     <string name="setting_instant_length">Διάρκεια άμεσης εγγραφής</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Υπότιτλοι</string>
     <string name="ui_playback_options">Επιλογές αναπαραγωγής</string>
     <string name="ui_automatic">Αυτόματο</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Το αντίγραφο ασφαλείας εξήχθη. Κρατήστε το αρχείο ιδιωτικό: περιέχει στοιχεία σύνδεσης λιστών και το PIN γονικού ελέγχου.</string>
     <string name="ui_backup_is_too_large">Το αντίγραφο ασφαλείας είναι πολύ μεγάλο</string>
     <string name="ui_replace_saved_configuration">Αντικατάσταση αποθηκευμένης διαμόρφωσης;</string>
     <string name="ui_replace">Αντικαταστήστε</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Αποθηκεύτηκε στο Downloads/%1$s. Κρατήστε το αρχείο ιδιωτικό: περιέχει στοιχεία σύνδεσης λιστών και το PIN γονικού ελέγχου.</string>
     <string name="ui_no_backups_in_downloads">Δεν υπάρχουν αντίγραφα στο Downloads. Αντιγράψτε πρώτα ένα αρχείο εκεί.</string>
     <string name="ui_choose_a_file">Επιλογή αρχείου…</string>
+    <string name="http_error_code">Ο διακομιστής επέστρεψε HTTP %1$d</string>
+    <string name="http_empty_response">Κενή απάντηση</string>
+    <string name="source_open_failed">Δεν ανοίγει το %1$s</string>
+    <string name="backup_storage_denied">Το αντίγραφο δεν αποθηκεύτηκε γιατί απορρίφθηκε η άδεια αποθήκευσης. Δώστε την από τις ρυθμίσεις της εφαρμογής και δοκιμάστε ξανά.</string>
+    <string name="recording_notification_title">Εγγραφή</string>
+    <string name="recording_preparing">Προετοιμασία εγγραφής…</string>
+    <string name="channel_recording_name">Εγγραφή σε εξέλιξη</string>
+    <string name="channel_recording_result_name">Προβλήματα εγγραφής</string>
+    <string name="channel_reminder_name">Υπενθυμίσεις εκπομπών</string>
+    <string name="reminder_already_started">Η εκπομπή έχει ήδη ξεκινήσει</string>
+    <string name="reminder_starting_soon">Ξεκινά σύντομα στο %1$s</string>
+    <string name="recording_count">%1$d εγγραφές</string>
+    <string name="recording_failed_title">Η εγγραφή απέτυχε: %1$s</string>
+    <string name="rec_already_recording">Αυτό το κανάλι καταγράφεται ήδη εκείνη την ώρα</string>
+    <string name="rec_no_duration">Η εκπομπή δεν έχει διάρκεια</string>
+    <string name="rec_no_archive">Η εκπομπή τελείωσε και το κανάλι δεν έχει αρχείο</string>
+    <string name="rec_archive_expired">Η εκπομπή είναι παλαιότερη από το αρχείο %1$d ημερών</string>
+    <string name="rec_channel_missing">Το κανάλι δεν είναι πλέον στη λίστα του</string>
+    <string name="rec_window_passed">Χάθηκε: η ώρα εγγραφής πέρασε</string>
+    <string name="rec_resumed_gap">Συνεχίστηκε μετά από διακοπή, οπότε μπορεί να λείπει ένα μικρό κομμάτι</string>
+    <string name="rec_ended_early">Τελείωσε νωρίτερα ή έχει κενά: %1$s</string>
+    <string name="rec_interrupted">Διακόπηκε: η συσκευή ή η εφαρμογή σταμάτησαν κατά την εγγραφή, λείπει ένα μέρος</string>
+    <string name="rec_missed">Χάθηκε: η συσκευή ήταν κλειστή ή η εφαρμογή σταματημένη</string>
+    <string name="rec_storage_low">Δεν υπάρχει αρκετός χώρος (κάτω από 200 MB)</string>
+    <string name="rec_stream_failed">Δεν βρέθηκε η διεύθυνση ροής: %1$s</string>
+    <string name="rec_unexpected_stop">Η εγγραφή σταμάτησε απρόσμενα: %1$s</string>
+    <string name="rec_limit_stopped_early">Σταμάτησε νωρίτερα: το Android περιορίζει τις λήψεις στο παρασκήνιο σε 6 ώρες την ημέρα</string>
+    <string name="rec_background_denied">Το Android δεν επέτρεψε εγγραφή στο παρασκήνιο. Επιτρέψτε ξυπνητήρια και υπενθυμίσεις για το Tellybox στις ρυθμίσεις συστήματος.</string>
 </resources>

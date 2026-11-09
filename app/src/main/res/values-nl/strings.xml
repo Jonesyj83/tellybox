@@ -8,7 +8,6 @@
     <string name="group_all">Alle zenders</string>
     <string name="group_search">Zoeken: %1$s</string>
     <string name="action_search">Zoeken</string>
-    <string name="action_playlists">Playlists</string>
     <string name="action_add_playlist">Playlist toevoegen</string>
     <string name="empty_title">Nog geen playlists</string>
     <string name="empty_body">Voeg een M3U-link, een Xtream Codes-login of een Stalker-portaal toe om te beginnen.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portaal</string>
     <string name="player_error">Kan deze zender niet afspelen</string>
     <string name="player_retry">Druk op OK om het opnieuw te proberen</string>
-    <string name="player_connecting">Verbinden…</string>
     <string name="error_http">De server weigerde de stream (HTTP %1$d).</string>
     <string name="error_network">Kan de server niet bereiken. Controleer de verbinding.</string>
     <string name="error_timeout">De server deed er te lang over.</string>
     <string name="error_format">Het formaat van deze stream wordt niet ondersteund.</string>
     <string name="error_decoder">Dit apparaat kan de stream niet decoderen.</string>
-    <string name="now_next">Nu: %1$s</string>
-    <string name="action_guide">Tv-gids</string>
     <string name="guide_no_info">Geen informatie</string>
     <string name="guide_no_data">Geen gidsgegevens</string>
     <string name="guide_empty">Geen zenders om te tonen.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Geen terugkijken voor deze zender.</string>
     <string name="guide_watch_live">Zender bekijken</string>
     <string name="guide_jump_now">Naar nu</string>
-    <string name="action_settings">Instellingen</string>
     <string name="settings_title">Instellingen</string>
     <string name="settings_player">Speler</string>
-    <string name="settings_guide">Tv-gids</string>
     <string name="setting_buffer">Buffergrootte</string>
     <string name="buffer_small">Klein (start het snelst)</string>
     <string name="buffer_medium">Middel</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d uur</item>
         <item quantity="other">%d uur</item>
     </plurals>
-    <string name="action_recordings">Opnames</string>
     <string name="player_stream_stopped">De stream reageert niet meer. Kies de zender opnieuw of probeer een andere.</string>
     <string name="player_reconnecting">Stream weggevallen, opnieuw verbinden (%1$d/%2$d)…</string>
     <string name="action_record">● Opnemen</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Herinnering ingesteld voor %1$s</string>
     <string name="reminder_removed">Herinnering verwijderd</string>
     <string name="reminder_failed">Kan geen herinnering instellen: %1$s</string>
-    <string name="settings_recording">Opnemen en herinneringen</string>
     <string name="setting_pad_before">Eerder beginnen met opnemen</string>
     <string name="setting_pad_after">Langer doorgaan na het einde</string>
     <string name="setting_instant_length">Duur directe opname</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Ondertitels</string>
     <string name="ui_playback_options">Afspeelopties</string>
     <string name="ui_automatic">Automatisch</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Back-up geëxporteerd. Houd dit bestand privé: het bevat inloggegevens van afspeellijsten en de ouder-PIN.</string>
     <string name="ui_backup_is_too_large">Back-up is te groot</string>
     <string name="ui_replace_saved_configuration">Opgeslagen configuratie vervangen?</string>
     <string name="ui_replace">Vervangen</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Opgeslagen in Downloads/%1$s. Houd dit bestand privé: het bevat inloggegevens van afspeellijsten en de ouder-PIN.</string>
     <string name="ui_no_backups_in_downloads">Geen back-ups in Downloads. Kopieer eerst een bestand daarheen.</string>
     <string name="ui_choose_a_file">Bestand kiezen…</string>
+    <string name="http_error_code">Server gaf HTTP %1$d terug</string>
+    <string name="http_empty_response">Leeg antwoord</string>
+    <string name="source_open_failed">Kan %1$s niet openen</string>
+    <string name="backup_storage_denied">De back-up is niet opgeslagen omdat de opslagtoestemming is geweigerd. Geef die in de app-instellingen en probeer opnieuw.</string>
+    <string name="recording_notification_title">Opname</string>
+    <string name="recording_preparing">Opname voorbereiden…</string>
+    <string name="channel_recording_name">Opname bezig</string>
+    <string name="channel_recording_result_name">Opnameproblemen</string>
+    <string name="channel_reminder_name">Programmaherinneringen</string>
+    <string name="reminder_already_started">Dat programma is al begonnen</string>
+    <string name="reminder_starting_soon">Begint zo op %1$s</string>
+    <string name="recording_count">%1$d opnames</string>
+    <string name="recording_failed_title">Opname mislukt: %1$s</string>
+    <string name="rec_already_recording">Dit kanaal wordt op dat moment al opgenomen</string>
+    <string name="rec_no_duration">Dit programma heeft geen speelduur</string>
+    <string name="rec_no_archive">Het programma is afgelopen en het kanaal heeft geen archief</string>
+    <string name="rec_archive_expired">Het programma is ouder dan het %1$d-dagenarchief van het kanaal</string>
+    <string name="rec_channel_missing">Het kanaal staat niet meer in de lijst</string>
+    <string name="rec_window_passed">Gemist: het opnametijdvak is voorbij</string>
+    <string name="rec_resumed_gap">Hervat na een onderbreking, dus er kan een kort gat in zitten</string>
+    <string name="rec_ended_early">Eerder gestopt of met gaten: %1$s</string>
+    <string name="rec_interrupted">Onderbroken: het toestel of de app stopte tijdens de opname, een deel ontbreekt</string>
+    <string name="rec_missed">Gemist: toestel stond uit of de app was gestopt</string>
+    <string name="rec_storage_low">Niet genoeg ruimte (minder dan 200 MB)</string>
+    <string name="rec_stream_failed">Streamadres niet op te halen: %1$s</string>
+    <string name="rec_unexpected_stop">Opname stopte onverwacht: %1$s</string>
+    <string name="rec_limit_stopped_early">Eerder gestopt: Android beperkt downloads op de achtergrond tot 6 uur per dag</string>
+    <string name="rec_background_denied">Android stond de opname op de achtergrond niet toe. Sta wekkers en herinneringen voor Tellybox toe in de systeeminstellingen.</string>
 </resources>

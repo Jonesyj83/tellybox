@@ -8,7 +8,6 @@
     <string name="group_all">Alle kanaler</string>
     <string name="group_search">Søk: %1$s</string>
     <string name="action_search">Søk</string>
-    <string name="action_playlists">Spillelister</string>
     <string name="action_add_playlist">Legg til spilleliste</string>
     <string name="empty_title">Ingen spillelister ennå</string>
     <string name="empty_body">Legg til en M3U-lenke, en Xtream Codes-pålogging eller en Stalker-portal for å komme i gang.</string>
@@ -126,14 +125,11 @@
     <string name="default_name_stalker">Portal</string>
     <string name="player_error">Kan ikke spille av denne kanalen</string>
     <string name="player_retry">Trykk OK for å prøve igjen</string>
-    <string name="player_connecting">Kobler til…</string>
     <string name="error_http">Serveren avviste strømmen (HTTP %1$d).</string>
     <string name="error_network">Fikk ikke kontakt med serveren. Sjekk tilkoblingen.</string>
     <string name="error_timeout">Serveren brukte for lang tid på å svare.</string>
     <string name="error_format">Formatet på denne strømmen støttes ikke.</string>
     <string name="error_decoder">Denne enheten kan ikke dekode strømmen.</string>
-    <string name="now_next">Nå: %1$s</string>
-    <string name="action_guide">TV-guide</string>
     <string name="guide_no_info">Ingen informasjon</string>
     <string name="guide_no_data">Ingen guidedata</string>
     <string name="guide_empty">Ingen kanaler å vise.</string>
@@ -142,10 +138,8 @@
     <string name="guide_no_catchup">Ingen catch-up for denne kanalen.</string>
     <string name="guide_watch_live">Se kanalen</string>
     <string name="guide_jump_now">Gå til nå</string>
-    <string name="action_settings">Innstillinger</string>
     <string name="settings_title">Innstillinger</string>
     <string name="settings_player">Avspiller</string>
-    <string name="settings_guide">TV-guide</string>
     <string name="setting_buffer">Bufferstørrelse</string>
     <string name="buffer_small">Liten (starter raskest)</string>
     <string name="buffer_medium">Middels</string>
@@ -217,7 +211,6 @@
         <item quantity="one">%d time</item>
         <item quantity="other">%d timer</item>
     </plurals>
-    <string name="action_recordings">Opptak</string>
     <string name="player_stream_stopped">Strømmen svarer ikke lenger. Velg kanalen på nytt eller prøv en annen.</string>
     <string name="player_reconnecting">Strømmen falt ut, kobler til igjen (%1$d/%2$d)…</string>
     <string name="action_record">● Ta opp</string>
@@ -287,7 +280,6 @@
     <string name="reminder_set">Påminnelse satt for %1$s</string>
     <string name="reminder_removed">Påminnelsen fjernet</string>
     <string name="reminder_failed">Kan ikke sette påminnelse: %1$s</string>
-    <string name="settings_recording">Opptak og påminnelser</string>
     <string name="setting_pad_before">Start opptak tidligere</string>
     <string name="setting_pad_after">Ta opp etter slutt</string>
     <string name="setting_instant_length">Lengde på hurtigopptak</string>
@@ -506,7 +498,6 @@
     <string name="ui_subtitles">Undertekster</string>
     <string name="ui_playback_options">Avspillingsalternativer</string>
     <string name="ui_automatic">Automatisk</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Sikkerhetskopi eksportert. Hold filen privat: den inneholder påloggingsdetaljer for spillelister og foreldre-PIN.</string>
     <string name="ui_backup_is_too_large">Sikkerhetskopien er for stor</string>
     <string name="ui_replace_saved_configuration">Vil du erstatte lagret konfigurasjon?</string>
     <string name="ui_replace">Bytt ut</string>
@@ -569,4 +560,32 @@
     <string name="ui_backup_saved_in_downloads">Lagret i Downloads/%1$s. Hold filen privat: den inneholder påloggingsdetaljer for spillelister og foreldre-PIN.</string>
     <string name="ui_no_backups_in_downloads">Ingen sikkerhetskopier i Downloads. Kopier en fil dit først.</string>
     <string name="ui_choose_a_file">Velg en fil…</string>
+    <string name="http_error_code">Tjeneren svarte HTTP %1$d</string>
+    <string name="http_empty_response">Tomt svar</string>
+    <string name="source_open_failed">Kan ikke åpne %1$s</string>
+    <string name="backup_storage_denied">Sikkerhetskopien ble ikke lagret fordi lagringstillatelsen ble avslått. Gi den i appinnstillingene og prøv igjen.</string>
+    <string name="recording_notification_title">Opptak</string>
+    <string name="recording_preparing">Forbereder opptak…</string>
+    <string name="channel_recording_name">Opptak pågår</string>
+    <string name="channel_recording_result_name">Problemer med opptak</string>
+    <string name="channel_reminder_name">Programpåminnelser</string>
+    <string name="reminder_already_started">Programmet har allerede startet</string>
+    <string name="reminder_starting_soon">Starter snart på %1$s</string>
+    <string name="recording_count">%1$d opptak</string>
+    <string name="recording_failed_title">Opptak mislyktes: %1$s</string>
+    <string name="rec_already_recording">Denne kanalen tas allerede opp på det tidspunktet</string>
+    <string name="rec_no_duration">Programmet har ingen varighet</string>
+    <string name="rec_no_archive">Programmet er over, og kanalen har ikke arkiv</string>
+    <string name="rec_archive_expired">Programmet er eldre enn kanalens %1$d-dagers arkiv</string>
+    <string name="rec_channel_missing">Kanalen er ikke lenger i spillelisten</string>
+    <string name="rec_window_passed">Gått glipp av: opptaksvinduet er passert</string>
+    <string name="rec_resumed_gap">Fortsett etter en avbrytelse, så det kan mangle en kort bit</string>
+    <string name="rec_ended_early">Avsluttet tidlig eller har hull: %1$s</string>
+    <string name="rec_interrupted">Avbrutt: enheten eller appen stoppet under opptaket, en del mangler</string>
+    <string name="rec_missed">Gått glipp av: enheten var av eller appen stoppet</string>
+    <string name="rec_storage_low">Ikke nok plass (under 200 MB)</string>
+    <string name="rec_stream_failed">Fikk ikke strømmeadressen: %1$s</string>
+    <string name="rec_unexpected_stop">Opptaket stoppet uventet: %1$s</string>
+    <string name="rec_limit_stopped_early">Stoppet tidlig: Android begrenser nedlastinger i bakgrunnen til 6 timer om dagen</string>
+    <string name="rec_background_denied">Android tillot ikke opptak i bakgrunnen. Tillat alarmer og påminnelser for Tellybox i systeminnstillingene.</string>
 </resources>

@@ -38,6 +38,18 @@ class SettingsActivity : SectionActivity() {
     private var currentSettings: AppSettings? = null
     private val importFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(::importBackupUri) }
 
+    private val exportPermission = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) exportBackup() else AlertDialog.Builder(this)
+            .setMessage(R.string.backup_storage_denied).setPositiveButton(R.string.ok, null).show()
+    }
+
+    private fun requestBackupExport() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q &&
+            androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            exportPermission.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else exportBackup()
+    }
+
     private inner class Row(@param:androidx.annotation.StringRes val id: Int, val value: String, val description: String = "", val dimmed: Boolean = false, val title: String = getString(id), val onClick: () -> Unit)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -332,7 +344,7 @@ class SettingsActivity : SectionActivity() {
             SettingsSection.GENERAL -> maintenance()
             SettingsSection.PLAYLISTS -> listOf(Row(R.string.ui_manage_playlists, getString(R.string.ui_add_edit_refresh_and_remove_streams)) { openSection(Section.PLAYLISTS) })
             SettingsSection.EPG -> listOf(Row(R.string.ui_guide_sources_and_assignments, getString(R.string.ui_urls_and_last_update_times)) { showGuides() }, Row(R.string.ui_clear_epg, "") { clearEpg() })
-            SettingsSection.BACKUP -> listOf(Row(R.string.ui_export_backup, getString(R.string.ui_includes_credentials_and_parental_pin)) { exportBackup() }, Row(R.string.ui_import_backup, getString(R.string.ui_replace_configuration_from_a_versioned_json_file)) { chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) }) })
+            SettingsSection.BACKUP -> listOf(Row(R.string.ui_export_backup, getString(R.string.ui_includes_credentials_and_parental_pin)) { requestBackupExport() }, Row(R.string.ui_import_backup, getString(R.string.ui_replace_configuration_from_a_versioned_json_file)) { chooseBackup(onChooseFile = { importFile.launch(arrayOf("application/json", "text/plain")) }) })
             SettingsSection.ABOUT -> listOf(Row(R.string.about_version, getString(R.string.ui_a_player_for_playlists_supplied_by_you), title = getString(R.string.about_version, com.tellybox.tv.BuildConfig.VERSION_NAME)) {}, Row(R.string.ui_open_source_licences, getString(R.string.ui_androidx_media3_kotlin_coil_okhttp_and_retrofit)) { AlertDialog.Builder(this).setMessage(assets.open("open_source_licences.txt").bufferedReader().use { it.readText() }).setPositiveButton(R.string.ok, null).show() })
             else -> emptyList()
         }

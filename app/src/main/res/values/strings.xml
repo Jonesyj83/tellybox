@@ -10,7 +10,6 @@
     <string name="group_all">All channels</string>
     <string name="group_search">Search: %1$s</string>
     <string name="action_search">Search</string>
-    <string name="action_playlists">Playlists</string>
     <string name="action_add_playlist">Add playlist</string>
     <string name="empty_title">No playlists yet</string>
     <string name="empty_body">Add an M3U link, an Xtream Codes login or a Stalker portal to get started.</string>
@@ -125,16 +124,13 @@
     <!-- player -->
     <string name="player_error">Can\'t play this channel</string>
     <string name="player_retry">Press OK to try again</string>
-    <string name="player_connecting">Connecting…</string>
     <string name="error_http">The server turned the stream down (HTTP %1$d).</string>
     <string name="error_network">Couldn\'t reach the server. Check the connection.</string>
     <string name="error_timeout">The server took too long to respond.</string>
     <string name="error_format">This stream\'s format isn\'t supported.</string>
     <string name="error_decoder">This device can\'t decode the stream.</string>
-    <string name="now_next">Now: %1$s</string>
 
     <!-- tv guide -->
-    <string name="action_guide">TV guide</string>
     <string name="guide_no_info">No information</string>
     <string name="guide_no_data">No guide data</string>
     <string name="guide_empty">No channels to show.</string>
@@ -145,10 +141,8 @@
     <string name="guide_jump_now">Jump to now</string>
 
     <!-- settings -->
-    <string name="action_settings">Settings</string>
     <string name="settings_title">Settings</string>
     <string name="settings_player">Player</string>
-    <string name="settings_guide">TV guide</string>
     <string name="setting_buffer">Buffer size</string>
     <string name="buffer_small">Small (starts fastest)</string>
     <string name="buffer_medium">Medium</string>
@@ -218,7 +212,6 @@
     <string name="off">Off</string>
     <plurals name="hours"><item quantity="one">%d hour</item><item quantity="other">%d hours</item></plurals>
     <!-- recordings -->
-    <string name="action_recordings">Recordings</string>
     <string name="player_stream_stopped">The stream stopped responding. Pick the channel again or try another one.</string>
     <string name="player_reconnecting">Stream dropped, reconnecting (%1$d/%2$d)…</string>
     <string name="action_record">● Record</string>
@@ -286,7 +279,6 @@
     <string name="reminder_failed">Can\'t set a reminder: %1$s</string>
 
     <!-- recording settings -->
-    <string name="settings_recording">Recording and reminders</string>
     <string name="setting_pad_before">Start recording early</string>
     <string name="setting_pad_after">Keep recording after the end</string>
     <string name="setting_instant_length">Instant recording length</string>
@@ -504,7 +496,6 @@
     <string name="ui_subtitles">Subtitles</string>
     <string name="ui_playback_options">Playback options</string>
     <string name="ui_automatic">Automatic</string>
-    <string name="ui_backup_exported_keep_this_file_private_it_contains_playlist_credential">Backup exported. Keep this file private: it holds playlist credentials and the parental PIN.</string>
     <string name="ui_backup_is_too_large">Backup is too large</string>
     <string name="ui_replace_saved_configuration">Replace saved configuration?</string>
     <string name="ui_replace">Replace</string>
@@ -567,4 +558,32 @@
     <string name="ui_backup_saved_in_downloads">Saved to Downloads/%1$s. Keep this file private: it holds playlist credentials and the parental PIN.</string>
     <string name="ui_no_backups_in_downloads">No backups in Downloads. Copy a backup file there first.</string>
     <string name="ui_choose_a_file">Choose a file…</string>
+    <string name="rec_unexpected_stop">Recording stopped unexpectedly: %1$s</string>
+    <string name="rec_window_passed">Missed: the recording window had already passed</string>
+    <string name="rec_channel_missing">The channel is no longer in its playlist</string>
+    <string name="rec_stream_failed">Couldn\'t get the stream address: %1$s</string>
+    <string name="rec_storage_low">Not enough free storage (less than 200 MB left)</string>
+    <string name="rec_limit_stopped_early">Stopped early: Android limits background downloads to 6 hours a day</string>
+    <string name="rec_ended_early">Ended early or has gaps: %1$s</string>
+    <string name="rec_resumed_gap">Resumed after an interruption, so there may be a short gap</string>
+    <string name="recording_failed_title">Recording failed: %1$s</string>
+    <string name="recording_preparing">Preparing recording…</string>
+    <string name="recording_count">%1$d recordings</string>
+    <string name="recording_notification_title">Recording</string>
+    <string name="rec_already_recording">This channel is already being recorded at that time</string>
+    <string name="rec_interrupted">Interrupted: the device or app stopped during the recording, so part of it is missing</string>
+    <string name="rec_missed">Missed: the device was off or the app was stopped when the recording was due</string>
+    <string name="reminder_already_started">That programme has already started</string>
+    <string name="reminder_starting_soon">Starting soon on %1$s</string>
+    <string name="channel_recording_name">Recording in progress</string>
+    <string name="channel_recording_result_name">Recording problems</string>
+    <string name="channel_reminder_name">Programme reminders</string>
+    <string name="http_error_code">Server returned HTTP %1$d</string>
+    <string name="http_empty_response">Empty response</string>
+    <string name="source_open_failed">Can\'t open %1$s</string>
+    <string name="rec_background_denied">Android did not allow the recording to start in the background. Allow &quot;Alarms &amp; reminders&quot; for Tellybox in the system settings.</string>
+    <string name="backup_storage_denied">The backup could not be saved because storage permission was denied. Allow storage access to save backups in Downloads.</string>
+    <string name="rec_no_duration">This programme has no running time</string>
+    <string name="rec_no_archive">This programme has ended and the channel has no catch-up archive</string>
+    <string name="rec_archive_expired">This programme is older than the channel\'s %1$d-day archive</string>
 </resources>
