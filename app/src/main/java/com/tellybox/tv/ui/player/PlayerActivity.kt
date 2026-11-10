@@ -128,6 +128,13 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         closeBanner()
     }
 
+    /**
+     * Set when Back puts the banner away while paused. Playback state changes would otherwise
+     * bring it straight back, so the next Back only puts it away again and the viewer never
+     * gets out.
+     */
+    private var bannerDismissed = false
+
     /** Takes the banner down whatever state playback is in. Back uses this so it always works. */
     private fun closeBanner() {
         val focusInBanner = binding.banner.hasFocus()
@@ -772,6 +779,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         updateSleep()
         binding.bannerLogo.setImageDrawable(null)
         if (!channel.logoUrl.isNullOrBlank()) binding.bannerLogo.load(channel.logoUrl)
+        bannerDismissed = false
         binding.banner.visibility = View.VISIBLE
         binding.sleepButton.visibility = View.VISIBLE
         if (!catchup && !fileMode && current?.kind == ContentKind.LIVE) {
@@ -785,7 +793,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
 
     /** Brings the banner back as it is, without reloading the logo, e.g. on a pause. */
     private fun refreshBanner() {
-        if (current == null || inPip()) return
+        if (current == null || inPip() || bannerDismissed) return
         binding.banner.visibility = View.VISIBLE
         binding.sleepButton.visibility = View.VISIBLE
         if (!catchup && !fileMode && current?.kind == ContentKind.LIVE) binding.recordButton.visibility = View.VISIBLE
@@ -910,6 +918,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     }
 
     private fun showControls() {
+        bannerDismissed = false
         refreshBanner()
         if (timeshiftMode == TimeshiftMode.FULL && binding.timeshiftPanel.visibility == View.VISIBLE) {
             binding.timeshiftBar.requestFocus()
@@ -1002,8 +1011,8 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         val exo = player?.exo ?: return false
         when (keyCode) {
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> togglePause()
-            KeyEvent.KEYCODE_MEDIA_PLAY -> { exo.play(); refreshBanner() }
-            KeyEvent.KEYCODE_MEDIA_PAUSE -> { exo.pause(); refreshBanner() }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> { bannerDismissed = false; exo.play(); refreshBanner() }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> { bannerDismissed = false; exo.pause(); refreshBanner() }
             KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD -> nudge(-SKIP_MS)
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD -> nudge(SKIP_MS)
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
@@ -1162,12 +1171,14 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
         if (binding.banner.visibility == View.VISIBLE) {
             // Not hideBanner, which keeps the banner up while timeshift is paused.
             handler.removeCallbacks(hideBanner)
+            bannerDismissed = true
             closeBanner()
             binding.playerView.requestFocus()
             return
         }
-        @Suppress("DEPRECATION")
-        super.onBackPressed()
+        // Finish outright. The player is the end of the line, and going through the back
+        // dispatcher let a press disappear while timeshift was paused.
+        finish()
     }
 
     /** Digits typed on the remote build a channel number; OK or a pause in typing tunes to it. */
@@ -1183,6 +1194,7 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private fun handleDigit(keyCode: Int): Boolean {
         val digit = digitOf(keyCode) ?: return false
         typedNumber.append(digit)
+        bannerDismissed = false
         binding.banner.visibility = View.VISIBLE
         binding.bannerNumber.text = typedNumber.toString()
         handler.removeCallbacks(hideBanner)
