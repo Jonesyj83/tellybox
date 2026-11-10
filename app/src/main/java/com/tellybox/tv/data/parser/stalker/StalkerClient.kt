@@ -139,17 +139,37 @@ class StalkerClient(
             )
             is StalkerVodRef.Series -> throw StalkerException("A series has no stream of its own")
         }
-        val cmd = StalkerVodMapper.streamCmd(call("vod", "get_ordered_list", params))
-            ?: throw StalkerException("Portal returned no stream for this title")
+        val listing = call("vod", "get_ordered_list", params)
+        val candidates = StalkerVodMapper.linkCmds(listing)
+        if (candidates.isEmpty()) throw StalkerException("Portal returned no stream for this title")
         // Always exchange it, even when it already looks like a URL. Portals hand out paths that
         // are only playable once they have been turned into a signed link, and playing the bare
-        // path is what earns a 403 from the server.
-        val linked = runCatching {
-            (call("vod", "create_link", mapOf("cmd" to cmd, "forced_storage" to "undefined", "disable_ad" to "0"))
-                as? JsonObject)?.str("cmd")
-        }.getOrNull()
-        val playable = linked?.let(StalkerMapper::urlFromCmd) ?: StalkerMapper.urlFromCmd(cmd)
-        return playable ?: throw StalkerException("Portal returned no stream for this title")
+        // path is what earns a 403 from the server. Which argument the portal wants varies, so
+        // each candidate is tried until one comes back with something playable.
+        var refusal: String? = null
+        var answered = false
+        for (cmd in candidates) {
+            val reply = try {
+                call("vod", "create_link", mapOf("cmd" to cmd, "forced_storage" to "undefined", "disable_ad" to "0"))
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: StalkerException) {
+                continue // No create_link at all: keep trying, then fall back to the raw path.
+            }
+            answered = true
+            // Portals wrap the answer in "js" on some builds and not on others.
+            val body = ((reply as? JsonObject)?.get("js") as? JsonObject) ?: (reply as? JsonObject)
+            StalkerMapper.urlFromCmd(body?.str("cmd").orEmpty())?.let { return it }
+            body?.str("error")?.takeIf { it.isNotBlank() }?.let { refusal = it }
+        }
+        // A portal that refuses with an error has told us the link won't work. Playing the bare
+        // path anyway is what turned a clear "nothing_to_play" into a mystery 403.
+        refusal?.let { throw StalkerException("The portal wouldn't give a playable link ($it)") }
+        // Nothing answered at all, so the portal may not have create_link. Play what it gave us.
+        if (!answered) {
+            StalkerMapper.urlFromCmd(candidates.last())?.let { return it }
+        }
+        throw StalkerException("Portal returned no stream for this title")
     }
 
     private suspend fun call(type: String, action: String, params: Map<String, String> = emptyMap()): JsonElement? {

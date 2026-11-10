@@ -128,6 +128,26 @@ object StalkerVodMapper {
     /** The playable link from a `movie_id=` (or `episode_id=`) lookup: `data[0].cmd`. */
     fun streamCmd(js: JsonElement?): String? = listData(js).firstOrNull()?.str("cmd")
 
+    /**
+     * What to ask `create_link` for, in the order to try it.
+     *
+     * Ministra portals backed by flussonic storage give the bare storage URL as `cmd` and answer
+     * "nothing_to_play" when that same URL is handed back to `create_link`. They only sign a link
+     * when asked for `/media/file_<id>.mpg`, where the id is the file row's own id and not the
+     * movie's video_id. A file row is the only row that has one, so the bare cmd stays as a
+     * second try for portals that want it the other way round.
+     */
+    fun linkCmds(js: JsonElement?): List<String> {
+        val row = listData(js).firstOrNull() ?: return emptyList()
+        val out = LinkedHashSet<String>()
+        val id = row.str("id")
+        if (row.bool("is_file") && id != null && id.isNotEmpty() && id.all { it in '0'..'9' }) {
+            out += "/media/file_$id.mpg"
+        }
+        row.str("cmd")?.takeIf { it.isNotBlank() }?.let { out += it }
+        return out.toList()
+    }
+
     private fun listData(js: JsonElement?) = ((js as? JsonObject)?.arr("data") ?: js).objects()
 
     private fun resolve(base: HttpUrl?, path: String): String? =

@@ -15,7 +15,10 @@ the change. Use this before a tag, and add to it whenever something slips throug
 
 ## The paths that have actually broken
 
-- **Stalker portals.** Never tested by us on a real portal, so use `tools/fake-portal.py`. Add a
+- **Stalker portals.** A fake that echoes back whatever it is given proves nothing: the film
+  link test passed against one while every real film on a Ministra portal came back 403, because
+  the portal only signs `/media/file_<id>.mpg` and refuses the bare storage URL. Answer like the
+  portal does, including the refusals. Use `tools/fake-portal.py`. Add a
   playlist pointing at it, confirm channels appear in seconds, confirm the films arrive after,
   delete the playlist mid-import and confirm the app doesn't hang.
 - **Backup and restore.** Export, wipe app data, restore, check channels and the parental PIN.

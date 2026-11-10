@@ -169,7 +169,17 @@ class StalkerVodTest {
     @After
     fun stopServers() = servers.forEach { it.close() }
 
-    private fun portal(failVod: Boolean = false): FakePortal = FakePortal { q ->
+    /** The storage URL a fixture advertises, so the fake portal can sign it the way the real one does. */
+    private fun storageUrl(name: String): String =
+        requireNotNull(Regex("\"cmd\": \"([^\"]+)\"").find(fixture(name))?.groupValues?.get(1))
+
+    private fun signedUrl(fileId: String): String? = when (fileId) {
+        "3545371" -> storageUrl("real-movie-491960.json")
+        "3373954" -> storageUrl("real-episode-2986168.json")
+        else -> null
+    }
+
+    private fun portal(failVod: Boolean = false, signFileIds: Set<String> = setOf("3545371", "3373954")): FakePortal = FakePortal { q ->
         val empty = """{"js":{"total_items":"0","max_page_items":14,"data":[]}}"""
         when {
             q["action"] == "handshake" -> 200 to """{"js":{"token":"session"}}"""
@@ -179,8 +189,14 @@ class StalkerVodTest {
             q["type"] == "itv" && q["action"] == "get_all_channels" ->
                 200 to """{"js":{"total_items":1,"data":[{"id":"10","name":"One","number":"1","cmd":"ffmpeg http://localhost/ch/10_","tv_genre_id":"3"}]}}"""
             q["type"] == "vod" && failVod -> 500 to "Internal Server Error"
-            q["action"] == "create_link" ->
-                200 to """{"js":{"cmd":"${q["cmd"]?.replace("\"", "")}"}}"""
+            // The real portal answers nothing_to_play for the bare storage URL and only signs
+            // /media/file_<id>.mpg, which is how the 403 got past a fake that echoed everything.
+            q["action"] == "create_link" -> {
+                val fileId = Regex("^/media/file_(\\d+)\\.mpg$").find(q["cmd"].orEmpty())?.groupValues?.get(1)
+                val signed = fileId?.takeIf { it in signFileIds }?.let { signedUrl(it) }
+                if (signed != null) 200 to """{"js":{"cmd":"$signed?token=$fileId"}}"""
+                else 200 to """{"js":{"id":0,"cmd":"","error":"link_fault"}}"""
+            }
             q["action"] == "get_categories" -> 200 to fixture("real-vod-get-categories.json")
             q["action"] != "get_ordered_list" -> 404 to ""
             q["episode_id"] != null -> 200 to fixture("real-episode-2986168.json")
@@ -213,7 +229,6 @@ class StalkerVodTest {
     fun movieResolvesThroughMovieIdLookup() = runBlocking {
         val p = portal()
         val url = client(p).resolve(StalkerVodRef.parse("stalker://movie/491960")!!)
-        assertTrue(url.endsWith("/index.m3u8"))
         assertTrue(url.startsWith("http://89.187.181.21/"))
         val lookup = p.requests.last { it["action"] == "get_ordered_list" }
         assertEquals("491960", lookup["movie_id"])
@@ -238,7 +253,8 @@ class StalkerVodTest {
         val ref = StalkerVodRef.Episode("273000", season3.id, episodes.last().id)
         assertEquals("stalker://episode/273000/144224/2986168", ref.marker)
         val url = c.resolve(StalkerVodRef.parse(ref.marker)!!)
-        assertTrue(url.startsWith("http://95.173.206.33/") && url.endsWith("/index.m3u8"))
+        // The episode resolves the same way the film does: the file row gets signed.
+        assertTrue(url.startsWith("http://95.173.206.33/") && url.endsWith("/index.m3u8?token=3373954"))
         val lookup = p.requests.last { it["action"] == "get_ordered_list" }
         assertEquals(listOf("273000", "144224", "2986168"),
             listOf(lookup["movie_id"], lookup["season_id"], lookup["episode_id"]))
@@ -316,6 +332,48 @@ class StalkerVodTest {
         assertEquals(listOf("News"), result.groups.map { it.name })
         assertNotNull(result.vodError)
         assertTrue(p.requests.any { it["type"] == "vod" })
+    }
+    // --- the argument create_link actually wants ---------------------------------------------
+
+    @Test
+    fun linkCmdsAsksForTheFileRowFirstThenTheBareStorageUrl() {
+        val movie = StalkerVodMapper.linkCmds(js("real-movie-491960.json"))
+        assertEquals("/media/file_3545371.mpg", movie.first())
+        assertEquals(storageUrl("real-movie-491960.json"), movie.last())
+        assertEquals(2, movie.size)
+
+        val episode = StalkerVodMapper.linkCmds(js("real-episode-2986168.json"))
+        assertEquals("/media/file_3373954.mpg", episode.first())
+        assertEquals(storageUrl("real-episode-2986168.json"), episode.last())
+    }
+
+    @Test
+    fun linkCmdsHasNothingToOfferForAnEmptyListing() {
+        assertTrue(StalkerVodMapper.linkCmds(null).isEmpty())
+        assertTrue(StalkerVodMapper.linkCmds(emptyListing()).isEmpty())
+    }
+
+    private fun emptyListing(): JsonElement = Json.parseToJsonElement("{\"js\":{\"data\":[]}}")
+
+    @Test
+    fun resolvePlaysTheSignedFileLinkNotTheBareStorageUrl() = runBlocking {
+        val p = portal(signFileIds = setOf("3545371"))
+        val url = client(p).resolve(StalkerVodRef.parse("stalker://movie/491960")!!)
+        assertEquals(storageUrl("real-movie-491960.json") + "?token=3545371", url)
+        // The first thing asked for is the file row, not the storage URL the row handed out.
+        val asked = p.requests.filter { it["action"] == "create_link" }.map { it["cmd"] }
+        assertEquals(listOf("/media/file_3545371.mpg"), asked)
+    }
+
+    @Test
+    fun everyLinkRefusedShowsThePortalErrorInsteadOfPlayingTheRawPath() = runBlocking {
+        val p = portal(signFileIds = emptySet())
+        val error = runCatching { client(p).resolve(StalkerVodRef.parse("stalker://movie/491960")!!) }
+            .exceptionOrNull()
+        assertTrue(error is StalkerException)
+        assertTrue(error!!.message.orEmpty().contains("link_fault"))
+        // Both candidates were tried before giving up.
+        assertEquals(2, p.requests.count { it["action"] == "create_link" })
     }
 }
 
