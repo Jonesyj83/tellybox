@@ -1053,6 +1053,21 @@ class PlayerActivity : com.tellybox.tv.ui.ScaledActivity(), com.tellybox.tv.play
     private var okLongPressed = false
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // Back is taken here rather than in onBackPressed so a focused button or the video
+        // surface can never swallow it. One press puts the banner away, the next leaves.
+        if (event.keyCode == KeyEvent.KEYCODE_BACK && !inPip()) {
+            if (event.action == KeyEvent.ACTION_UP) {
+                if (binding.banner.visibility == View.VISIBLE) {
+                    handler.removeCallbacks(hideBanner)
+                    bannerDismissed = true
+                    closeBanner()
+                    binding.playerView.requestFocus()
+                } else {
+                    finish()
+                }
+            }
+            return true
+        }
         // Anything pressed while the banner is up counts as using it, so the banner stays until the
         // viewer stops, including while navigating to Sleep and Record.
         if (event.action == KeyEvent.ACTION_DOWN && binding.banner.visibility == View.VISIBLE) {
