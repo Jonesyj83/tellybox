@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.tellybox.tv.BuildConfig
 import com.tellybox.tv.R
 import com.tellybox.tv.appContainer
 import com.tellybox.tv.data.db.RecordingEntity
@@ -24,6 +25,7 @@ import com.tellybox.tv.data.db.RecordingSource
 import com.tellybox.tv.data.db.RecordingStatus
 import com.tellybox.tv.data.recording.RecordingPlan
 import com.tellybox.tv.data.recording.StreamRecorder
+import com.tellybox.tv.data.recording.TsTimestamps
 import com.tellybox.tv.schedule.Notifications
 import com.tellybox.tv.ui.recordings.RecordingsActivity
 import kotlinx.coroutines.CancellationException
@@ -238,7 +240,15 @@ class RecordingService : Service() {
                 error = note,
             ),
         )
-        if (result.bytes == 0L) file.delete()
+        if (result.bytes == 0L) {
+            file.delete()
+        } else {
+            // The recorder has closed the file. Some providers splice in segments on another
+            // clock, which makes a short recording claim to be hours long; even that out.
+            // Same length either way, so the bytes just saved stay right.
+            val fixed = withContext(Dispatchers.IO) { TsTimestamps.fix(file) }
+            if (BuildConfig.DEBUG) android.util.Log.d("RecordingService", "Timestamps for recording $id ${if (fixed) "evened out" else "already continuous"}")
+        }
     }
 
     private suspend fun finish(rec: RecordingEntity) {
