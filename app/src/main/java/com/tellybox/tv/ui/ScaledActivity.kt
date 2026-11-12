@@ -16,9 +16,21 @@ import kotlin.math.roundToInt
 /** Applies the activity's scale once to each attached view, including recycled list rows. */
 open class ScaledActivity : AppCompatActivity() {
     val uiScale by lazy {
-        resources.configuration.let {
-            UiScale(it.screenWidthDp, it.screenHeightDp, compact = it.smallestScreenWidthDp < 600)
-        }
+        val config = resources.configuration
+        UiScale(config.screenWidthDp, config.screenHeightDp, compact = !isTelevision(config))
+    }
+
+    /**
+     * A TV reports 540 dp across at 1080p, which looks like a phone by width alone. Ask the
+     * system what it is instead: the television ui mode or the leanback feature means TV, and
+     * those keep the original scale.
+     */
+    private fun isTelevision(config: android.content.res.Configuration): Boolean {
+        val televisionMode =
+            config.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK ==
+                android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+        val leanback = packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
+        return televisionMode || leanback
     }
     private val sized = Collections.newSetFromMap(WeakHashMap<View, Boolean>())
 

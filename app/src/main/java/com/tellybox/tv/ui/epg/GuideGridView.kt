@@ -90,7 +90,11 @@ class GuideGridView @JvmOverloads constructor(
 
     private val uiScale = (context as? com.tellybox.tv.ui.ScaledActivity)?.uiScale
         ?: resources.configuration.let {
-            com.tellybox.tv.ui.UiScale(it.screenWidthDp, it.screenHeightDp, compact = it.smallestScreenWidthDp < 600)
+            // Mirrors ScaledActivity: a television keeps the TV scale whatever its dp width says.
+            val television = it.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK ==
+                android.content.res.Configuration.UI_MODE_TYPE_TELEVISION ||
+                context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
+            com.tellybox.tv.ui.UiScale(it.screenWidthDp, it.screenHeightDp, compact = !television)
         }
     private val dp = resources.displayMetrics.density * uiScale.scale
     private var rowHeight = 26 * dp
@@ -478,7 +482,10 @@ class GuideGridView @JvmOverloads constructor(
         if (now in viewStart..viewEnd && channels.isNotEmpty()) {
             val x = channelWidth + (now - viewStart) / 60_000f * pxPerMinute
             // Stop at the last row instead of drawing on into empty space below the list.
-            val bottom = minOf(height.toFloat(), headerHeight + visibleRows * rowHeight)
+            // visibleRows is how many rows would fit, not how many there are: a short list on a
+            // tall phone would still send the line down through empty space.
+            val drawnRows = minOf(visibleRows, maxOf(0, channels.size - firstRow))
+            val bottom = minOf(height.toFloat(), headerHeight + drawnRows * rowHeight)
             canvas.drawLine(x, headerHeight - 6 * dp, x, bottom, nowLine)
         }
     }

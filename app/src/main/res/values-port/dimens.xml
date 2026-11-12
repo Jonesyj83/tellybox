@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Held in portrait, a phone gives most of its width to the list instead of the category
+     column. Televisions never show this: they are always landscape, so they keep the wider
+     column and their list is unaffected. -->
+<resources>
+    <dimen name="category_width">128dp</dimen>
+    <dimen name="category_gap">8dp</dimen>
+    <dimen name="overscan_v">6dp</dimen>
+</resources>
