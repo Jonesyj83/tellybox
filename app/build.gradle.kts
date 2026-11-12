@@ -15,8 +15,8 @@ android {
         applicationId = "com.tellybox.tv"
         minSdk = 23
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.3.3"
+        versionCode = 9
+        versionName = "0.4.0-test1"
     }
 
     signingConfigs {
