@@ -140,9 +140,16 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
         binding = ActivityMainBinding.inflate(layoutInflater)
         // Leave room for programme details when the logical canvas is narrower than a TV baseline.
         // These are base dp here; ScaledActivity applies the shared factor before drawing.
-        val mainColumnBase = uiScale.widthDp / uiScale.scale - 48 * 2 - 44 - 220 - 12
-        binding.previewTile.layoutParams.width =
-            (minOf(270f, ((mainColumnBase - 16) / 2).coerceAtLeast(80f)) * resources.displayMetrics.density).toInt()
+        // On a portrait phone the preview goes above the list, so it takes the full width
+        // instead of being sized to share a row with the programme details.
+        val portraitNow = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT
+        if (portraitNow) {
+            binding.previewTile.layoutParams.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        } else {
+            val mainColumnBase = uiScale.widthDp / uiScale.scale - 48 * 2 - 44 - 220 - 12
+            binding.previewTile.layoutParams.width =
+                (minOf(270f, ((mainColumnBase - 16) / 2).coerceAtLeast(80f)) * resources.displayMetrics.density).toInt()
+        }
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             window.attributes = window.attributes.apply {
                 layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
@@ -164,7 +171,13 @@ class MainActivity : com.tellybox.tv.ui.parental.ProtectedActivity(), GuideGridV
         } }
 
 
-        binding.groups.layoutManager = LinearLayoutManager(this)
+        // Portrait phones get a strip of groups above the list; everywhere else it is a column.
+        val portrait = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT
+        binding.groups.layoutManager = LinearLayoutManager(
+            this,
+            if (portrait) LinearLayoutManager.HORIZONTAL else LinearLayoutManager.VERTICAL,
+            false,
+        )
         binding.groups.adapter = groupAdapter
         binding.groups.itemAnimator = null
         if (com.tellybox.tv.BuildConfig.DEBUG) {

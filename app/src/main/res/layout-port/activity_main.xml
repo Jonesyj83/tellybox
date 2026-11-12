@@ -1,0 +1,313 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Portrait phones. The rail stays down the left because that is how the app navigates
+     everywhere else; the groups become a strip across the top of the list instead of a
+     column, and the preview sits above the channels rather than beside them. Every id
+     matches the landscape layout, so the screen code does not care which one it got. -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/overscan_h"
+    android:paddingEnd="@dimen/overscan_end">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="horizontal">
+
+    <include
+        android:id="@+id/menuRail"
+        layout="@layout/view_rail" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingTop="10dp">
+
+      <androidx.recyclerview.widget.RecyclerView
+          android:id="@+id/groups"
+          android:layout_width="match_parent"
+          android:layout_height="44dp"
+          android:clipToPadding="false"
+          android:descendantFocusability="afterDescendants"
+          android:paddingStart="12dp"
+          android:paddingEnd="12dp"
+          android:scrollbars="none" />
+
+      <LinearLayout
+          android:id="@+id/topBlock"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="8dp"
+          android:baselineAligned="false"
+          android:orientation="vertical">
+
+        <com.tellybox.tv.ui.channels.RatioFrameLayout
+            android:id="@+id/previewTile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="@android:color/black"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="@drawable/fg_preview">
+
+          <androidx.media3.ui.PlayerView
+              android:id="@+id/previewPlayer"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:focusable="false"
+              app:show_buffering="when_playing"
+              app:shutter_background_color="@android:color/black"
+              app:use_controller="false" />
+
+          <TextView
+              android:id="@+id/previewHint"
+              style="@style/Text.Caption"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:gravity="center"
+              android:padding="16dp"
+              android:text="@string/preview_hint" />
+
+          <LinearLayout
+              android:id="@+id/previewError"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:gravity="center_horizontal"
+              android:orientation="vertical"
+              android:padding="12dp"
+              android:visibility="gone">
+
+            <TextView
+                style="@style/Text.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/preview_error"
+                android:textColor="@color/error" />
+
+            <TextView
+                android:id="@+id/previewErrorDetail"
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="2" />
+          </LinearLayout>
+
+          <TextView
+              android:id="@+id/previewLabel"
+              style="@style/Text.Caption"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="bottom|start"
+              android:layout_margin="6dp"
+              android:background="@drawable/bg_watch_chip"
+              android:ellipsize="end"
+              android:paddingStart="8dp"
+              android:paddingTop="2dp"
+              android:paddingEnd="8dp"
+              android:paddingBottom="2dp"
+              android:singleLine="true"
+              android:textColor="@color/text_primary"
+              android:visibility="gone" />
+
+          <TextView
+              android:id="@+id/previewWatch"
+              style="@style/Text.Caption"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="top|end"
+              android:layout_margin="6dp"
+              android:background="@drawable/bg_watch_chip"
+              android:duplicateParentState="true"
+              android:ellipsize="end"
+              android:fontFamily="sans-serif-medium"
+              android:maxLines="1"
+              android:paddingStart="10dp"
+              android:paddingTop="3dp"
+              android:paddingEnd="10dp"
+              android:paddingBottom="3dp"
+              android:text="@string/preview_action_play"
+              android:textColor="@color/text_primary"
+              android:visibility="gone" />
+        </com.tellybox.tv.ui.channels.RatioFrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="12dp"
+            android:orientation="vertical">
+
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:gravity="center_vertical"
+              android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/infoChannel"
+                style="@style/Text.Caption"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:singleLine="true"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/status"
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:singleLine="true" />
+
+            <TextView
+                android:id="@+id/clock"
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textColor="@color/text_primary" />
+          </LinearLayout>
+
+          <TextView
+              android:id="@+id/infoTitle"
+              style="@style/Text.Body"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:ellipsize="end"
+              android:fontFamily="sans-serif-medium"
+              android:singleLine="true"
+              android:textSize="15sp" />
+
+          <TextView
+              android:id="@+id/infoTime"
+              style="@style/Text.Caption"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:ellipsize="end"
+              android:singleLine="true"
+              android:textSize="11sp" />
+
+          <ProgressBar
+              android:id="@+id/infoProgress"
+              style="?android:attr/progressBarStyleHorizontal"
+              android:layout_width="match_parent"
+              android:layout_height="3dp"
+              android:layout_marginTop="4dp"
+              android:layout_marginBottom="4dp"
+              android:max="1000"
+              android:progressTint="@color/accent" />
+
+          <TextView
+              android:id="@+id/infoDescription"
+              style="@style/Text.Caption"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="2dp"
+              android:ellipsize="end"
+              android:maxLines="2"
+              android:textSize="11sp" />
+
+          <Button
+              android:id="@+id/watchButton"
+              style="@style/Button.TV.Small"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginEnd="0dp"
+              android:background="@drawable/bg_watch_button"
+              android:ellipsize="end"
+              android:fontFamily="sans-serif-medium"
+              android:maxWidth="400dp"
+              android:singleLine="true"
+              android:visibility="gone" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <FrameLayout
+          android:layout_width="match_parent"
+          android:layout_height="0dp"
+          android:layout_weight="1"
+          android:layout_marginTop="8dp">
+
+        <com.tellybox.tv.ui.epg.GuideGridView
+            android:id="@+id/grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/channelsEmpty"
+            style="@style/Text.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:maxWidth="300dp"
+            android:text="@string/empty_group"
+            android:visibility="gone" />
+      </FrameLayout>
+    </LinearLayout>
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/emptyState"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:gravity="center_horizontal"
+      android:orientation="vertical"
+      android:padding="24dp"
+      android:visibility="gone">
+
+    <TextView
+        style="@style/Text.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/empty_title" />
+
+    <TextView
+        style="@style/Text.Body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:maxWidth="520dp"
+        android:text="@string/empty_body"
+        android:textColor="@color/text_secondary" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal">
+
+      <Button
+          android:id="@+id/emptyAddButton"
+          style="@style/Button.TV"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/action_add_playlist" />
+
+      <Button
+          android:id="@+id/emptySettingsButton"
+          style="@style/Button.TV"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="12dp"
+          android:text="@string/settings_title" />
+    </LinearLayout>
+  </LinearLayout>
+</FrameLayout>

@@ -39,8 +39,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:screenOrientation="landscape">
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
@@ -51,30 +50,30 @@
         <activity
             android:name=".ui.playlists.PlaylistsActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            />
 
-        <activity android:name=".ui.playlists.GroupManagementActivity" android:exported="false" android:screenOrientation="landscape" />
+        <activity android:name=".ui.playlists.GroupManagementActivity" android:exported="false" />
 
         <activity
             android:name=".ui.playlists.AddPlaylistActivity"
             android:exported="false"
-            android:screenOrientation="landscape"
+           
             android:windowSoftInputMode="adjustResize" />
 
-        <activity android:name=".ui.parental.ParentalActivity" android:exported="false" android:screenOrientation="landscape" />
+        <activity android:name=".ui.parental.ParentalActivity" android:exported="false" />
 
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            />
 
         <activity
             android:name=".ui.epg.GuideActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            />
 
-        <activity android:name=".ui.vod.VodActivity" android:exported="false" android:screenOrientation="landscape" />
-        <activity android:name=".ui.vod.VodDetailActivity" android:exported="false" android:screenOrientation="landscape" />
+        <activity android:name=".ui.vod.VodActivity" android:exported="false" />
+        <activity android:name=".ui.vod.VodDetailActivity" android:exported="false" />
 
         <activity
             android:name=".ui.player.PlayerActivity"
@@ -91,8 +90,8 @@
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Tellybox.Player" />
-        <activity android:name=".ui.recordings.RecordingsActivity" android:exported="false" android:screenOrientation="landscape" />
-        <activity android:name=".ui.reminders.RemindersActivity" android:exported="false" android:screenOrientation="landscape" />
+        <activity android:name=".ui.recordings.RecordingsActivity" android:exported="false" />
+        <activity android:name=".ui.reminders.RemindersActivity" android:exported="false" />
         <activity
             android:name=".reminders.ReminderPopupActivity"
             android:excludeFromRecents="true"

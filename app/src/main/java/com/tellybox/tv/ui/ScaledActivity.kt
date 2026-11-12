@@ -15,7 +15,11 @@ import kotlin.math.roundToInt
 
 /** Applies the activity's scale once to each attached view, including recycled list rows. */
 open class ScaledActivity : AppCompatActivity() {
-    val uiScale by lazy { resources.configuration.let { UiScale(it.screenWidthDp, it.screenHeightDp) } }
+    val uiScale by lazy {
+        resources.configuration.let {
+            UiScale(it.screenWidthDp, it.screenHeightDp, compact = it.smallestScreenWidthDp < 600)
+        }
+    }
     private val sized = Collections.newSetFromMap(WeakHashMap<View, Boolean>())
 
     override fun onCreate(savedInstanceState: Bundle?) {

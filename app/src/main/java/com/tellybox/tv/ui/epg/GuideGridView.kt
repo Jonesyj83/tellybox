@@ -89,7 +89,9 @@ class GuideGridView @JvmOverloads constructor(
         }
 
     private val uiScale = (context as? com.tellybox.tv.ui.ScaledActivity)?.uiScale
-        ?: resources.configuration.let { com.tellybox.tv.ui.UiScale(it.screenWidthDp, it.screenHeightDp) }
+        ?: resources.configuration.let {
+            com.tellybox.tv.ui.UiScale(it.screenWidthDp, it.screenHeightDp, compact = it.smallestScreenWidthDp < 600)
+        }
     private val dp = resources.displayMetrics.density * uiScale.scale
     private var rowHeight = 26 * dp
     private val headerHeight = 22 * dp
