@@ -30,6 +30,14 @@ the change. Use this before a tag, and add to it whenever something slips throug
 - **Refresh after a partial import.** Kill the network mid-refresh, let it fail, then check the
   playlist still has its channels.
 
+## The release itself
+
+- The release must carry an asset named exactly `Tellybox.apk`. The downloader code points at
+  `releases/latest/download/Tellybox.apk`, and a release with only a versioned APK leaves that
+  URL serving the previous build from cache. Check the hash of that URL, not just the asset list.
+- `releases/latest` follows the newest full release, so a pre-release can be tested by others
+  without moving everyone onto it.
+
 ## Judgement
 
 - Fix-only releases and feature releases don't ride together. A fix ships small and boring.
