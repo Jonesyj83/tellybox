@@ -1,17 +1,30 @@
 # Tellybox
 
-A free IPTV player for Android TV. Point it at your own playlist and it builds the channel
-list, pulls the guide in, and plays the streams. No account, no ads, no tracking, nothing
-leaving the box except the requests needed to load your playlist and play your channels.
+A free IPTV player for Android TV. Paste your playlist or your Stalker portal and it builds the
+channel list, pulls the guide in, and plays the streams. No account, no ads, no subscription, no
+tracking.
 
-Tellybox does not supply, host or bundle any channels. You bring the playlist, and you are
-responsible for having the right to watch what is on it.
+**[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**  ·  Downloader code **9720603**
 
-**[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**
-
-<a href="https://buymeacoffee.com/jonesy"><img src="docs/support.svg" alt="Buy me a beer" height="46"></a>
+Open the Downloader app on your TV, type that number, install. Done.
 
 ![Live TV with the preview window and guide](docs/screenshots/home.jpg)
+
+## What it is good at
+
+Stalker portals. If your provider gives you a MAC address and a portal URL, that's where this app
+does better than most: it talks to the portal the way the portal expects, signs film links properly
+and keeps everything local so search, favourites and history are instant.
+
+M3U links, M3U files and Xtream logins all work the same way.
+
+## What it doesn't do
+
+No movie addons or debrid, no YouTube, no music. No phones or tablets yet, it's Android TV only.
+No network shares. Tellybox comes with no channels and doesn't host any, you use your own line and
+you're responsible for having the right to watch it.
+
+<a href="https://buymeacoffee.com/jonesy"><img src="docs/support.svg" alt="Buy me a beer" height="46"></a>
 
 ## What you need
 
@@ -23,8 +36,8 @@ responsible for having the right to watch what is on it.
 ## Install
 
 1. Grab the APK from the [releases page](https://github.com/Jonesyj83/tellybox/releases/latest).
-2. Get it onto the TV. Easiest is the Downloader app on the TV: open it, type the download
-   link, install. Or from a computer with `adb install -r Tellybox-0.3.0.apk`.
+2. Get it onto the TV. Easiest is the Downloader app on the TV with the code above. Or from a
+   computer with `adb install -r Tellybox.apk`.
 3. Allow installs from unknown sources when the TV asks. Android TV blocks sideloading by
    default, this is the normal prompt for any app that didn't come from the Play Store.
 4. Open Tellybox, choose **Add playlist**, and paste your link.
