@@ -4,25 +4,19 @@ A free IPTV player for Android TV. Paste your playlist or your Stalker portal an
 channel list, pulls the guide in, and plays the streams. No account, no ads, no subscription, no
 tracking.
 
+It doesn't come with any channels. You use your own line, and you're responsible for having the
+right to watch what's on it.
+
 **[Download the latest APK](https://github.com/Jonesyj83/tellybox/releases/latest)**  ·  Downloader code **9720603**
 
 Open the Downloader app on your TV, type that number, install. Done.
 
 ![Live TV with the preview window and guide](docs/screenshots/home.jpg)
 
-## What it is good at
-
-Stalker portals. If your provider gives you a MAC address and a portal URL, that's where this app
-does better than most: it talks to the portal the way the portal expects, signs film links properly
-and keeps everything local so search, favourites and history are instant.
-
-M3U links, M3U files and Xtream logins all work the same way.
-
-## What it doesn't do
-
-No movie addons or debrid, no YouTube, no music. No phones or tablets yet, it's Android TV only.
-No network shares. Tellybox comes with no channels and doesn't host any, you use your own line and
-you're responsible for having the right to watch it.
+If your provider gave you a MAC address and a portal URL, that's a Stalker portal, and it's the one
+this app handles best. It signs film links the way the portal expects and keeps everything on the
+box, so search, favourites and history come back instantly. M3U links, M3U files and Xtream logins
+work the same way.
 
 <a href="https://buymeacoffee.com/jonesy"><img src="docs/support.svg" alt="Buy me a beer" height="46"></a>
 
